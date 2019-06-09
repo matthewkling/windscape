@@ -61,3 +61,15 @@ windrose <- function(x, weighting="velocity"){
       d <- unlist(lapply(d, sum))
       return(as.numeric(d))
 }
+
+
+
+
+add_coords <- function(windrose){
+      rows <- cols <- windrose[[1]]
+      rows[] <- rep(1:nrow(rows), each=ncol(rows))
+      cols[] <- rep(1:ncol(rows), nrow(rows))
+      windrose <- stack(windrose, rows, cols)
+      names(windrose) <- c("SW", "W", "NW", "N", "NE", "E", "SE", "S", "row", "col")
+      return(windrose)
+}
