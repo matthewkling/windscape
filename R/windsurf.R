@@ -1,7 +1,7 @@
 
 
 # dispersal function to compute transition likelihood
-disperse <- function(x){
+diffuse <- function(x){
       p <- x[c(1,3,5,7,9,11,13,15)] # SW ...cw... S
       g <- x[17:20]
       if(g[1]<g[2] & g[4]<g[3]) return(p[1]/sqrt(2)/sqrt(2)) #SW
@@ -46,4 +46,27 @@ transition_stack <- function(x, transitionFunction, directions, symm, ...){
       transitionMatrix(tr) <- transitionMatr
       matrixValues(tr) <- "resistance"
       return(tr)
+}
+
+
+
+# create a transition object from a windrose raster stack
+wind_trans <- function(windrose, correction="c"){
+      windrose <- add_coords(windrose)
+      trans <- transition_stack(windrose, diffuse, directions=8, symm=F)
+      geoCorrection(trans, type=correction)
+}
+
+
+windshed <- function(trans, # transition object created by wind_trans()
+                     coords, # lon-lat vector
+                     upwind = F){
+      coords <- matrix(coords, ncol=2)
+      if(upwind){
+            cost <- raster(trans)
+            cost[] <- costDistance(trans, coordinates(cost), coords)
+      } else{
+            cost <- accCost(trans, coords)
+      }
+      return(cost)
 }
