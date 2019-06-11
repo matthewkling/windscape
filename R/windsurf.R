@@ -59,7 +59,7 @@ wind_trans <- function(windrose, correction="c"){
 
 
 windshed <- function(trans, # transition object created by wind_trans()
-                     coords, # lon-lat vector
+                     coords, # lenghth-2 vector: lon-lat of focal location
                      upwind = F){
       coords <- matrix(coords, ncol=2)
       if(upwind){
