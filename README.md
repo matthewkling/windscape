@@ -1,2 +1,2 @@
-# windshed
-R package for wind connectivity modeling
+# windscape
+R package for modeling landscape connectivity by wind
