@@ -73,3 +73,67 @@ add_coords <- function(windrose){
       names(windrose) <- c("SW", "W", "NW", "N", "NE", "E", "SE", "S", "row", "col")
       return(windrose)
 }
+
+
+
+
+# generate windoses for a raster dataset
+windrose_rasters <- function(w, # raster stack of u and v wind components
+                             outfile,
+                             order = "uvuv", # either "uvuv" or "uuvv", indicating whether u and v components are alternating
+                             ncores = 1,
+                             ... # see windrose function
+){
+
+      # collate data
+      if(order == "uvuv"){
+            even <- function(x) x %% 2 == 0
+            w <- w[[c(which(!even(1:nlayers(w))),
+                      which(even(1:nlayers(w))))]]
+      }
+
+      rosefun <- function(x) windrose(x, ...)
+
+      if(ncores == 1){
+            wr <- raster::calc(w, fun=rosefun, forceapply=TRUE,
+                               filename=outfile)
+            names(wr) <- c("SW", "W", "NW", "N", "NE", "E", "SE", "S")
+            return(wr)
+      } else {
+
+            # split dataset into batches
+            nlayer <- nlayers(w)/2
+            core <- rep(1:ncores, each=floor(nlayer/ncores))
+            core <- c(core, rep(ncores, nlayer %% ncores))
+            w <- lapply(1:ncores, function(x) list(i=x,
+                                                   data=w[[c(which(core == x),
+                                                             which(core == x) + nlayer)]]))
+
+            # process batches in parallel
+            require(doParallel)
+            cl <- makeCluster(ncores)
+            registerDoParallel(cl)
+            wr <- foreach(x = w,
+                          .packages=c("raster", "windshed")) %dopar% {
+                                raster::calc(x$data, fun=rosefun, forceapply=TRUE,
+                                             filename=paste0(substr(outfile, 1, nchar(outfile)-4),
+                                                             "_", x$i,
+                                                             substr(outfile, nchar(outfile)-3, nchar(outfile))))
+                          }
+            stopCluster(cl)
+            #wr <- Reduce("+", wr)
+      }
+}
+
+
+
+
+wind_stats <- function(wr){
+      require(ineq)
+      total <- sum(wr)
+      directionality <- calc(wr, Gini) # Gini: 1 = directionality, 0 = equality
+      mean_u
+      mean_v
+      mean_direction
+      mean_speed
+}
