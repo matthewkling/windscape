@@ -70,3 +70,72 @@ windshed <- function(trans, # transition object created by wind_trans()
       }
       return(cost)
 }
+
+
+ws_summarize <- function(x, # raster layer of wind flow (where positive values are more accessible)
+                         origin # coordinates of center point (2-column matrix)
+){
+
+      # transform everything to latlong
+      p <- rasterToPoints(x)
+      xy <- as.data.frame(rbind(origin, p[,1:2]))
+      coordinates(xy) <- c("x", "y")
+      crs(xy) <- crs(x)
+      latlong <- crs('+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs')
+      xy <- spTransform(xy, latlong)
+      xy <- coordinates(xy)
+      origin <- xy[1,]
+      xy <- xy[2:nrow(xy),]
+
+      # size of windshed
+      w <- p[,3]
+      ws_size <- mean(w)
+
+      # distance and bearing to centroid of windshed
+      ctd <- apply(xy, 2, function(z) weighted.mean(z, w, na.rm=T)) # not geodesically ideal
+      ctd_dist <- distGeo(origin, ctd) / 1000
+      ctd_brng <- bearing(origin, ctd)
+
+      # distance and bearing to every cell
+      dist <- distGeo(origin, xy) / 1000
+      brng <- bearing(origin, xy)
+
+      # mean distance, mean bearing
+      ws_dist <- weighted.mean(dist, w, na.rm=T)
+      iso <- isotropy(brng, w, na.rm=T)
+      ws_iso <- iso["iso"]
+      ws_brng <- iso["bearing"]
+
+      # convert centroid back to origin proj
+      ctd <- as.data.frame(matrix(ctd, ncol=2))
+      coordinates(ctd) <- c("V1", "V2")
+      crs(ctd) <- latlong
+      ctd <- spTransform(ctd, crs(x))
+      ctd <- coordinates(ctd)
+
+      names(ctd) <- names(ws_iso) <- names(ws_brng) <- NULL
+      c(centroid_x = ctd[1], centroid_y = ctd[2],
+        centroid_dist = ctd_dist, ctd_bearing = ctd_brng,
+        mean_distance = ws_dist, mean_bearing = ws_brng,
+        isotropy = ws_iso, size=ws_size)
+}
+
+
+# weighted circular standard deviation
+isotropy <- function(x, # bearings -- in degrees, not radians
+                     w=NULL, ...){
+      # a custom weighted version of the "mean resultant vector" from circular stats
+      # see: https://doi.org/10.3389/fpsyg.2018.02040 and help(CircStats::circ.disp)
+      # my implementation: convert the bearings into XY, then take the mean of the XYs, weight by wind speed
+      if(is.null(w)) w <- rep(1, length(x))
+      x <- x / 180 * pi
+      xy <- cbind(x = sin(x), y = cos(x))
+      xy <- apply(xy, 2, weighted.mean, w=w, ...)
+      rbar <- sqrt(sum(xy^2)) # mean resultant vector
+      iso <- sqrt(1-rbar) # circular standard deviation
+      angle <- bearing(c(0,0), xy)
+      return(c(bearing=angle, iso=iso))
+}
+
+
+
