@@ -102,9 +102,9 @@ ws_summarize <- function(x, # raster layer of wind flow (where positive values a
 
       # mean distance, mean bearing
       ws_dist <- weighted.mean(dist, w, na.rm=T)
-      iso <- isotropy(brng, w, na.rm=T)
-      ws_iso <- iso["iso"]
+      iso <- circ_sd(brng, w, na.rm=T)
       ws_brng <- iso["bearing"]
+      ws_iso <- 1 - anisotropy(brng, w)
 
       # convert centroid back to origin proj
       ctd <- as.data.frame(matrix(ctd, ncol=2))
@@ -114,16 +114,21 @@ ws_summarize <- function(x, # raster layer of wind flow (where positive values a
       ctd <- coordinates(ctd)
 
       names(ctd) <- names(ws_iso) <- names(ws_brng) <- NULL
-      c(centroid_x = ctd[1], centroid_y = ctd[2],
-        centroid_dist = ctd_dist, ctd_bearing = ctd_brng,
-        mean_distance = ws_dist, mean_bearing = ws_brng,
-        isotropy = ws_iso, size=ws_size)
+      c(centroid_x = ctd[1],
+        centroid_y = ctd[2],
+        centroid_distance = ctd_dist,
+        centroid_bearing = ctd_brng,
+        windshed_distance = ws_dist,
+        windshed_bearing = ws_brng,
+        windshed_isotropy = ws_iso,
+        windshed_size=ws_size)
 }
 
 
 # weighted circular standard deviation
-isotropy <- function(x, # bearings -- in degrees, not radians
-                     w=NULL, ...){
+circ_sd <- function(x, # bearings -- in degrees, not radians
+                     w=NULL,
+                     ...){
       # a custom weighted version of the "mean resultant vector" from circular stats
       # see: https://doi.org/10.3389/fpsyg.2018.02040 and help(CircStats::circ.disp)
       # my implementation: convert the bearings into XY, then take the mean of the XYs, weight by wind speed
@@ -137,5 +142,22 @@ isotropy <- function(x, # bearings -- in degrees, not radians
       return(c(bearing=angle, iso=iso))
 }
 
+
+# circular distance measure used internally within isotropy function below
+cdist <- function(x, y){
+      d <- abs(x - y)
+      d[d > 180] <- 360 - d[d > 180]
+      sum(d)
+}
+
+# circular "earth movers distance" between a set of bearings and a uniform distribution,
+# normalized such that 1 represents a single angle and 0 represents a uniform distirbution
+anisotropy <- function(x, w=NULL, ...){
+      if(is.null(w)) w <- rep(1, length(x))
+      e <- cbind(w/sum(w), x)
+      u <- cbind(1/360, 1:360) # uniform distribution
+      d <- emdist::emd(e, u, dist=cdist)
+      d / 90 # normalize by 90, the max possible value
+}
 
 

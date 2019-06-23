@@ -74,6 +74,8 @@ add_coords <- function(windrose){
       return(windrose)
 }
 
+windrose_names <- function() c("SW", "W", "NW", "N", "NE", "E", "SE", "S")
+
 
 
 
