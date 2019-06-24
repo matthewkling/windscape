@@ -154,6 +154,7 @@ cdist <- function(x, y){
 # normalized such that 1 represents a single angle and 0 represents a uniform distirbution
 anisotropy <- function(x, w=NULL, ...){
       if(is.null(w)) w <- rep(1, length(x))
+      if(!is.finite(x[1] + w[1])) return(NA)
       e <- cbind(w/sum(w), x)
       u <- cbind(1/360, 1:360) # uniform distribution
       d <- emdist::emd(e, u, dist=cdist)
