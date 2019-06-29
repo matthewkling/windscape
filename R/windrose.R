@@ -18,19 +18,24 @@ loading <- function(theta){ # theta in [0,45]
 }
 
 #velocity-weighted frequency of wind in each quadrant
-windrose <- function(x, weighting="velocity"){
+windrose <- function(x,
+                     p=2 # 0=time, 1=velocity, 2=drag, 3=force
+                     ){
       #x0 <- s[277,349]
 
-      wfx <- switch(weighting,
-                    time = function(x) 1,
-                    velocity = function(x) sqrt(sum(x^2)),
-                    force = function(x) sqrt(sum(x^2))^3)
+      # wfx <- switch(weighting,
+      #               time = function(x) 1,
+      #               velocity = function(x) sqrt(sum(x^2)),
+      #               drag = function(x) sqrt(sum(x^2))^2,
+      #               force = function(x) sqrt(sum(x^2))^3)
+
+      wfx <- function(x) sqrt(sum(x^2)) ^ p
 
       # restructure: row=timestep, col=u&v components
       m <- matrix(x, ncol=2, byrow=F)
 
       # calcualte force and direction
-      frc <- apply(m, 1, wfx) # fun should be force or velocity
+      frc <- apply(m, 1, wfx)
       dir <- apply(m, 1, function(x) spin90(direction(x[2], -1*x[1])))
 
       # octant bounds for each vector
@@ -75,6 +80,7 @@ add_coords <- function(windrose){
 }
 
 windrose_names <- function() c("SW", "W", "NW", "N", "NE", "E", "SE", "S")
+windrose_bearings <- function() c(225, 270, 315, 0, 45, 90, 135, 180)
 
 
 
