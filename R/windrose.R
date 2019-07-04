@@ -12,80 +12,70 @@ spin90 <- function(x){
       x
 }
 
-# convert an angle [0-45] to a loading [0-1] in the 45-degree direction
-loading <- function(theta){ # theta in [0,45]
-      sin((4*(theta-22.5))*pi/180)/2+.5
+add_lat <- function(x){
+      lat <- x[[1]]
+      lat[] <- coordinates(lat)[,2]
+      stack(lat, x)
 }
 
-#velocity-weighted frequency of wind in each quadrant
-windrose <- function(x,
-                     p=2 # 0=time, 1=velocity, 2=drag, 3=force
-                     ){
-      #x0 <- s[277,349]
 
-      # wfx <- switch(weighting,
-      #               time = function(x) 1,
-      #               velocity = function(x) sqrt(sum(x^2)),
-      #               drag = function(x) sqrt(sum(x^2))^2,
-      #               force = function(x) sqrt(sum(x^2))^3)
+neighbor_loadings <- function(b, # wind bearings
+                              nb # bearings to neighbors
+){
+      ni <- max(which(b > nb))
+      prop <- (b - nb[ni]) / (nb[ni+1] - nb[ni])
+      l <- rep(0, 9)
+      l[c(ni, ni+1)] <- c(1-prop, prop)
+      l <- c(l[1] + l[9], l[2:8])
+      as.vector(l)
+}
+
+
+# velocity-weighted frequency of wind in each quadrant
+# same as above, but accounting for non-square grid
+windrose_geo <- function(x,
+                         res, # raster resolution, in degrees
+                         p=2, # 0=time, 1=velocity, 2=drag, 3=force
+                         summary_fun = sum # function to summarize across time steps
+){
 
       wfx <- function(x) sqrt(sum(x^2)) ^ p
 
-      # restructure: row=timestep, col=u&v components
+      # unpack & restructure: row=timestep, col=u&v components
+      lat <- x[1]
+      x <- x[2:length(x)]
       m <- matrix(x, ncol=2, byrow=F)
 
-      # calcualte force and direction
-      frc <- apply(m, 1, wfx)
+      # wind force and direction
+      weight <- apply(m, 1, wfx)
       dir <- apply(m, 1, function(x) spin90(direction(x[2], -1*x[1])))
+      dir[dir<0] <- dir[dir<0] + 360
 
-      # octant bounds for each vector
-      d1 <- plyr::round_any(dir, 45, floor)
-      d1[d1 == -180] <- 180
-      d2 <- plyr::round_any(dir, 45, ceiling)
-      d2[d2 == -180] <- 180
+      # bearings to queen neighbors
+      nc <- cbind(x = c(0, res, res, res, 0, -res, -res, -res),
+                  y = c(res, res, 0, -res, -res, -res, 0, res) + lat)
+      nc[,2] <- pmin(nc[,2], 90)
+      nc[,2] <- pmax(nc[,2], -90)
+      nb <- bearingRhumb(c(0, lat), nc)
+      nb <- c(nb, 360)
 
-      # loadings on each octant bound, based on angle
-      theta <- dir %% 45
-      l1 <- loading(theta)
-      l2 <- 1-l1
+      # allocate weights to neighbors, based on direction
+      l <- t(apply(matrix(dir, ncol=1), 1, neighbor_loadings, nb=nb))
+      l <- sweep(l, 1, weight, `*`)
+      l <- apply(l, 2, summary_fun)
 
-      # add some dummy data to ensure all quadrants are represented
-      frc <- c(frc, rep(0,8))
-      l1 <- c(l1, rep(0,8))
-      l2 <- c(l2, rep(0,8))
-      d1 <- c(d1, c(-135, -90, -45, 0, 45, 90, 135, 180))
-      d2 <- c(d2, c(-135, -90, -45, 0, 45, 90, 135, 180))
+      # adjust conductance weights to account for inter-cell distance
+      nd <- distGeo(c(0, lat), nc)
+      l <- l / nd
 
-      # repackage
-      d <- c(d1, d2)
-      l <- c(l1, l2)
-      frc <- c(frc, frc)
-
-      # summarize
-      d <- split(frc*l, d)
-      d <- unlist(lapply(d, sum))
-      return(as.numeric(d))
+      # reorder, clockwise from SW
+      l[c(6:8, 1:6)]
 }
-
-
-
-
-add_coords <- function(windrose){
-      rows <- cols <- windrose[[1]]
-      rows[] <- rep(1:nrow(rows), each=ncol(rows))
-      cols[] <- rep(1:ncol(rows), nrow(rows))
-      windrose <- stack(windrose, rows, cols)
-      names(windrose) <- c("SW", "W", "NW", "N", "NE", "E", "SE", "S", "row", "col")
-      return(windrose)
-}
-
-windrose_names <- function() c("SW", "W", "NW", "N", "NE", "E", "SE", "S")
-windrose_bearings <- function() c(225, 270, 315, 0, 45, 90, 135, 180)
-
 
 
 
 # generate windoses for a raster dataset
+# must be in lat-long proection
 windrose_rasters <- function(w, # raster stack of u and v wind components
                              outfile,
                              order = "uvuv", # either "uvuv" or "uuvv", indicating whether u and v components are alternating
@@ -100,7 +90,8 @@ windrose_rasters <- function(w, # raster stack of u and v wind components
                       which(even(1:nlayers(w))))]]
       }
 
-      rosefun <- function(x) windrose(x, ...)
+      resn <- mean(res(w[[1]]))
+      rosefun <- function(x) windrose_geo(x, res=resn, ...)
 
       if(ncores == 1){
             wr <- raster::calc(w, fun=rosefun, forceapply=TRUE,
@@ -122,16 +113,31 @@ windrose_rasters <- function(w, # raster stack of u and v wind components
             cl <- makeCluster(ncores)
             registerDoParallel(cl)
             wr <- foreach(x = w,
-                          .packages=c("raster", "windshed")) %dopar% {
+                          .packages=c("raster", "windscape")) %dopar% {
+                                x$data <- add_lat(x$data)
                                 raster::calc(x$data, fun=rosefun, forceapply=TRUE,
                                              filename=paste0(substr(outfile, 1, nchar(outfile)-4),
                                                              "_", x$i,
                                                              substr(outfile, nchar(outfile)-3, nchar(outfile))))
                           }
             stopCluster(cl)
-            #wr <- Reduce("+", wr)
+
       }
 }
+
+
+add_coords <- function(windrose){
+      rows <- cols <- windrose[[1]]
+      rows[] <- rep(1:nrow(rows), each=ncol(rows))
+      cols[] <- rep(1:ncol(rows), nrow(rows))
+      windrose <- stack(windrose, rows, cols)
+      names(windrose) <- c("SW", "W", "NW", "N", "NE", "E", "SE", "S", "row", "col")
+      return(windrose)
+}
+
+windrose_names <- function() c("SW", "W", "NW", "N", "NE", "E", "SE", "S")
+windrose_bearings <- function() c(225, 270, 315, 0, 45, 90, 135, 180)
+
 
 
 
