@@ -4,13 +4,31 @@
 #   Test Package:              'Ctrl + Shift + T'
 
 
-# direction from u&v components -- in degrees, clockwise from 12:00
+# direction from u&v components -- in degrees, clockwise from north
 direction <- function(x, y) atan2(x, y) * 180 / pi
 spin90 <- function(x){
       x <- x - 90
       x[x<(-180)] <- x[x<(-180)] + 360
       x
 }
+
+
+
+add_coords <- function(windrose){
+      rows <- cols <- windrose[[1]]
+      rows[] <- rep(1:nrow(rows), each=ncol(rows))
+      cols[] <- rep(1:ncol(rows), nrow(rows))
+      windrose <- stack(windrose, rows, cols)
+      names(windrose) <- c("SW", "W", "NW", "N", "NE", "E", "SE", "S", "row", "col")
+      return(windrose)
+}
+
+add_res <- function(x){
+      r <- x[[1]]
+      r[] <- mean(res(r[[1]]))
+      stack(r, x)
+}
+
 
 add_lat <- function(x){
       lat <- x[[1]]
@@ -22,6 +40,7 @@ add_lat <- function(x){
 neighbor_loadings <- function(b, # wind bearings
                               nb # bearings to neighbors
 ){
+      #if(any(is.na(c(b, nb)))) return(rep(NA, 8))
       ni <- max(which(b > nb))
       prop <- (b - nb[ni]) / (nb[ni+1] - nb[ni])
       l <- rep(0, 9)
@@ -31,25 +50,30 @@ neighbor_loadings <- function(b, # wind bearings
 }
 
 
+
 # velocity-weighted frequency of wind in each quadrant
 # same as above, but accounting for non-square grid
 windrose_geo <- function(x,
-                         res, # raster resolution, in degrees
                          p=2, # 0=time, 1=velocity, 2=drag, 3=force
                          summary_fun = sum # function to summarize across time steps
 ){
+
+      require(windscape)
+      require(geosphere)
 
       wfx <- function(x) sqrt(sum(x^2)) ^ p
 
       # unpack & restructure: row=timestep, col=u&v components
       lat <- x[1]
-      x <- x[2:length(x)]
+      res <- x[2]
+      x <- x[3:length(x)]
       m <- matrix(x, ncol=2, byrow=F)
 
       # wind force and direction
       weight <- apply(m, 1, wfx)
-      dir <- apply(m, 1, function(x) spin90(direction(x[2], -1*x[1])))
+      dir <- apply(m, 1, function(x) spin90(windscape::direction(x[2], -1*x[1])))
       dir[dir<0] <- dir[dir<0] + 360
+      dir[dir==0] <- 360
 
       # bearings to queen neighbors
       nc <- cbind(x = c(0, res, res, res, 0, -res, -res, -res),
@@ -74,6 +98,7 @@ windrose_geo <- function(x,
 
 
 
+
 # generate windoses for a raster dataset
 # must be in lat-long proection
 windrose_rasters <- function(w, # raster stack of u and v wind components
@@ -90,12 +115,13 @@ windrose_rasters <- function(w, # raster stack of u and v wind components
                       which(even(1:nlayers(w))))]]
       }
 
-      resn <- mean(res(w[[1]]))
-      rosefun <- function(x) windrose_geo(x, res=resn, ...)
+
+      rosefun <- function(x) windrose_geo(x, ...)
 
       if(ncores == 1){
-            wr <- raster::calc(w, fun=rosefun, forceapply=TRUE,
-                               filename=outfile)
+            wr <- add_res(w)
+            wr <- add_lat(wr)
+            wr <- raster::calc(wr, fun=rosefun, forceapply=TRUE, filename=outfile)
             names(wr) <- c("SW", "W", "NW", "N", "NE", "E", "SE", "S")
             return(wr)
       } else {
@@ -114,6 +140,7 @@ windrose_rasters <- function(w, # raster stack of u and v wind components
             registerDoParallel(cl)
             wr <- foreach(x = w,
                           .packages=c("raster", "windscape")) %dopar% {
+                                x$data <- add_res(x$data)
                                 x$data <- add_lat(x$data)
                                 raster::calc(x$data, fun=rosefun, forceapply=TRUE,
                                              filename=paste0(substr(outfile, 1, nchar(outfile)-4),
@@ -125,15 +152,6 @@ windrose_rasters <- function(w, # raster stack of u and v wind components
       }
 }
 
-
-add_coords <- function(windrose){
-      rows <- cols <- windrose[[1]]
-      rows[] <- rep(1:nrow(rows), each=ncol(rows))
-      cols[] <- rep(1:ncol(rows), nrow(rows))
-      windrose <- stack(windrose, rows, cols)
-      names(windrose) <- c("SW", "W", "NW", "N", "NE", "E", "SE", "S", "row", "col")
-      return(windrose)
-}
 
 windrose_names <- function() c("SW", "W", "NW", "N", "NE", "E", "SE", "S")
 windrose_bearings <- function() c(225, 270, 315, 0, 45, 90, 135, 180)
