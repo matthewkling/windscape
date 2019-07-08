@@ -1,19 +1,31 @@
 
 
-# dispersal function to compute transition likelihood
-diffuse <- function(x){
+# dispersal functions to compute transition likelihood
+downwind <- function(x){
       p <- x[c(1,3,5,7,9,11,13,15)] # SW ...cw... S
       g <- x[17:20]
-      if(g[1]<g[2] & g[4]<g[3]) return(p[1]/sqrt(2)/sqrt(2)) #SW
+      if(g[1]<g[2] & g[4]<g[3]) return(p[1]) #SW
       if(g[1]==g[2] & g[4]<g[3]) return(p[2]) #W
-      if(g[2]<g[1] & g[4]<g[3]) return(p[3]/sqrt(2)/sqrt(2)) #NW
+      if(g[2]<g[1] & g[4]<g[3]) return(p[3]) #NW
       if(g[3]==g[4] & g[2]<g[1]) return(p[4]) #N
-      if(g[2]<g[1] & g[3]<g[4]) return(p[5]/sqrt(2)/sqrt(2)) #NE
+      if(g[2]<g[1] & g[3]<g[4]) return(p[5]) #NE
       if(g[1]==g[2] & g[3]<g[4]) return(p[6]) #E
-      if(g[1]<g[2] & g[3]<g[4]) return(p[7]/sqrt(2)/sqrt(2)) #SE
+      if(g[1]<g[2] & g[3]<g[4]) return(p[7]) #SE
       if(g[3]==g[4] & g[1]<g[2]) return(p[8]) #S
-      # dividing by 2 root 2 prevents the geocorrection from distorting the probability field
 }
+upwind <- function(x){
+      p <- x[c(2,4,6,8,10,12,14,16)] # SW ...cw... S
+      g <- x[17:20]
+      if(g[1]<g[2] & g[4]<g[3]) return(p[5]) #SW
+      if(g[1]==g[2] & g[4]<g[3]) return(p[6]) #W
+      if(g[2]<g[1] & g[4]<g[3]) return(p[7]) #NW
+      if(g[3]==g[4] & g[2]<g[1]) return(p[8]) #N
+      if(g[2]<g[1] & g[3]<g[4]) return(p[1]) #NE
+      if(g[1]==g[2] & g[3]<g[4]) return(p[2]) #E
+      if(g[1]<g[2] & g[3]<g[4]) return(p[3]) #SE
+      if(g[3]==g[4] & g[1]<g[2]) return(p[4]) #S
+}
+
 
 
 transition_stack <- function(x, transitionFunction, directions, symm, ...){
@@ -50,26 +62,6 @@ transition_stack <- function(x, transitionFunction, directions, symm, ...){
 
 
 
-# create a transition object from a windrose raster stack
-wind_trans <- function(windrose, correction="c"){
-      windrose <- add_coords(windrose)
-      trans <- transition_stack(windrose, diffuse, directions=8, symm=F)
-      geoCorrection(trans, type=correction)
-}
-
-
-windshed <- function(trans, # transition object created by wind_trans()
-                     coords, # lenghth-2 vector: lon-lat of focal location
-                     upwind = F){
-      coords <- matrix(coords, ncol=2)
-      if(upwind){
-            cost <- raster(trans)
-            cost[] <- costDistance(trans, coordinates(cost), coords)
-      } else{
-            cost <- accCost(trans, coords)
-      }
-      return(cost)
-}
 
 
 ws_summarize <- function(x, # raster layer of wind flow (where positive values are more accessible)
