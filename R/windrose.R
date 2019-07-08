@@ -57,7 +57,6 @@ windrose_geo <- function(x,
                          p=2, # 0=time, 1=velocity, 2=drag, 3=force
                          summary_fun = sum # function to summarize across time steps
 ){
-
       require(windscape)
       require(geosphere)
 
@@ -93,7 +92,7 @@ windrose_geo <- function(x,
       l <- l / nd
 
       # reorder, clockwise from SW
-      l[c(6:8, 1:6)]
+      l[c(6:8, 1:5)]
 }
 
 
