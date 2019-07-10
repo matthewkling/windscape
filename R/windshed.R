@@ -65,45 +65,59 @@ transition_stack <- function(x, transitionFunction, directions, symm, ...){
 
 
 ws_summarize <- function(x, # raster layer of wind flow (where positive values are more accessible)
-                         origin # coordinates of center point (2-column matrix)
+                          origin, # coordinates of center point (2-column matrix)
+                          latlon = T # is data already in lat-lon coordinates
 ){
 
       # transform everything to latlong
       p <- rasterToPoints(x)
-      xy <- as.data.frame(rbind(origin, p[,1:2]))
-      coordinates(xy) <- c("x", "y")
-      crs(xy) <- crs(x)
-      latlong <- crs('+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs')
-      xy <- spTransform(xy, latlong)
-      xy <- coordinates(xy)
-      origin <- xy[1,]
-      xy <- xy[2:nrow(xy),]
+      use <- is.finite(p[,3])
+      p <- p[use, ]
+      xy <- p[,1:2]
+
+      if(!latlon){
+            xy <- as.data.frame(rbind(origin, xy))
+            coordinates(xy) <- c("x", "y")
+            crs(xy) <- crs(x)
+            latlong <- crs('+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs')
+            xy <- spTransform(xy, latlong)
+            xy <- coordinates(xy)
+            origin <- xy[1,]
+            xy <- xy[2:nrow(xy),]
+      }
+
+      # weights, based on latitude-dependent land area
+      inc <- res(x)[1]/2
+      weights <- apply(xy, 1, function(y) distGeo(c(0-inc, y[2]), c(0+inc, y[2])))
 
       # size of windshed
       w <- p[,3]
-      ws_size <- mean(w)
+      ws_size <- weighted.mean(w, weights)
 
       # distance and bearing to centroid of windshed
-      ctd <- apply(xy, 2, function(z) weighted.mean(z, w, na.rm=T)) # not geodesically ideal
+      ctd <- apply(xy, 2, function(z) weighted.mean(z, w*weights, na.rm=T))
       ctd_dist <- distGeo(origin, ctd) / 1000
       ctd_brng <- bearing(origin, ctd)
 
       # distance and bearing to every cell
       dist <- distGeo(origin, xy) / 1000
-      brng <- bearing(origin, xy)
+      brng <- round(bearing(origin, xy))
 
       # mean distance, mean bearing
-      ws_dist <- weighted.mean(dist, w, na.rm=T)
-      iso <- circ_sd(brng, w, na.rm=T)
+      ws_dist <- weighted.mean(dist, w*weights, na.rm=T)
+      iso <- circ_sd(brng, w*weights, na.rm=T)
       ws_brng <- iso["bearing"]
-      ws_iso <- 1 - anisotropy(brng, w)
+      #ws_iso <- 1 - anisotropy(brng, w) # too slow
+      ws_iso <- iso["iso"]
 
       # convert centroid back to origin proj
-      ctd <- as.data.frame(matrix(ctd, ncol=2))
-      coordinates(ctd) <- c("V1", "V2")
-      crs(ctd) <- latlong
-      ctd <- spTransform(ctd, crs(x))
-      ctd <- coordinates(ctd)
+      if(!latlon){
+            ctd <- as.data.frame(matrix(ctd, ncol=2))
+            coordinates(ctd) <- c("V1", "V2")
+            crs(ctd) <- latlong
+            ctd <- spTransform(ctd, crs(x))
+            ctd <- coordinates(ctd)
+      }
 
       names(ctd) <- names(ws_iso) <- names(ws_brng) <- NULL
       c(centroid_x = ctd[1],
