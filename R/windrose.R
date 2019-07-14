@@ -54,23 +54,22 @@ neighbor_loadings <- function(b, # wind bearings
 # velocity-weighted frequency of wind in each quadrant
 # same as above, but accounting for non-square grid
 windrose_geo <- function(x,
-                         p=2, # 0=time, 1=velocity, 2=drag, 3=force
+                         p=1, # 0=time, 1=velocity, 2=drag, 3=force
                          summary_fun = sum # function to summarize across time steps
 ){
       require(windscape)
       require(geosphere)
 
-      wfx <- function(x) sqrt(sum(x^2)) ^ p
-
       # unpack & restructure: row=timestep, col=u&v components
       lat <- x[1]
       res <- x[2]
       x <- x[3:length(x)]
-      m <- matrix(x, ncol=2, byrow=F)
+      uv <- matrix(x, ncol=2, byrow=F)
 
-      # wind force and direction
-      weight <- apply(m, 1, wfx)
-      dir <- apply(m, 1, function(x) spin90(windscape::direction(x[2], -1*x[1])))
+      # wind strength and direction
+      strength <- function(uv) sqrt(sum(uv^2)) ^ p
+      weight <- apply(uv, 1, strength)
+      dir <- apply(uv, 1, function(x) spin90(windscape::direction(x[2], -1*x[1])))
       dir[dir<0] <- dir[dir<0] + 360
       dir[dir==0] <- 360
 
@@ -89,7 +88,8 @@ windrose_geo <- function(x,
 
       # adjust conductance weights to account for inter-cell distance
       nd <- distGeo(c(0, lat), nc)
-      l <- l / nd
+      l <- l/nd
+      # units are now in 1/seconds^p
 
       # reorder, clockwise from SW
       l[c(6:8, 1:5)]

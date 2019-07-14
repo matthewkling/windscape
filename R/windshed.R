@@ -1,9 +1,17 @@
 
 
-# dispersal functions to compute transition likelihood
-downwind <- function(x){
-      p <- x[c(1,3,5,7,9,11,13,15)] # SW ...cw... S
+# function to supply to the transitionFunction arg of transition_stack
+windflow <- function(x, direction="downwind"){
+      # x is vector of collated windrose values for FROM and TO cells
+      # direction is downwind or upwind
+      # node row and column indices
       g <- x[17:20]
+
+      # edge wind loadings (clockwise from southwest)
+      p <- apply(matrix(x[1:16], ncol=2, byrow=T), 1, mean)
+
+      if(direction=="upwind") p <- p[c(5:8, 1:4)]
+
       if(g[1]<g[2] & g[4]<g[3]) return(p[1]) #SW
       if(g[1]==g[2] & g[4]<g[3]) return(p[2]) #W
       if(g[2]<g[1] & g[4]<g[3]) return(p[3]) #NW
@@ -12,18 +20,6 @@ downwind <- function(x){
       if(g[1]==g[2] & g[3]<g[4]) return(p[6]) #E
       if(g[1]<g[2] & g[3]<g[4]) return(p[7]) #SE
       if(g[3]==g[4] & g[1]<g[2]) return(p[8]) #S
-}
-upwind <- function(x){
-      p <- x[c(2,4,6,8,10,12,14,16)] # SW ...cw... S
-      g <- x[17:20]
-      if(g[1]<g[2] & g[4]<g[3]) return(p[5]) #SW
-      if(g[1]==g[2] & g[4]<g[3]) return(p[6]) #W
-      if(g[2]<g[1] & g[4]<g[3]) return(p[7]) #NW
-      if(g[3]==g[4] & g[2]<g[1]) return(p[8]) #N
-      if(g[2]<g[1] & g[3]<g[4]) return(p[1]) #NE
-      if(g[1]==g[2] & g[3]<g[4]) return(p[2]) #E
-      if(g[1]<g[2] & g[3]<g[4]) return(p[3]) #SE
-      if(g[3]==g[4] & g[1]<g[2]) return(p[4]) #S
 }
 
 
