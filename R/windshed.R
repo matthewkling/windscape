@@ -58,36 +58,25 @@ transition_stack <- function(x, transitionFunction, directions, symm, ...){
 
 
 
-
-
 ws_summarize <- function(x, # raster layer of wind flow (where positive values are more accessible)
-                          origin, # coordinates of center point (2-column matrix)
-                          latlon = T # is data already in lat-lon coordinates
+                         origin # coordinates of center point (2-column matrix)
 ){
 
-      # transform everything to latlong
-      p <- rasterToPoints(x)
+      p <- cbind(coordinates(x), values(x))
+
+      # cell weights based on latitude
+      y <- seq(p[1,2], p[nrow(p),2], length.out=nrow(x))
+      inc <- res(x)[1] / 2
+      weight <- sapply(y, function(y) distGeo(c(0-inc, y), c(0+inc, y)))
+      p <- cbind(p, weight = rep(weight, each=ncol(x)))
+
       use <- is.finite(p[,3])
       p <- p[use, ]
       xy <- p[,1:2]
-
-      if(!latlon){
-            xy <- as.data.frame(rbind(origin, xy))
-            coordinates(xy) <- c("x", "y")
-            crs(xy) <- crs(x)
-            latlong <- crs('+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs')
-            xy <- spTransform(xy, latlong)
-            xy <- coordinates(xy)
-            origin <- xy[1,]
-            xy <- xy[2:nrow(xy),]
-      }
-
-      # weights, based on latitude-dependent land area
-      inc <- res(x)[1]/2
-      weights <- apply(xy, 1, function(y) distGeo(c(0-inc, y[2]), c(0+inc, y[2])))
+      weights <- p[,4]
+      w <- p[,3]
 
       # size of windshed
-      w <- p[,3]
       ws_size <- weighted.mean(w, weights)
 
       # distance and bearing to centroid of windshed
@@ -106,14 +95,6 @@ ws_summarize <- function(x, # raster layer of wind flow (where positive values a
       #ws_iso <- 1 - anisotropy(brng, w) # too slow
       ws_iso <- iso["iso"]
 
-      # convert centroid back to origin proj
-      if(!latlon){
-            ctd <- as.data.frame(matrix(ctd, ncol=2))
-            coordinates(ctd) <- c("V1", "V2")
-            crs(ctd) <- latlong
-            ctd <- spTransform(ctd, crs(x))
-            ctd <- coordinates(ctd)
-      }
 
       names(ctd) <- names(ws_iso) <- names(ws_brng) <- NULL
       c(centroid_x = ctd[1],
