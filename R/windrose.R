@@ -37,28 +37,10 @@ add_lat <- function(x){
 }
 
 
-neighbor_loadings <- function(b, # wind bearings
-                              nb # bearings to neighbors
-){
-      #if(any(is.na(c(b, nb)))) return(rep(NA, 8))
-      ni <- max(which(b > nb))
-      prop <- (b - nb[ni]) / (nb[ni+1] - nb[ni])
-      l <- rep(0, 9)
-      l[c(ni, ni+1)] <- c(1-prop, prop)
-      l <- c(l[1] + l[9], l[2:8])
-      as.vector(l)
-}
-
-
-
 # velocity-weighted frequency of wind in each quadrant
-# same as above, but accounting for non-square grid
-windrose_geo <- function(x,
-                         p=1, # 0=time, 1=velocity, 2=drag, 3=force
-                         summary_fun = sum # function to summarize across time steps
+windrose <- function(x,
+                          p=1 # 0=time, 1=velocity, 2=drag, 3=force
 ){
-      require(windscape)
-      require(geosphere)
 
       # unpack & restructure: row=timestep, col=u&v components
       lat <- x[1]
@@ -67,9 +49,8 @@ windrose_geo <- function(x,
       uv <- matrix(x, ncol=2, byrow=F)
 
       # wind strength and direction
-      strength <- function(uv) sqrt(sum(uv^2)) ^ p
-      weight <- apply(uv, 1, strength)
-      dir <- apply(uv, 1, function(x) spin90(windscape::direction(x[2], -1*x[1])))
+      weight <- sqrt(uv[,1]^2 + uv[,2]^2)^p
+      dir <- spin90(windscape::direction(uv[,2], -1*uv[,1]))
       dir[dir<0] <- dir[dir<0] + 360
       dir[dir==0] <- 360
 
@@ -78,16 +59,17 @@ windrose_geo <- function(x,
                   y = c(res, res, 0, -res, -res, -res, 0, res) + lat)
       nc[,2] <- pmin(nc[,2], 90)
       nc[,2] <- pmax(nc[,2], -90)
-      nb <- bearingRhumb(c(0, lat), nc)
+      nb <- geosphere::bearingRhumb(c(0, lat), nc)
       nb <- c(nb, 360)
 
       # allocate weights to neighbors, based on direction
-      l <- t(apply(matrix(dir, ncol=1), 1, neighbor_loadings, nb=nb))
-      l <- sweep(l, 1, weight, `*`)
-      l <- apply(l, 2, summary_fun)
+      # l <- t(sapply(dir, neighbor_loadings, nb = nb))
+      # l <- sweep(l, 1, weight, `*`)
+      # l <- apply(l, 2, summary_fun)
+      l <- windscapeRCPP::edge_loadings(dir, weight, nb)
 
       # adjust conductance weights to account for inter-cell distance
-      nd <- distGeo(c(0, lat), nc)
+      nd <- geosphere::distGeo(c(0, lat), nc)
       l <- l/nd
       # units are now in 1/seconds^p
 
@@ -115,7 +97,7 @@ windrose_rasters <- function(w, # raster stack of u and v wind components
       }
 
 
-      rosefun <- function(x) windrose_geo(x, ...)
+      rosefun <- function(x) windrose(x, ...)
 
       if(ncores == 1){
             wr <- add_res(w)

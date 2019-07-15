@@ -8,7 +8,14 @@ windflow <- function(x, direction="downwind"){
       g <- x[17:20]
 
       # edge wind loadings (clockwise from southwest)
-      p <- apply(matrix(x[1:16], ncol=2, byrow=T), 1, mean)
+      p <- c(x[1]+x[2],
+             x[3]+x[4],
+             x[5]+x[6],
+             x[7]+x[8],
+             x[9]+x[10],
+             x[11]+x[12],
+             x[13]+x[14],
+             x[15]+x[16]) / 2
 
       if(direction=="upwind") p <- p[c(5:8, 1:4)]
 
@@ -21,7 +28,6 @@ windflow <- function(x, direction="downwind"){
       if(g[1]<g[2] & g[3]<g[4]) return(p[7]) #SE
       if(g[3]==g[4] & g[1]<g[2]) return(p[8]) #S
 }
-
 
 
 transition_stack <- function(x, transitionFunction, directions, symm, ...){
@@ -61,7 +67,6 @@ transition_stack <- function(x, transitionFunction, directions, symm, ...){
 ws_summarize <- function(x, # raster layer of wind flow (where positive values are more accessible)
                          origin # coordinates of center point (2-column matrix)
 ){
-
       p <- cbind(coordinates(x), values(x))
 
       # cell weights based on latitude
