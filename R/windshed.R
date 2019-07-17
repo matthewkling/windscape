@@ -67,21 +67,23 @@ transition_stack <- function(x, transitionFunction, directions, symm, ...){
 ws_summarize <- function(x, # raster layer of wind flow (where positive values are more accessible)
                          origin # coordinates of center point (2-column matrix)
 ){
-      p <- cbind(coordinates(x), values(x))
+      p <- cbind(coordinates(x), z = values(x))
 
       # cell weights based on latitude
       y <- seq(p[1,2], p[nrow(p),2], length.out=nrow(x))
       inc <- res(x)[1] / 2
-      weight <- sapply(y, function(y) distGeo(c(0-inc, y), c(0+inc, y)))
+      weight <- sapply(y, function(y) distGeo(c(0-inc, y), c(0+inc, y)) / 1000)
       p <- cbind(p, weight = rep(weight, each=ncol(x)))
 
-      use <- is.finite(p[,3])
+      # remove NA values
+      use <- is.finite(p[,"z"])
       p <- p[use, ]
       xy <- p[,1:2]
-      weights <- p[,4]
-      w <- p[,3]
+      weights <- p[,"weight"]
+      w <- p[,"z"]
 
       # size of windshed
+      land_area <- sum(weights[w > 0])
       ws_size <- weighted.mean(w, weights)
 
       # distance and bearing to centroid of windshed
@@ -100,7 +102,7 @@ ws_summarize <- function(x, # raster layer of wind flow (where positive values a
       #ws_iso <- 1 - anisotropy(brng, w) # too slow
       ws_iso <- iso["iso"]
 
-
+      # package results
       names(ctd) <- names(ws_iso) <- names(ws_brng) <- NULL
       c(centroid_x = ctd[1],
         centroid_y = ctd[2],
@@ -109,8 +111,10 @@ ws_summarize <- function(x, # raster layer of wind flow (where positive values a
         windshed_distance = ws_dist,
         windshed_bearing = ws_brng,
         windshed_isotropy = ws_iso,
-        windshed_size=ws_size)
+        windshed_size=ws_size,
+        windshed_landarea=land_area)
 }
+
 
 
 # weighted circular standard deviation
