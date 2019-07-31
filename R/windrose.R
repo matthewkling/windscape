@@ -66,7 +66,7 @@ windrose <- function(x,
       # l <- t(sapply(dir, neighbor_loadings, nb = nb))
       # l <- sweep(l, 1, weight, `*`)
       # l <- apply(l, 2, summary_fun)
-      l <- windscapeRCPP::edge_loadings(dir, weight, nb)
+      l <- edge_loadings(dir, weight, nb)
 
       # adjust conductance weights to account for inter-cell distance
       nd <- geosphere::distGeo(c(0, lat), nc)

@@ -1,1 +1,3 @@
+useDynLib(windscapeRCPP, .registration=TRUE)
 exportPattern("^[[:alpha:]]+")
+importFrom(Rcpp, evalCpp)
