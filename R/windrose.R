@@ -4,8 +4,18 @@
 #   Test Package:              'Ctrl + Shift + T'
 
 
-# direction from u&v components -- in degrees, clockwise from north
+#' Calculate the direction of a vector based on its x and y components.
+#'
+#' @param x horizontal component (numeric vector)
+#' @param y vertical component (numeric vector)
+#' @return the angle of the vector, in degrees clockwise from 12 o'clock
 direction <- function(x, y) atan2(x, y) * 180 / pi
+
+
+#' Rotate a set of bearings counterclockwise by 90 degrees
+#'
+#' @param x vector of angles, in degrees
+#' @return rotated angles
 spin90 <- function(x){
       x <- x - 90
       x[x<(-180)] <- x[x<(-180)] + 360
@@ -14,15 +24,10 @@ spin90 <- function(x){
 
 
 
-add_coords <- function(windrose){
-      rows <- cols <- windrose[[1]]
-      rows[] <- rep(1:nrow(rows), each=ncol(rows))
-      cols[] <- rep(1:ncol(rows), nrow(rows))
-      windrose <- stack(windrose, rows, cols)
-      names(windrose) <- c("SW", "W", "NW", "N", "NE", "E", "SE", "S", "row", "col")
-      return(windrose)
-}
-
+#' Augment a raster object, adding a layer containing the cell resolution.
+#'
+#' @param x raster layer or stack
+#' @return the input layer, with an additional layer of resolution values
 add_res <- function(x){
       r <- x[[1]]
       r[] <- mean(res(r[[1]]))
@@ -30,6 +35,10 @@ add_res <- function(x){
 }
 
 
+#' Augment a raster object, adding a layer containing the latitude of each cell.
+#'
+#' @param x raster layer or stack
+#' @return the input layer, with an additional layer of latitude values
 add_lat <- function(x){
       lat <- x[[1]]
       lat[] <- coordinates(lat)[,2]
@@ -37,10 +46,20 @@ add_lat <- function(x){
 }
 
 
-# velocity-weighted frequency of wind in each quadrant
-windrose <- function(x,
-                          p=1 # 0=time, 1=velocity, 2=drag, 3=force
-){
+
+#' Calculate 8-neighbor edge loadings from a time series of u and v windspeeds
+#'
+#' @param x A vector of wind data containing: latitude, resolution, u
+#'   windspeeds, v windspeeds
+#' @param p A positive number indicating the power to raise windspeeds to (see details)
+#' @return A vector of 8 conductance values to neighboring cells, clockwise
+#'   starting with the southwest neighbor. If input windspeeds are in m/s,
+#'   values are in (1 / seconds ^ p)
+#' @details A value of p = 0 will ignore speed, assigning weights based on
+#'   direction only. P = 1 assumes conductance is proportional to windspeed, p =
+#'   2 assumes it's proportional to aerodynamic drag, and p = 3 assumes it's
+#'   proportional to force. Any intermediate value can also be used.
+windrose <- function(x, p=1){
 
       # unpack & restructure: row=timestep, col=u&v components
       lat <- x[1]
@@ -82,12 +101,23 @@ windrose <- function(x,
 
 # generate windoses for a raster dataset
 # must be in lat-long proection
-windrose_rasters <- function(w, # raster stack of u and v wind components
-                             outfile,
-                             order = "uvuv", # either "uvuv" or "uuvv", indicating whether u and v components are alternating
-                             ncores = 1,
-                             ... # see windrose function
-){
+
+#' Generate a
+#'
+#' @param w Raster stack of u and v wind components; note that these must be in
+#'   lat-long coordinates.
+#' @param outfile File path to save output raster to.
+#' @param order Either "uvuv" (the default) or "uuvv", indicating whether the u
+#'   and v components of the w object are alternating.
+#' @param ncores Integer indicating the number of computing cores to use for
+#'   parallel processing. If multiple cores are used, an output file will be
+#'   saved for each core, appending the core number to the user-supplied
+#'   filename.
+#' @param ... Additional arguments passed to `windrose`
+#'
+#' @return An 8-layer raster stack, where each layer is wind conductance from
+#'   the focal cell to one of its neighbors (clockwise starting in the SW).
+windrose_rasters <- function(w, outfile, order = "uvuv",  ncores = 1, ...){
 
       # collate data
       if(order == "uvuv"){
@@ -134,19 +164,17 @@ windrose_rasters <- function(w, # raster stack of u and v wind components
 }
 
 
+#' Get neighbor names for a windrose object
+#'
+#' @return Names of neighbors; note that actual directions vary by latitude
 windrose_names <- function() c("SW", "W", "NW", "N", "NE", "E", "SE", "S")
+
+#' Get neighbor directions for a windrose object
+#'
+#' @return Bearings to neighbors; note that actual directions vary by latitude
+#'   so these values are not accurate
 windrose_bearings <- function() c(225, 270, 315, 0, 45, 90, 135, 180)
 
 
 
 
-
-wind_stats <- function(wr){
-      require(ineq)
-      total <- sum(wr)
-      directionality <- calc(wr, Gini) # Gini: 1 = directionality, 0 = equality
-      mean_u
-      mean_v
-      mean_direction
-      mean_speed
-}

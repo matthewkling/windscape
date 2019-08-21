@@ -19,11 +19,8 @@ BEGIN_RCPP
 END_RCPP
 }
 
-RcppExport SEXP _windscapeRCPP_edge_loadings(SEXP, SEXP, SEXP);
-
 static const R_CallMethodDef CallEntries[] = {
     {"_windscape_edge_loadings", (DL_FUNC) &_windscape_edge_loadings, 3},
-    {"_windscapeRCPP_edge_loadings", (DL_FUNC) &_windscapeRCPP_edge_loadings, 3},
     {NULL, NULL, 0}
 };
 

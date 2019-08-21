@@ -1,9 +1,13 @@
 
 
-# function to supply to the transitionFunction arg of transition_stack
+#' A wind transition function to supply to `transition_stack`.
+#'
+#' @param x as used internally within `transition_stack`, this is a vector of
+#'   collated windrose values for FROM and TO cells
+#' @param direction either "downwind" (the default) or "upwind", indicating
+#'   whether outbound or inbound wind conductance should be computed.
 windflow <- function(x, direction="downwind"){
-      # x is vector of collated windrose values for FROM and TO cells
-      # direction is downwind or upwind
+
       # node row and column indices
       g <- x[17:20]
 
@@ -30,6 +34,11 @@ windflow <- function(x, direction="downwind"){
 }
 
 
+#' A modified version of `gdistance::transition`,
+#'
+#' This version accepts a raster stack and a custom transition function; the
+#' original does not support arbitrary transition functions for multi-layer
+#' transition data.
 transition_stack <- function(x, transitionFunction, directions, symm, ...){
 
       brk <- x
@@ -64,9 +73,13 @@ transition_stack <- function(x, transitionFunction, directions, symm, ...){
 
 
 
-ws_summarize <- function(x, # raster layer of wind flow (where positive values are more accessible)
-                         origin # coordinates of center point (2-column matrix)
-){
+#' Summarize a windshed raster
+#'
+#' @param x raster layer of wind flow (where positive values are more accessible)
+#' @param origin coordinates of center point (2-column matrix)
+#'
+#' @return A named vector of summary stats
+ws_summarize <- function(x, origin){
       p <- cbind(coordinates(x), z = values(x))
 
       # cell weights based on latitude
@@ -117,7 +130,14 @@ ws_summarize <- function(x, # raster layer of wind flow (where positive values a
 
 
 
-# weighted circular standard deviation
+#' Weighted circular standard deviation
+#'
+#' @param x Vector of bearings (in degrees)
+#' @param w Optional vector of weights
+#' @param ... Additional arguments to weighted.mean, e.g. `na.rm=TRUE`
+#'
+#' @return A named vector including the bearing of the mean resultant vector
+#'   ("bearing") and the circular standard deviation ("iso")
 circ_sd <- function(x, # bearings -- in degrees, not radians
                      w=NULL,
                      ...){
@@ -127,30 +147,9 @@ circ_sd <- function(x, # bearings -- in degrees, not radians
       if(is.null(w)) w <- rep(1, length(x))
       x <- x / 180 * pi
       xy <- cbind(x = sin(x), y = cos(x))
-      xy <- apply(xy, 2, weighted.mean, w=w, ...)
-      rbar <- sqrt(sum(xy^2)) # mean resultant vector
+      xy <- apply(xy, 2, weighted.mean, w=w, ...)  # mean resultant vector
+      rbar <- sqrt(sum(xy^2)) # mean resultant vector length
       iso <- sqrt(1-rbar) # circular standard deviation
       angle <- bearing(c(0,0), xy)
       return(c(bearing=angle, iso=iso))
 }
-
-
-# circular distance measure used internally within isotropy function below
-cdist <- function(x, y){
-      d <- abs(x - y)
-      d[d > 180] <- 360 - d[d > 180]
-      sum(d)
-}
-
-# circular "earth movers distance" between a set of bearings and a uniform distribution,
-# normalized such that 1 represents a single angle and 0 represents a uniform distirbution
-anisotropy <- function(x, w=NULL, ...){
-      if(is.null(w)) w <- rep(1, length(x))
-      if(!is.finite(x[1] + w[1])) return(NA)
-      e <- cbind(w/sum(w), x)
-      u <- cbind(1/360, 1:360) # uniform distribution
-      d <- emdist::emd(e, u, dist=cdist)
-      d / 90 # normalize by 90, the max possible value
-}
-
-
