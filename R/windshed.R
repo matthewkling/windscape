@@ -80,13 +80,33 @@ transition_stack <- function(x, transitionFunction, directions, symm, ...){
 #'
 #' @return A named vector of summary stats
 ws_summarize <- function(x, origin){
+
       p <- cbind(coordinates(x), z = values(x))
 
       # cell weights based on latitude
       y <- seq(p[1,2], p[nrow(p),2], length.out=nrow(x))
-      inc <- res(x)[1] / 2
-      weight <- sapply(y, function(y) distGeo(c(0-inc, y), c(0+inc, y)) / 1000)
+      xres2 <- res(x)[1] / 2
+      yres2 <- res(x)[2] / 2
+      weight <- sapply(y, function(y) distGeo(c(0-xres2, y), c(0+xres2, y)) / 1000)
       p <- cbind(p, weight = rep(weight, each=ncol(x)))
+
+      # cell weights based on longitude
+      # downweight nearby east-west neigbors of origin pixel at higher latitudes
+      # to correct bias from latitudinal cell size gradient
+      ox <- origin[1]
+      oy <- origin[2]
+      d0 <- distGeo(c(-xres2, 0), c(xres2, 0)) / 2 / 1000 # halfwidth of cell at equator
+      dy <- distGeo(c(-xres2, oy), c(xres2, oy)) / 2 / 1000 # halfwidth of cell at focal latitude
+      ri <- abs(p[,"y"] - oy) < yres2 # cell indices in the center row
+      ph <- p[ri, ]
+      dp <- abs(ph[,"x"] - ox) * dy / yres2 # km to origin
+      bi <- d0 - dy # distance range of cells overlapping hole
+      bo <- d0 + dy
+      w <- (dp - bi) / (bo - bi)
+      w[w > 1] <- 1
+      w[w < 0] <- 0
+      p[ri,"weight"] <- p[ri,"weight"] * w
+
 
       # remove NA values
       use <- is.finite(p[,"z"])
