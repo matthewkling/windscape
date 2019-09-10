@@ -2,6 +2,6 @@
 # Generator token: 10BE3573-1514-4C36-9D1C-5A225CD40393
 
 edge_loadings <- function(b, w, nb) {
-    .Call('_windscape_edge_loadings', PACKAGE = 'windscape', b, w, nb)
+    .Call(`_windscape_edge_loadings`, b, w, nb)
 }
 

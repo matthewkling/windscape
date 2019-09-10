@@ -9,6 +9,7 @@ Description: This package implements a set of functions to convert wind data
 Encoding: UTF-8
 LazyData: true
 License: GPL (>= 2)
-Imports: Rcpp (>= 1.0.0)
 LinkingTo: Rcpp
+Imports: Rcpp, raster
 RoxygenNote: 6.1.1
+

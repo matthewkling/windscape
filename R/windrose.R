@@ -1,7 +1,3 @@
-#' @useDynLib windscape
-#' @importFrom Rcpp sourceCpp
-NULL
-
 #' Calculate 8-neighbor edge loadings from a time series of u and v windspeeds
 #'
 #' @param x A vector of wind data containing: latitude, resolution, u
@@ -47,3 +43,8 @@ windrose <- function(x, p=1){
       # reorder, clockwise from SW
       l[c(6:8, 1:5)]
 }
+
+
+#' @useDynLib windscape
+#' @importFrom Rcpp sourceCpp
+NULL
