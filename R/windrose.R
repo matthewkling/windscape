@@ -1,3 +1,7 @@
+#' @useDynLib windscape
+#' @importFrom Rcpp sourceCpp
+NULL
+
 #' Calculate 8-neighbor edge loadings from a time series of u and v windspeeds
 #'
 #' @param x A vector of wind data containing: latitude, resolution, u
