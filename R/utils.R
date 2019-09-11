@@ -38,6 +38,18 @@ add_lat <- function(x){
       stack(lat, x)
 }
 
+#' Augment a raster object, adding layers containing cell row-column indices.
+#'
+#' @param x raster layer or stack
+#' @return the input layer, with an additional layer of latitude values
+add_coords <- function(windrose){
+   rows <- cols <- windrose[[1]]
+   rows[] <- rep(1:nrow(rows), each=ncol(rows))
+   cols[] <- rep(1:ncol(rows), nrow(rows))
+   windrose <- stack(windrose, rows, cols)
+   names(windrose) <- c("SW", "W", "NW", "N", "NE", "E", "SE", "S", "row", "col")
+   return(windrose)
+}
 
 #' Get neighbor names for a windrose object
 #'
