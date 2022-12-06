@@ -64,3 +64,15 @@ ggplot() +
    theme(legend.position="top",
          strip.text=element_text(size=15))
 ```
+
+### Web tool
+
+This R package powers the [WINDSCAPE WEB APP](http://matthewkling.net/shiny/windscape/) (still very much under development and in beta) that models and visualizes the wind dispersal landscape for any location on earth. You just click the map to select a site, choose between "inbound" (upwind) or "outbound" (downwind) dispersal, and the app generates a global map of relative accessibility by wind. The app utilizes decades of hourly wind data from the [Climate Forecast System Renanalysis](https://cfs.ncep.noaa.gov/cfsr/) to estimate long-term average wind travel times between locations. The screenshot below for example shows Hawaii's inbound windscape, i.e. how easy it is to get *to* Hawaii from various locations across the region traveling by near-surface winds.
+
+
+### Publications
+
+Publications that have used `windscape` include:
+
+* **Kling, M.**, and D. Ackerly. (2021) Global wind patterns shape genetic differentiation, asymmetric gene flow, and genetic diversity in trees. Proceedings of the National Academy of Sciences, 118(17) [[https://doi.org/10.1073/pnas.2017317118](https://doi.org/10.1073/pnas.2017317118)]
+* **Kling, M.**, and D. Ackerly. (2020) Global wind patterns and the vulnerability of wind-dispersed species to climate change. Nature Climate Change, 10: 868-875 [[https://doi.org/10.1038/s41558-020-0848-3](https://doi.org/10.1038/s41558-020-0848-3)]
