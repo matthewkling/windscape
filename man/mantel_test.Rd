@@ -4,22 +4,33 @@
 \alias{mantel_test}
 \title{Mantel test}
 \usage{
-mantel_test(x, y, z = NULL, nperm = 999, method = "pearson")
+mantel_test(
+  x,
+  y,
+  z = NULL,
+  nperm = 999,
+  method = "pearson",
+  alternative = c("two.sided", "less", "greater")
+)
 }
 \arguments{
 \item{x, y}{Square matrices (can be asymmetric).}
 
 \item{z}{Optional list of one or more square control matrices if partial Mantel is desired.}
 
-\item{nperm}{Number of random permutations to perform (positive integer)}
+\item{nperm}{Number of random permutations to perform (positive integer).}
 
-\item{method}{Correlation method (see \link[stats]{cor} for details)}
+\item{method}{Correlation method (see \link[stats]{cor} for details).}
+
+\item{alternative}{A character string specifying the alternative hypothesis, must be one of "two.sided" (default), "greater" or "less".}
 }
 \value{
 A list with the following components:
 \itemize{
  \item{`stat`: }{The correlation coefficient between \code{x} and \code{y}, measured on the data provided. This will be a partial correlation if \code{z} is specified.}
  \item{`quantile`: }{The quantile of the observed stat in the null distribution.}
+ \item{`p.value`: }{Significance, derived from the combination of \code{quantile} and \code{alternative}.}
+ \item{`perm`: }{A vector of null correlations based on permuted data.}
 }
 }
 \description{

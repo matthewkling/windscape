@@ -6,12 +6,15 @@
 #'
 #' @param x,y Square matrices (can be asymmetric).
 #' @param z Optional list of one or more square control matrices if partial Mantel is desired.
-#' @param nperm Number of random permutations to perform (positive integer)
-#' @param method Correlation method (see \link[stats]{cor} for details)
+#' @param nperm Number of random permutations to perform (positive integer).
+#' @param method Correlation method (see \link[stats]{cor} for details).
+#' @param alternative A character string specifying the alternative hypothesis, must be one of "two.sided" (default), "greater" or "less".
 #' @return A list with the following components:
 #' \itemize{
 #'  \item{`stat`: }{The correlation coefficient between \code{x} and \code{y}, measured on the data provided. This will be a partial correlation if \code{z} is specified.}
 #'  \item{`quantile`: }{The quantile of the observed stat in the null distribution.}
+#'  \item{`p.value`: }{Significance, derived from the combination of \code{quantile} and \code{alternative}.}
+#'  \item{`perm`: }{A vector of null correlations based on permuted data.}
 #' }
 #' @examples
 #' # A convenience function to generate symmetric matrices:
@@ -46,10 +49,11 @@
 #' c(a$stat, b$statistic)
 #' c(1 - a$quantile, b$signif) # will differ slightly due to randomization
 #' @export
-mantel_test <- function(x, y, # square matrices (can be asymmetric)
-                        z = NULL, # optional: list of square control matrices if partial Mantel is desired
+mantel_test <- function(x, y,
+                        z = NULL,
                         nperm = 999,
-                        method = "pearson"){
+                        method = "pearson",
+                        alternative = c("two.sided", "less", "greater")){
       diag(x) <- NA
       diag(y) <- NA
 
@@ -71,6 +75,14 @@ mantel_test <- function(x, y, # square matrices (can be asymmetric)
             perm[i] <- cor(R1[p, p][tri], R2[tri], method = method)
       }
 
+      q <- mean(stat > perm)
+      p <- switch(match.arg(alternative),
+             two.sided = (.5 - abs(q - .5)) * 2,
+             less = q,
+             greater = 1 - q)
+
       list(stat = stat,
-           quantile = mean(stat > perm))
+           quantile = q,
+           p.value = p,
+           perm = perm)
 }
