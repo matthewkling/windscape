@@ -75,7 +75,7 @@ mantel_test <- function(x, y,
             perm[i] <- cor(R1[p, p][tri], R2[tri], method = method)
       }
 
-      q <- mean(stat > perm)
+      q <- mean(perm < stat - sqrt(.Machine$double.eps))
       p <- switch(match.arg(alternative),
              two.sided = (.5 - abs(q - .5)) * 2,
              less = q,
