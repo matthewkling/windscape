@@ -4,13 +4,11 @@
 \alias{windrose_rasters}
 \title{Generate a windrose raster stack from a stack of windfield rasters}
 \usage{
-windrose_rasters(w, outfile, order = "uvuv", ncores = 1, ...)
+windrose_rasters(w, order = "uvuv", ncores = 1, p, ...)
 }
 \arguments{
 \item{w}{Raster stack of u and v wind components; note that these must be in
 lat-long coordinates.}
-
-\item{outfile}{File path to save output raster to.}
 
 \item{order}{Either "uvuv" (the default) or "uuvv", indicating whether the u
 and v components of the w object are alternating.}
@@ -20,7 +18,9 @@ parallel processing. If multiple cores are used, an output file will be
 saved for each core, appending the core number to the user-supplied
 filename.}
 
-\item{...}{Additional arguments passed to `windrose`}
+\item{p}{A positive number indicating the power to raise windspeeds to (see \code{\link{windrose} for details}).}
+
+\item{...}{Additional arguments passed to `raster::calc`, e.g. 'filename'.}
 }
 \value{
 An 8-layer raster stack, where each layer is wind conductance from

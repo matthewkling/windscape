@@ -2,7 +2,7 @@
 
 The `windscape` R package contains functions to model landscape connectivity by wind dispersal. While prior implementations like the `rWind` package support connectivity modeling based on a snapshot of wind conditions, the functions implemented here are designed to integrate over short-term or long-term time series of wind conditions across a landscape, which can be used to predict wind connectivity across scales ranging from days to millennia. These models estimate directional wind travel times between any pair of sites, and can therefore be used to generate upwind immigration and downwind emigration accessibility surfaces for a focal site such as in the example below.
 
-![windsheds](https://github.com/matthewkling/matthewkling.github.io/blob/608ef040272ef1f44efc3a8519cbf8e99e39c9ef/images/windscape_demo.png)
+![](https://matthewkling.github.io/img/images/windscape_hawaii.png)
 
 ### Installation
 
@@ -10,9 +10,11 @@ The `windscape` R package contains functions to model landscape connectivity by 
 
 ### Use
 
-The core workflow currently supported by the package begins with a raster stack representing a time series of windfields, summarizes this into a set of time-integrated wind conductance values between every grid cell and its eight neighbors, and then converts this into an asymmetric transition object (defined in the `gdistance` package) representing either upwind or downwind connectivity. The example code below demonstrates a workflow that reproduces the figure above.
+The core workflow currently supported by the package begins with a raster stack representing a time series of windfields, summarizes this into a set of time-integrated wind conductance values between every grid cell and its eight neighbors, and then converts this into an asymmetric transition object (defined in the `gdistance` package) representing either upwind or downwind connectivity. 
 
-``` r
+The example code below shows a workflow that models and visualizes upwind and downwind accessibility site in North America, based on wind data for a few days in the year 2000. A more detailed set of vignettes is in development.
+
+```{r, echo = T, message = F, warning = F}
 library(windscape)
 library(raster)
 library(tidyverse)
@@ -29,30 +31,30 @@ wind <- cfsr_dl(years = 2000, months = 1:12, days = c(1, 15),
 wind <- shift(stack(wind), dx = -360)
 
 # summarize wind time series (n = 1152 hourly layers) into 
-# a wind conductance raster (n = 8 directional layers)
-conductance <- windrose_rasters(wind, outfile = "windrose.tif", order = "uuvv", p = 1)
+# a wind conductance or "windrose" raster (n = 8 directional layers)
+conductance <- windrose_rasters(wind, order = "uuvv", p = 1)
 
 # generate downwind and upwind dispersal surfaces for one focal site 
-origin <- matrix(c(-105, 40), ncol = 2)
-downwind <- conductance %>% 
-      add_coords() %>% 
-      transition_stack(windflow, directions = 8, symm = F, direction = "downwind") %>%
-      accCost(origin)
-upwind <- conductance %>% 
-      add_coords() %>% 
-      transition_stack(windflow, directions=8, symm=F, direction="upwind") %>%
-      accCost(origin)
+site <- matrix(c(-105, 40), ncol = 2)
+downwind <- build_wind_graph(conductance, "downwind") %>%
+      accCost(site)
+upwind <- build_wind_graph(conductance, "upwind") %>%
+      accCost(site)
 
-# convert seconds to hours, resturcture data, and plot
+# convert seconds to hours, restructure data, and plot
 d <- stack(downwind / 3600, upwind / 3600) %>%
       rasterToPoints() %>%
       as.data.frame() %>%
-      rename(downwind=layer.1, upwind=layer.2) %>%
-      gather(direction, wind_hours, downwind, upwind)
-ggplot() +
+      gather(direction, wind_hours, layer.1, layer.2) %>%
+      mutate(direction = recode(direction, 
+                                layer.1 = "downwind (outbound)", 
+                                layer.2 = "upwind (inbound)"))
+ggplot(d) +
       facet_wrap(~direction) +
-      geom_raster(data=d, aes(x, y, fill=wind_hours)) +
-      geom_point(data=as.data.frame(origin), aes(V1, V2)) +
+      geom_raster(aes(x, y, fill = wind_hours)) +
+      geom_contour(aes(x, y, z = wind_hours), binwidth = .1, color = "white", linewidth = .25) +
+      geom_point(data = as.data.frame(site), aes(V1, V2)) +
+      coord_fixed(ratio = 1.2) +
       scale_fill_gradientn(colors=c("yellow", "red", "blue", "black")) +
       theme_void() +
       theme(legend.position="top",

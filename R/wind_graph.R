@@ -34,3 +34,16 @@ transition_stack <- function(x, transitionFunction, directions, symm, ...){
       matrixValues(tr) <- "resistance"
       return(tr)
 }
+
+
+#' Build a wind connectivity graph
+#'
+#' This function constructs a landscape connectivity graph from a windrose raster stack.
+#'
+#' @param rose A raster stack of created using \code{windrose_rasters()}.
+#' @param direction Either "downwind" (the default) or "upwind", indicating whether outbound or inbound wind conductance should be computed, respectively.
+#' @return a gdistance \link[gdistance]{Transition-class} object
+#' @export
+build_wind_graph <- function(rose, direction = "downwind"){
+      transition_stack(add_coords(rose), windflow, directions = 8, symm = F, direction = direction)
+}

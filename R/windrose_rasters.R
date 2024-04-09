@@ -2,18 +2,18 @@
 #'
 #' @param w Raster stack of u and v wind components; note that these must be in
 #'   lat-long coordinates.
-#' @param outfile File path to save output raster to.
 #' @param order Either "uvuv" (the default) or "uuvv", indicating whether the u
 #'   and v components of the w object are alternating.
 #' @param ncores Integer indicating the number of computing cores to use for
 #'   parallel processing. If multiple cores are used, an output file will be
 #'   saved for each core, appending the core number to the user-supplied
 #'   filename.
-#' @param ... Additional arguments passed to `windrose`
+#' @param p A positive number indicating the power to raise windspeeds to (see \code{\link{windrose} for details}).
+#' @param ... Additional arguments passed to `raster::calc`, e.g. 'filename'.
 #'
 #' @return An 8-layer raster stack, where each layer is wind conductance from
 #'   the focal cell to one of its neighbors (clockwise starting in the SW).
-windrose_rasters <- function(w, outfile, order = "uvuv",  ncores = 1, ...){
+windrose_rasters <- function(w, order = "uvuv",  ncores = 1, p, ...){
 
       # collate data
       if(order == "uvuv"){
@@ -23,12 +23,12 @@ windrose_rasters <- function(w, outfile, order = "uvuv",  ncores = 1, ...){
       }
 
 
-      rosefun <- function(x) windrose(x, ...)
+      rosefun <- function(x) windrose(x, p)
 
       if(ncores == 1){
             wr <- add_res(w)
             wr <- add_lat(wr)
-            wr <- raster::calc(wr, fun=rosefun, forceapply=TRUE, filename=outfile)
+            wr <- raster::calc(wr, fun=rosefun, forceapply=TRUE, ...)
             names(wr) <- c("SW", "W", "NW", "N", "NE", "E", "SE", "S")
             return(wr)
       } else {
