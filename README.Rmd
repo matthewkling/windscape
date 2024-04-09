@@ -1,4 +1,11 @@
-# windscape: time-integrated wind dispersal modeling in R
+---
+title: "windscape: time-integrated wind dispersal modeling in R"
+output: github_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
 
 The `windscape` R package contains functions to model landscape connectivity by wind dispersal. While prior implementations like the `rWind` package support connectivity modeling based on a snapshot of wind conditions, the functions implemented here are designed to integrate over short-term or long-term time series of wind conditions across a landscape, which can be used to predict wind connectivity across scales ranging from days to millennia. These models estimate directional wind travel times between any pair of sites, and can therefore be used to generate upwind immigration and downwind emigration accessibility surfaces for a focal site such as in the example below.
 
@@ -12,7 +19,7 @@ The `windscape` R package contains functions to model landscape connectivity by 
 
 The core workflow currently supported by the package begins with a raster stack representing a time series of windfields, summarizes this into a set of time-integrated wind conductance values between every grid cell and its eight neighbors, and then converts this into an asymmetric transition object (defined in the `gdistance` package) representing either upwind or downwind connectivity. 
 
-The example code below shows a workflow that models and visualizes upwind and downwind accessibility site in North America, based on wind data for a few days in the year 2000. A more detailed set of vignettes is in development.
+The example code below shows a workflow that models and visualizes upwind and downwind accessibility for a focal site in North America, based on wind data for a few days in the year 2000. A more detailed set of vignettes is in development.
 
 ```{r, echo = T, message = F, warning = F}
 library(windscape)
