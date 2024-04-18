@@ -12,3 +12,4 @@ License: GPL (>= 2)
 LinkingTo: Rcpp
 Imports: Rcpp, raster
 RoxygenNote: 7.2.3
+URL: https://matthewkling.github.io/windscape/
