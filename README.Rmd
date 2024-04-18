@@ -9,6 +9,9 @@ knitr::opts_chunk$set(echo = TRUE)
 
 The `windscape` R package contains functions to model landscape connectivity by wind dispersal. While prior implementations like the `rWind` package support connectivity modeling based on a snapshot of wind conditions, the functions implemented here are designed to integrate over short-term or long-term time series of wind conditions across a landscape, which can be used to predict wind connectivity across scales ranging from days to millennia. These models estimate directional wind travel times between any pair of sites, and can therefore be used to generate upwind immigration and downwind emigration accessibility surfaces for a focal site such as in the example below.
 
+This is an early version of the package, and is under ongoing development. The core functionality is stable, but documentation and testing is incomplete, additional features are planned, and future API changes are possible.
+
+
 ![](https://matthewkling.github.io/img/images/windscape_hawaii.png)
 
 ### Installation
@@ -74,7 +77,7 @@ This R package powers the [WINDSCAPE WEB APP](http://matthewkling.net/shiny/wind
 
 ### Publications
 
-Publications that have used `windscape` include:
+Publications that have used the `windscape` framework include:
 
 -   **Kling, M.**, and D. Ackerly. (2021) Global wind patterns shape genetic differentiation, asymmetric gene flow, and genetic diversity in trees. Proceedings of the National Academy of Sciences, 118(17) [<https://doi.org/10.1073/pnas.2017317118>]
 -   **Kling, M.**, and D. Ackerly. (2020) Global wind patterns and the vulnerability of wind-dispersed species to climate change. Nature Climate Change, 10: 868-875 [<https://doi.org/10.1038/s41558-020-0848-3>]

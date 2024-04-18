@@ -85,3 +85,59 @@ cfsr_dl <- function(years = 1979, months = 1, days = 1,
       w <- pmap(q, cfsr_dl_day)
       c(rast(map(w, "u")), rast(map(w, "v")))
 }
+
+
+
+#' Download land-water raster from the Climate Forecast System Reanalysis (CFSR)
+#'
+#' This function downloads a CFSR land-water raster layer from the NCAR THREDDS server, for an area specified by a spatial bounding box.
+#'
+#' (Actually, since CFSR does not publish a land layer per se, this function downloads a soil temperature layer for an arbitrary date and classifies areas with data as land and no data as water.)
+#'
+#' @param xlim Vector of length 2, giving longitudinal limits of the data to download, in the range 0 to 360.
+#' @param ylim Vector of length 2, giving latitudinal limits of the data to download, in the range -90 to 90.
+#' @return A SpatRaster layer with 1 indicating land and 0 indicating water.
+#' @export
+cfsr_dl_land <- function(xlim = c(260, 270), ylim = c(40, 50)){
+
+      require(ncdf4)
+      require(terra)
+
+      # open connection
+      url <- paste0("https://thredds.rda.ucar.edu/thredds/dodsC/files/g/ds093.1/1980/soilt1.gdas.198001.grb2")
+      ds <- nc_open(url)
+
+      # dimensions
+      lon <- ncvar_get(ds, "lon")
+      lat <- ncvar_get(ds, "lat")
+
+      # bounds
+      x <- sort(xlim)
+      y <- sort(ylim)
+
+      # indices
+      btw <- function(data, z) range(which(data <= max(z) & data >= min(z)))
+      lon_i <- btw(lon, x)
+      lat_i <- btw(lat, y)
+      lon_count <- lon_i[-1] - lon_i[1] + 1
+      lat_count <- lat_i[-1] - lat_i[1] + 1
+      start <- c(lon_i[1], lat_i[1], 1, 1) # x,y,z,t
+      count <- c(lon_count, lat_count, 1, 1)
+
+      # get data (land temperature data used as land indicator)
+      message("... retrieving CFSR land layer ...")
+      v <- ncvar_get(ds, "Temperature_depth_below_surface_layer", start = start, count = count)
+
+      # convert to raster object
+      xres <- base::diff(sort(x)) / (lon_count - 1)
+      yres <- base::diff(sort(y)) / (lat_count - 1)
+      extent <- c(x[1] - 0.5 * xres, x[2] + 0.5 * xres,
+                  y[1] - 0.5 * yres, y[2] + 0.5 * yres)
+      vr <- rast(aperm(v, c(2, 1, 3)[1:2]), extent = extent)
+
+      # classify
+      vr[is.finite(vr)] <- 1
+      vr[is.na(vr)] <- 0
+      names(vr) <- "land"
+      return(vr)
+}
