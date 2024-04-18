@@ -59,8 +59,8 @@ downwind <- build_wind_graph(conductance, "downwind") %>%
 upwind <- build_wind_graph(conductance, "upwind") %>%
       accCost(site)
 
-# convert seconds to hours, restructure data, and plot
-d <- stack(downwind / 3600, upwind / 3600) %>%
+# restructure data and plot
+d <- stack(downwind, upwind) %>%
       rasterToPoints() %>%
       as.data.frame() %>%
       gather(direction, wind_hours, layer.1, layer.2) %>%
@@ -70,7 +70,7 @@ d <- stack(downwind / 3600, upwind / 3600) %>%
 ggplot(d) +
       facet_wrap(~direction) +
       geom_raster(aes(x, y, fill = wind_hours)) +
-      geom_contour(aes(x, y, z = wind_hours), binwidth = .1, color = "white", linewidth = .25) +
+      geom_contour(aes(x, y, z = wind_hours), bins = 20, color = "white", linewidth = .25) +
       geom_point(data = as.data.frame(site), aes(V1, V2)) +
       coord_fixed(ratio = 1.2) +
       scale_fill_gradientn(colors=c("yellow", "red", "blue", "black")) +

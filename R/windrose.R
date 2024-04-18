@@ -35,10 +35,10 @@ windrose <- function(x, p=1){
       # allocate weights to neighbors, based on direction
       l <- edge_loadings(dir, weight, nb)
 
-      # adjust conductance weights to account for inter-cell distance
+      # adjust conductance weights to account for inter-cell distance and n observations
       nd <- geosphere::distGeo(c(0, lat), nc)
-      l <- l/nd
-      # units are now in 1/seconds^p
+      l <- l * 3600 / nd / nrow(uv)
+      # units are now in 3600 / seconds^p, which is 1 / hours if p = 1
 
       # reorder, clockwise from SW
       l[c(6:8, 1:5)]
