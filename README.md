@@ -12,6 +12,11 @@ directional wind travel times between any pair of sites, and can
 therefore be used to generate upwind immigration and downwind emigration
 accessibility surfaces for a focal site such as in the example below.
 
+This is an early version of the package, and is under ongoing
+development. The core functionality is stable, but documentation is
+incomplete, additional features are planned, and future API changes are
+possible.
+
 ![](https://matthewkling.github.io/img/images/windscape_hawaii.png)
 
 ### Installation
@@ -95,7 +100,7 @@ average wind travel times between locations.
 
 ### Publications
 
-Publications that have used `windscape` include:
+Publications that have used the `windscape` framework include:
 
 - **Kling, M.**, and D. Ackerly. (2021) Global wind patterns shape
   genetic differentiation, asymmetric gene flow, and genetic diversity

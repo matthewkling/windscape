@@ -9,7 +9,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 The `windscape` R package contains functions to model landscape connectivity by wind dispersal. While prior implementations like the `rWind` package support connectivity modeling based on a snapshot of wind conditions, the functions implemented here are designed to integrate over short-term or long-term time series of wind conditions across a landscape, which can be used to predict wind connectivity across scales ranging from days to millennia. These models estimate directional wind travel times between any pair of sites, and can therefore be used to generate upwind immigration and downwind emigration accessibility surfaces for a focal site such as in the example below.
 
-This is an early version of the package, and is under ongoing development. The core functionality is stable, but documentation and testing is incomplete, additional features are planned, and future API changes are possible.
+This is an early version of the package, and is under ongoing development. The core functionality is stable, but documentation is incomplete, additional features are planned, and future API changes are possible.
 
 
 ![](https://matthewkling.github.io/img/images/windscape_hawaii.png)

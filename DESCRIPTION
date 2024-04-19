@@ -1,7 +1,7 @@
 Package: windscape
 Type: Package
 Title: Landscape connectivity by wind
-Version: 0.1.0
+Version: 1.0.0
 Author: Matthew Kling
 Maintainer: Matthew Kling <mattkling@gmail.com>
 Description: This package implements a set of functions to convert wind data
@@ -10,6 +10,17 @@ Encoding: UTF-8
 LazyData: true
 License: GPL (>= 2)
 LinkingTo: Rcpp
-Imports: Rcpp, raster
+Imports: 
+    Rcpp,
+    raster,
+    gdistance,
+    geosphere
 RoxygenNote: 7.2.3
 URL: https://matthewkling.github.io/windscape/
+Suggests: 
+    knitr,
+    lubridate,
+    ncdf4,
+    rmarkdown,
+    terra
+VignetteBuilder: knitr
