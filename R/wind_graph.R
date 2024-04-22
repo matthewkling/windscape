@@ -1,3 +1,26 @@
+setClass("wind_graph",
+        contains = "TransitionLayer",
+        slots = c(p = "numeric",
+                  direction = "character"))
+
+#' Build a wind connectivity graph
+#'
+#' This function constructs a landscape connectivity graph from a windrose raster stack.
+#'
+#' @param x An object of class `wind_rose`.
+#' @param direction Either "downwind" (the default) or "upwind", indicating whether outbound or inbound wind conductance should be computed, respectively.
+#' @return a `wind_graph` object consisting of a gdistance \link[gdistance]{Transition-class} object and additional metadata
+#' @export
+#' @aliases build_wind_graph
+wind_graph <- function(x, direction = "downwind"){
+      g <- transition_stack(add_coords(x), windflow, directions = 8, symm = F, direction = direction)
+      g <- as(g, "wind_graph")
+      g@p <- g@p
+      g@direction <- direction
+      g
+}
+
+
 #' A modified version of `gdistance::transition`,
 #'
 #' This version accepts a raster stack and a custom transition function; the
@@ -5,7 +28,8 @@
 #' transition data.
 transition_stack <- function(x, transitionFunction, directions, symm, ...){
 
-      brk <- x
+      # require(raster)
+      brk <- raster::stack(x)
       x <- brk[[1]]
 
       tr <- new("TransitionLayer",
@@ -19,7 +43,7 @@ transition_stack <- function(x, transitionFunction, directions, symm, ...){
       Cells <- which(!is.na(getValues(x)))
       adj <- adjacent(x, cells=Cells, pairs=TRUE, target=Cells, directions=directions)
 
-      ##### start modificiations #####
+      ##### start modifications #####
       # format raster data layers to feed to transitionFunction
       # col order is x[[1]][from, to] ... x[[n]][from,to]
       dataVals <- lapply(1:nlayers(brk),
@@ -35,15 +59,3 @@ transition_stack <- function(x, transitionFunction, directions, symm, ...){
       return(tr)
 }
 
-
-#' Build a wind connectivity graph
-#'
-#' This function constructs a landscape connectivity graph from a windrose raster stack.
-#'
-#' @param rose A raster stack of created using \code{windrose_rasters()}.
-#' @param direction Either "downwind" (the default) or "upwind", indicating whether outbound or inbound wind conductance should be computed, respectively.
-#' @return a gdistance \link[gdistance]{Transition-class} object
-#' @export
-build_wind_graph <- function(rose, direction = "downwind"){
-      transition_stack(add_coords(rose), windflow, directions = 8, symm = F, direction = direction)
-}

@@ -5,25 +5,21 @@ cfsr_dl_day <- function(year = 1979, month = 1, day = 1,
       if(! month %in% 1:12) stop("'month' must be between 1 and 12")
       if(min(xmin, xmax) < 0 | max(xmin, xmax) > 360) stop("longitude and latitude must be between 0 and 360")
 
-      require(ncdf4)
-      require(lubridate)
-      require(terra)
-
       # open connection
       # example url: "https://thredds.rda.ucar.edu/thredds/dodsC/files/g/ds093.1/1990/wnd10m.gdas.199001.grb2"
       url <- paste0("https://thredds.rda.ucar.edu/thredds/dodsC/files/g/ds093.1/", year, "/wnd10m.gdas.",
                     year, stringr::str_pad(month, 2, "left", 0), ".grb2")
-      ds <- nc_open(url)
+      ds <- ncdf4::nc_open(url)
 
       # dimensions
-      lon <- ncvar_get(ds, "lon")
-      lat <- ncvar_get(ds, "lat")
-      time <- ncvar_get(ds, "time")
+      lon <- ncdf4::ncvar_get(ds, "lon")
+      lat <- ncdf4::ncvar_get(ds, "lat")
+      time <- ncdf4::ncvar_get(ds, "time")
 
       # convert time
-      t_units <- ncatt_get(ds, "time", "units")
+      t_units <- ncdf4::ncatt_get(ds, "time", "units")
       startdate <- gsub("T00:00:00Z", "", unlist(strsplit(t_units$value, " "))[3])
-      timestamp <- ymd(startdate) + dhours(time-1)
+      timestamp <- lubridate::ymd(startdate) + lubridate::dhours(time-1)
 
       # bounds
       x <- c(xmin, xmax)
@@ -47,16 +43,18 @@ cfsr_dl_day <- function(year = 1979, month = 1, day = 1,
 
       # get data
       message(paste0("... retrieving CFSR data for ", date, " ..."))
-      v <- ncvar_get(ds, "v-component_of_wind_height_above_ground", start = start, count = count)
-      u <- ncvar_get(ds, "u-component_of_wind_height_above_ground", start = start, count = count)
+      v <- ncdf4::ncvar_get(ds, "v-component_of_wind_height_above_ground",
+                            start = start, count = count)
+      u <- ncdf4::ncvar_get(ds, "u-component_of_wind_height_above_ground",
+                            start = start, count = count)
 
       # convert to raster object
       xres <- base::diff(sort(x)) / (lon_count - 1)
       yres <- base::diff(sort(y)) / (lat_count - 1)
       extent <- c(x[1] - 0.5 * xres, x[2] + 0.5 * xres,
                   y[1] - 0.5 * yres, y[2] + 0.5 * yres)
-      vr <- rast(aperm(v, c(2, 1, 3)), extent = extent)
-      ur <- rast(aperm(u, c(2, 1, 3)), extent = extent)
+      vr <- terra::rast(aperm(v, c(2, 1, 3)), extent = extent)
+      ur <- terra::rast(aperm(u, c(2, 1, 3)), extent = extent)
       names(vr) <- paste("v", timestamp[time_i[1]:time_i[2]])
       names(ur) <- paste("u", timestamp[time_i[1]:time_i[2]])
       return(list(u = ur, v = vr))
@@ -78,12 +76,11 @@ cfsr_dl_day <- function(year = 1979, month = 1, day = 1,
 #' @export
 cfsr_dl <- function(years = 1979, months = 1, days = 1,
                     xlim = c(260, 270), ylim = c(40, 50)){
-      require(terra)
-      require(purrr)
       q <- expand.grid(day = days, month = months, year = years,
                        xmin = min(xlim), xmax = max(xlim), ymin = min(ylim), ymax = max(ylim))
-      w <- pmap(q, cfsr_dl_day)
-      c(rast(map(w, "u")), rast(map(w, "v")))
+      w <- purrr::pmap(q, cfsr_dl_day)
+      c(terra::rast(purrr::map(w, "u")),
+        terra::rast(purrr::map(w, "v")))
 }
 
 
@@ -100,16 +97,13 @@ cfsr_dl <- function(years = 1979, months = 1, days = 1,
 #' @export
 cfsr_dl_land <- function(xlim = c(260, 270), ylim = c(40, 50)){
 
-      require(ncdf4)
-      require(terra)
-
       # open connection
       url <- paste0("https://thredds.rda.ucar.edu/thredds/dodsC/files/g/ds093.1/1980/soilt1.gdas.198001.grb2")
       ds <- nc_open(url)
 
       # dimensions
-      lon <- ncvar_get(ds, "lon")
-      lat <- ncvar_get(ds, "lat")
+      lon <- ncdf4::ncvar_get(ds, "lon")
+      lat <- ncdf4::ncvar_get(ds, "lat")
 
       # bounds
       x <- sort(xlim)
@@ -126,14 +120,15 @@ cfsr_dl_land <- function(xlim = c(260, 270), ylim = c(40, 50)){
 
       # get data (land temperature data used as land indicator)
       message("... retrieving CFSR land layer ...")
-      v <- ncvar_get(ds, "Temperature_depth_below_surface_layer", start = start, count = count)
+      v <- ncdf4::ncvar_get(ds, "Temperature_depth_below_surface_layer",
+                            start = start, count = count)
 
       # convert to raster object
       xres <- base::diff(sort(x)) / (lon_count - 1)
       yres <- base::diff(sort(y)) / (lat_count - 1)
       extent <- c(x[1] - 0.5 * xres, x[2] + 0.5 * xres,
                   y[1] - 0.5 * yres, y[2] + 0.5 * yres)
-      vr <- rast(aperm(v, c(2, 1, 3)[1:2]), extent = extent)
+      vr <- terra::rast(aperm(v, c(2, 1, 3)[1:2]), extent = extent)
 
       # classify
       vr[is.finite(vr)] <- 1

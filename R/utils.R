@@ -16,49 +16,16 @@ spin90 <- function(x){
       x
 }
 
-
-#' Augment a raster object, adding a layer containing the cell resolution.
-#'
-#' @param x raster layer or stack
-#' @return the input layer, with an additional layer of resolution values
-add_res <- function(x){
-      r <- x[[1]]
-      r[] <- mean(res(r[[1]]))
-      stack(r, x)
-}
-
-
-#' Augment a raster object, adding a layer containing the latitude of each cell.
-#'
-#' @param x raster layer or stack
-#' @return the input layer, with an additional layer of latitude values
-add_lat <- function(x){
-      lat <- x[[1]]
-      lat[] <- coordinates(lat)[,2]
-      stack(lat, x)
-}
-
 #' Augment a raster object, adding layers containing cell row-column indices.
 #'
-#' @param x raster layer or stack
-#' @return the input layer, with an additional layer of latitude values
+#' @param x SpatRaster
+#' @return x, with additional row and column index layers added
 add_coords <- function(windrose){
    rows <- cols <- windrose[[1]]
    rows[] <- rep(1:nrow(rows), each=ncol(rows))
    cols[] <- rep(1:ncol(rows), nrow(rows))
-   windrose <- stack(windrose, rows, cols)
+   windrose <- c(windrose, rows, cols)
    names(windrose) <- c("SW", "W", "NW", "N", "NE", "E", "SE", "S", "row", "col")
    return(windrose)
 }
 
-#' Get neighbor names for a windrose object
-#'
-#' @return Names of neighbors; note that actual directions vary by latitude
-windrose_names <- function() c("SW", "W", "NW", "N", "NE", "E", "SE", "S")
-
-
-#' Get neighbor directions for a windrose object
-#'
-#' @return Bearings to neighbors; note that actual directions vary by latitude
-#'   so these values are not accurate
-windrose_bearings <- function() c(225, 270, 315, 0, 45, 90, 135, 180)

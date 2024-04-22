@@ -5,12 +5,13 @@
 #' @param p A positive number indicating the power to raise windspeeds to (see details)
 #' @return A vector of 8 conductance values to neighboring cells, clockwise
 #'   starting with the southwest neighbor. If input windspeeds are in m/s,
-#'   values are in (1 / seconds ^ p)
+#'   values are in (1 / hours ^ p)
 #' @details A value of p = 0 will ignore speed, assigning weights based on
 #'   direction only. P = 1 assumes conductance is proportional to windspeed, p =
 #'   2 assumes it's proportional to aerodynamic drag, and p = 3 assumes it's
 #'   proportional to force. Any intermediate value can also be used.
-windrose <- function(x, p=1){
+#' @export
+rose <- function(x, trans = identity){
 
       # unpack & restructure: row=timestep, col=u&v components
       lat <- x[1]
@@ -18,8 +19,9 @@ windrose <- function(x, p=1){
       x <- x[3:length(x)]
       uv <- matrix(x, ncol=2, byrow=F)
 
-      # wind strength and direction
-      weight <- sqrt(uv[,1]^2 + uv[,2]^2)^p
+      # wind speed and direction
+      speed <- sqrt(uv[,1]^2 + uv[,2]^2)
+      weight <- trans(speed)
       dir <- spin90(windscape::direction(uv[,2], -1*uv[,1]))
       dir[dir<0] <- dir[dir<0] + 360
       dir[dir==0] <- 360
@@ -36,9 +38,8 @@ windrose <- function(x, p=1){
       l <- edge_loadings(dir, weight, nb)
 
       # adjust conductance weights to account for inter-cell distance and n observations
-      nd <- geosphere::distGeo(c(0, lat), nc)
-      l <- l * 3600 / nd / nrow(uv)
-      # units are now in 3600 / seconds^p, which is 1 / hours if p = 1
+      nd <- geosphere::distGeo(c(0, lat), nc) # distance, in m
+      l <- l * 3600 / nd / nrow(uv) # units are now in 3600 / seconds^p, which is 1 / hours if p = 1
 
       # reorder, clockwise from SW
       l[c(6:8, 1:5)]

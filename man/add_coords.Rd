@@ -7,10 +7,10 @@
 add_coords(windrose)
 }
 \arguments{
-\item{x}{raster layer or stack}
+\item{x}{SpatRaster}
 }
 \value{
-the input layer, with an additional layer of latitude values
+x, with additional row and column index layers added
 }
 \description{
 Augment a raster object, adding layers containing cell row-column indices.
