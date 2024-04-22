@@ -16,13 +16,7 @@
     <loc>https://matthewkling.github.io/windscape/reference/add_coords.html</loc>
   </url>
   <url>
-    <loc>https://matthewkling.github.io/windscape/reference/add_lat.html</loc>
-  </url>
-  <url>
-    <loc>https://matthewkling.github.io/windscape/reference/add_res.html</loc>
-  </url>
-  <url>
-    <loc>https://matthewkling.github.io/windscape/reference/build_wind_graph.html</loc>
+    <loc>https://matthewkling.github.io/windscape/reference/as_wind_rose.html</loc>
   </url>
   <url>
     <loc>https://matthewkling.github.io/windscape/reference/cfsr_dl.html</loc>
@@ -49,6 +43,12 @@
     <loc>https://matthewkling.github.io/windscape/reference/pairwise_ratios.html</loc>
   </url>
   <url>
+    <loc>https://matthewkling.github.io/windscape/reference/random_walk.html</loc>
+  </url>
+  <url>
+    <loc>https://matthewkling.github.io/windscape/reference/rose.html</loc>
+  </url>
+  <url>
     <loc>https://matthewkling.github.io/windscape/reference/spin90.html</loc>
   </url>
   <url>
@@ -58,19 +58,16 @@
     <loc>https://matthewkling.github.io/windscape/reference/weight_conductance.html</loc>
   </url>
   <url>
+    <loc>https://matthewkling.github.io/windscape/reference/wind_field.html</loc>
+  </url>
+  <url>
+    <loc>https://matthewkling.github.io/windscape/reference/wind_graph.html</loc>
+  </url>
+  <url>
+    <loc>https://matthewkling.github.io/windscape/reference/wind_rose.html</loc>
+  </url>
+  <url>
     <loc>https://matthewkling.github.io/windscape/reference/windflow.html</loc>
-  </url>
-  <url>
-    <loc>https://matthewkling.github.io/windscape/reference/windrose.html</loc>
-  </url>
-  <url>
-    <loc>https://matthewkling.github.io/windscape/reference/windrose_bearings.html</loc>
-  </url>
-  <url>
-    <loc>https://matthewkling.github.io/windscape/reference/windrose_names.html</loc>
-  </url>
-  <url>
-    <loc>https://matthewkling.github.io/windscape/reference/windrose_rasters.html</loc>
   </url>
   <url>
     <loc>https://matthewkling.github.io/windscape/reference/ws_summarize.html</loc>
