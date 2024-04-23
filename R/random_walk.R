@@ -36,6 +36,48 @@
 #'    FALSE. See details.
 random_walk <- function(x, init, iter = 100, record = iter, ratchet = FALSE){
 
+      transition_prob <- function(x){
+            p <- sum(x)
+            p <- minmax(p)[2,] - p
+            p <- c(p, x)
+            p / sum(p)
+      }
+
+      disperse <- function(n, p){
+            a <- p
+            for(k in 1:9) a[,,k] <- n * a[,,k]
+            da <- dim(a)
+            a[,,2] <- rbind(rep(0, da[2]), cbind(a[1:(da[1]-1), 2:(da[2]), 2], rep(0, da[1]-1))) # SW
+            a[,,3] <- cbind(a[1:(da[1]), 2:(da[2]), 3], rep(0, da[1])) # W
+            a[,,4] <- rbind(cbind(a[2:(da[1]), 2:(da[2]), 4], rep(0, da[1]-1)), rep(0, da[2])) # NW
+            a[,,5] <- rbind(a[2:(da[1]), 1:(da[2]), 5], rep(0, da[2])) # N
+            a[,,6] <- rbind(cbind(rep(0, da[1]-1), a[2:(da[1]), 1:(da[2]-1), 6]), rep(0, da[2])) # NE
+            a[,,7] <- cbind(rep(0, da[1]), a[1:(da[1]), 1:(da[2]-1), 7]) # E
+            a[,,8] <- rbind(rep(0, da[2]), cbind(rep(0, da[1]-1), a[1:(da[1]-1), 1:(da[2]-1), 8])) # SE
+            a[,,9] <- rbind(rep(0, da[2]), a[1:(da[1]-1), 1:(da[2]), 9]) # S
+            apply(a, c(1, 2), sum)
+      }
+
+      diffuse <- function(n, p, i, rec = i, ratch = F){
+            rec <- sort(rec)
+            r <- terra::as.array(rast(n, nlyrs = length(rec), vals = 0))
+            n <- matrix(n, nrow(n), byrow = T)
+            if(0 %in% rec) r[,,1] <- n
+            p <- terra::as.array(p)
+            pb <- txtProgressBar(min = 0, max = i, initial = 0, style = 3)
+            for(j in 1:i){
+                  if(ratch){
+                        n <- pmax(n, disperse(n, p))
+                  }else{
+                        n <- disperse(n, p)
+                  }
+                  if(j %in% rec) r[,,match(j, rec)] <- n
+                  setTxtProgressBar(pb, j+1)
+            }
+            close(pb)
+            r
+      }
+
       p <- transition_prob(x)
 
       # starting distribution
@@ -48,48 +90,8 @@ random_walk <- function(x, init, iter = 100, record = iter, ratchet = FALSE){
             n <- init
       }
 
-      w <- walk(n, p, iter, record, ratchet)
+      w <- diffuse(n, p, iter, record, ratchet)
       n <- rast(n, nlyrs = length(record), vals = w)
       names(n) <- paste0("iter", record)
       as(n, "SpatRaster")
-}
-
-transition_prob <- function(x){
-      p <- sum(x)
-      p <- minmax(p)[2,] - p
-      p <- c(p, x)
-      p / sum(p)
-}
-
-disperse <- function(n, p){
-      a <- p
-      for(k in 1:9) a[,,k] <- n * a[,,k]
-      da <- dim(a)
-      a[,,2] <- rbind(rep(0, da[2]), cbind(a[1:(da[1]-1), 2:(da[2]), 2], rep(0, da[1]-1))) # SW
-      a[,,3] <- cbind(a[1:(da[1]), 2:(da[2]), 3], rep(0, da[1])) # W
-      a[,,4] <- rbind(cbind(a[2:(da[1]), 2:(da[2]), 4], rep(0, da[1]-1)), rep(0, da[2])) # NW
-      a[,,5] <- rbind(a[2:(da[1]), 1:(da[2]), 5], rep(0, da[2])) # N
-      a[,,6] <- rbind(cbind(rep(0, da[1]-1), a[2:(da[1]), 1:(da[2]-1), 6]), rep(0, da[2])) # NE
-      a[,,7] <- cbind(rep(0, da[1]), a[1:(da[1]), 1:(da[2]-1), 7]) # E
-      a[,,8] <- rbind(rep(0, da[2]), cbind(rep(0, da[1]-1), a[1:(da[1]-1), 1:(da[2]-1), 8])) # SE
-      a[,,9] <- rbind(rep(0, da[2]), a[1:(da[1]-1), 1:(da[2]), 9]) # S
-      apply(a, c(1, 2), sum)
-}
-
-walk <- function(n, p, i, rec = i, ratch = F){
-      r <- as.array(rast(n, nlyrs = length(rec), vals = 0))
-      n <- matrix(n, nrow(n), byrow = T)
-      p <- as.array(p)
-      pb <- txtProgressBar(min = 0, max = i, initial = 0, style = 3)
-      for(j in 1:i){
-            if(ratch){
-                  n <- pmax(n, disperse(n, p))
-            }else{
-                  n <- disperse(n, p)
-            }
-            if(j %in% rec) r[,,match(j, rec)] <- n
-            setTxtProgressBar(pb, j+1)
-      }
-      close(pb)
-      r
 }
