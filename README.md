@@ -43,32 +43,30 @@ A more detailed set of vignettes is in development.
 
 ``` r
 library(windscape)
-library(raster)
 library(tidyverse)
-library(gdistance)
 
 # Download some hourly wind data from the Climate Forecast System Reanalysis.
-# We'll grab data for a chunk of North America for 24 days distributed across a single year,
+# We'll grab data for a chunk of North America for 40 days distributed across a single year,
 # though a proper study would want to use a denser sampling of data
-wind <- cfsr_dl(years = 2000, months = 1:12, days = c(1, 15),
+wind <- cfsr_dl(years = 2000, months = 6:9, days = seq(1, 28, 3),
                 xlim = c(-120, -90) + 360, # shift longitudes to be in [0, 360] range for CFSR
-                ylim = c(30, 50))
+                ylim = c(30, 50)) %>%
+      shift(dx = -360) # shift longitude back to the standard [-180, 180] range
 
-# convert to raster::stack and shift longitude to the standard [-180, 180] range
-wind <- shift(stack(wind), dx = -360)
+# convert to a wind_field object
+field <- wind_field(wind, order = "uuvv")
 
-# summarize wind time series (n = 1152 hourly layers) into 
-# a wind conductance or "windrose" raster (n = 8 directional layers)
-conductance <- windrose_rasters(wind, order = "uuvv", p = 1)
+# summarize into a "wind rose" object (n = 8 directional layers)
+rose <- wind_rose(field, p = 1)
 
 # convert raster data into upwind and downwind connectivity graphs
-downwind <- build_wind_graph(conductance, "downwind")
-upwind <- build_wind_graph(conductance, "upwind")
+downwind <- wind_graph(rose, "downwind")
+upwind <- wind_graph(rose, "upwind")
 
 # generate upwind and downwind dispersal surfaces for one focal site 
 site <- matrix(c(-105, 40), ncol = 2)
-downwind_hrs <-  accCost(downwind, site)
-upwind_hrs <-  accCost(upwind, site)
+downwind_hrs <- gdistance::accCost(downwind, site)
+upwind_hrs <- gdistance::accCost(upwind, site)
 
 # restructure data and plot
 d <- stack(downwind_hrs, upwind_hrs) %>%
@@ -112,8 +110,8 @@ sites <- cbind(x = runif(20, -115, -95),
 # pairwise wind flows among sites (notice that this is an asymmetric matrix)
 wind_flow <- gdistance::costDistance(downwind, sites)
 
-# pairwise geographic distance between sites (symmetric, converted to km)
-# (for use as a control variable in the partial Mantel tests)
+# pairwise geographic distance between sites (symmetric, converted to km),
+# for use as a control variable in the partial Mantel tests
 distance <- geosphere::distm(sites) / 1000 
 
 # test correlation between wind flow and gene flow, controlling for distance
@@ -122,7 +120,7 @@ r <- mantel_test(wind_flow, gene_flow, z = list(distance))
 
 # test correlation between bidirectional wind connectivity and genetic isolation,
 # controlling for distance
-gene_dist <- matrix(runif(400), 20) # simulate random gene flow data
+gene_dist <- matrix(runif(400), 20) # simulate random genetic differentiation data
 wind_conn <- pairwise_means(wind_flow) # convert to symmetric matrix
 r <- mantel_test(wind_conn, gene_dist, z = list(distance))
 
