@@ -19,6 +19,9 @@
     <loc>https://matthewkling.github.io/windscape/reference/as_wind_rose.html</loc>
   </url>
   <url>
+    <loc>https://matthewkling.github.io/windscape/reference/cell_distance.html</loc>
+  </url>
+  <url>
     <loc>https://matthewkling.github.io/windscape/reference/cfsr_dl.html</loc>
   </url>
   <url>
@@ -50,6 +53,9 @@
   </url>
   <url>
     <loc>https://matthewkling.github.io/windscape/reference/spin90.html</loc>
+  </url>
+  <url>
+    <loc>https://matthewkling.github.io/windscape/reference/tesselate.html</loc>
   </url>
   <url>
     <loc>https://matthewkling.github.io/windscape/reference/transition_stack.html</loc>
