@@ -29,3 +29,15 @@ add_coords <- function(windrose){
    return(windrose)
 }
 
+
+#' Extend a global raster with copies of itself
+#'
+#' @param x SpatRaster
+#' @param width Longitudinal degrees of extension
+#' @return a wider version of x, with the eastern side repeated on the west and vice-versa
+#' @export
+tesselate <- function(x, width = 20){
+      x <- x %>% crop(extent(180 - width, 180, -90, 90)) %>% shift(-360) %>% merge(x)
+      x <- x %>% crop(extent(-180, -180 + width, -90, 90)) %>% shift(360) %>% merge(x)
+      x
+}
