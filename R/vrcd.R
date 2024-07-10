@@ -1,13 +1,12 @@
-#' costDistance with local interpolation
+#' variable-resolution costDistance
 #'
 #' Increasing the spatial resolution of a wind data set (e.g. by interpolation using \link{downscale})
 #' can greatly improve wind connectivity estimates among nearby sites, but can make it computationally
 #' impossible to model connectivity over large geographic regions, a trade-off that presents problems
-#' for studies that include both nearby and distant site pairs.
-#'
-#' This function gets around this issue with a hybrid approach, using a broad-scale coarse-resolution
-#' wind grid to model connectivity among distant sites, and a separate local-scale high-resolution
-#' interpolated grid to model connectivity between each pair of nearby sites.
+#' for studies that include both nearby and distant site pairs. This function gets around this issue
+#' with a hybrid approach, using a broad-scale coarse-resolution wind grid to model wind cost-distance among
+#' distant sites, and a separate local-scale high-resolution interpolated grid to model connectivity
+#' between each pair of nearby sites.
 #'
 #' @param rose wind_rose.
 #' @param ll longitude and latitude of site locations, as a two-column matrix.
@@ -34,7 +33,7 @@
 #'  \item{cell_dist_coarse}{Distances between the cell centroids in the coarse-resolution input wind dataset (\code{rose}), in km. This is provided for reference, to judge improvements relative to \code{cell_dist}.}
 #' }
 #' @export
-cdli <- function(rose, ll, threshold_km = 30, pad = 1, max_nodes = 1e6, direction = "downwind", method = "bilinear"){
+vrcd <- function(rose, ll, threshold_km = 30, pad = 1, max_nodes = 1e6, direction = "downwind", method = "bilinear"){
 
       # point distances
       pdist <- geosphere::distm(ll) / 1000
