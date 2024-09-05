@@ -25,7 +25,7 @@ Here's a demonstration of a workflow to create a map of estimated wind travel ti
 library(windscape)
 library(tidyverse)
 
-site <- vect(matrix(c(-105, 40), 1)) # 
+site <- vect(matrix(c(-105, 40), 1)) # lat-lon coordinates of a focal site
 
 rast(system.file("extdata/wind.tif", package = "windscape")) %>% # load wind time series rasters
       wind_field(order = "uuvv") %>% # convert to a formal wind field object
