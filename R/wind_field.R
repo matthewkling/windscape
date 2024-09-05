@@ -1,3 +1,5 @@
+#' An S4 object class representing a wind field time series
+#'
 setClass("wind_field",
          contains = "SpatRaster",
          slots = c(n_steps = "numeric"))

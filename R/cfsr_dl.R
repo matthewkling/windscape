@@ -98,6 +98,7 @@ cfsr_dl <- function(years = 1979, months = 1, days = 1,
 cfsr_dl_land <- function(xlim = c(260, 270), ylim = c(40, 50)){
 
       # open connection
+      require(ncdf4)
       url <- paste0("https://thredds.rda.ucar.edu/thredds/dodsC/files/g/ds093.1/1980/soilt1.gdas.198001.grb2")
       ds <- nc_open(url)
 

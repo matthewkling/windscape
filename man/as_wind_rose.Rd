@@ -4,7 +4,7 @@
 \alias{as_wind_rose}
 \title{Create a wind_rose object from a set of raster layers}
 \usage{
-as_wind_rose(x, trans, n_steps = NULL)
+as_wind_rose(x, trans, n_steps = NA_integer_)
 }
 \arguments{
 \item{x}{SpatRaster with 8 layers representing flows in each semi-cardinal direction,

@@ -28,3 +28,22 @@ Depends:
     gdistance,
     R (>= 2.10),
     terra
+Collate: 
+    'RcppExports.R'
+    'cfsr_dl.R'
+    'circ_sd.R'
+    'distance.R'
+    'downscale.R'
+    'least_cost.R'
+    'mantel.R'
+    'pairwise_matrices.R'
+    'wind_rose.R'
+    'plot.R'
+    'random_walk.R'
+    'rose.R'
+    'utils.R'
+    'vrcd.R'
+    'weight_conductance.R'
+    'wind_field.R'
+    'wind_graph.R'
+    'ws_summarize.R'

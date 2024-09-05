@@ -2,28 +2,47 @@
 % Please edit documentation in R/random_walk.R
 \name{random_walk}
 \alias{random_walk}
-\title{Simulate wind diffusion}
+\title{Simulate diffusion by wind advection}
 \usage{
-random_walk(x, init, iter = 100, record = iter, ratchet = FALSE)
+random_walk(
+  rose,
+  init,
+  iter = 100,
+  record = iter,
+  mode = "pulse",
+  timescale = 1
+)
 }
 \arguments{
-\item{x}{a `wind_rose`.}
+\item{rose}{A \code{wind_rose}.}
 
 \item{init}{Initial conditions from which to begin diffusion, either a two-column
 matrix of coordinates, or a SpatRaster layer with non-negative mass values and the
-same spatial properties as `x`. If coordinates, the simulation starts with a
+same spatial properties as \code{rose}. If coordinates, the simulation starts with a
 mass of 1 at each coordinate location. If a SpatRaster, diffusion is done
-directly on the raster; this could be the result of a prior random_walk, or any
+directly on the raster; this could be the ouput from a prior random_walk, or any
 other data representing quantities to be spatially dispersed.}
 
 \item{iter}{Number of simulation iterations (positive integer).}
 
 \item{record}{Integer vector specifying which iterations to record. Default is to
-record only the final iteration, i.e. `iter`. One raster layer is returned for
-each value in `record`.}
+record only the final iteration, i.e. \code{iter}. One raster layer is returned for
+each value in \code{record}.}
 
-\item{ratchet}{Whether or not to "ratchet up" values during diffusion. Default is
-FALSE. See details.}
+\item{mode}{Propagation mode, either "pulse" (default) or "ratchet". See details.}
+
+\item{timescale}{A value between 0 and 1, giving the factor by which to
+scale the default time step length (which is calculated from the data; see \link{rw_max_step}).
+At each iteration, particle mass either exits cells at the rates given in the wind rose object,
+or remains in the cell. The default timescale value of 1 sets the timestep length to the
+maximum possible value, allowing the simulation to advance as far as possible in space given the
+number of iterations, which is computationally optimal. Reducing this value may be useful for
+smoothing the simulation dynamics, and/or setting the timestep to a desired duration.}
+}
+\value{
+A list with two elements: `data`, a SpatRaster with a layer for each value of `record`,
+   and `step_length`, the duration of a single iteration (in hours, if trans = 1 and wind field
+   units are m/s; multiply this by `iter` to get the duration of the full simulation).
 }
 \description{
 This function estimates diffusion across a windscape by Markov random walk. On each iteration,
@@ -40,10 +59,12 @@ cell with the highest conductance has a zero retention probability; this allows 
 to be normalized locally to a simplex while remaining proportional across cells and
 maximizing the dispersal occurring at each iteration.
 
-By default, the simulation tracks the fleeting diffusion of the initial "pulse" of particle
-mass, which will drift and spread like a cloud, eventually leaving the modeling domain
-(unless it's a closed spatial domain). The alternative setting `ratchet = TRUE` instead
-runs a propagating simulation in which local particle mass never declines, continuing to
-transmit mass at the cumulative maximum rate; this may be more akin to a biological
-process in which particles can reproduce locally after establishment.
+The `mode` argument determines how particle mass propagates over time. The default method,
+`"pulse"`, tracks the fleeting diffusion of the initial starting particle mass, which will drift
+and spread like a cloud, eventually leaving the modeling domain (unless it's a closed spatial
+domain). The `mode = "ratchet"` option runs a propagating simulation in which local particle
+mass never declines in any cell, with every location continuing to transmit mass at the
+cumulative maximum rate; this is more akin to a biological process in which dispersing particles
+reproduce locally after establishment, or in which a continuous stream of particles is released
+from the original source at every time step.
 }

@@ -5,12 +5,14 @@
 \alias{build_wind_graph}
 \title{Build a wind connectivity graph}
 \usage{
-wind_graph(x, direction = "downwind")
+wind_graph(x, direction = "downwind", wrap = FALSE)
 }
 \arguments{
 \item{x}{An object of class `wind_rose`.}
 
 \item{direction}{Either "downwind" (the default) or "upwind", indicating whether outbound or inbound wind conductance should be computed, respectively.}
+
+\item{wrap}{Should the left and right edges of the raster be connected? Default is FALSE. Set to TRUE if, for example, `x` is a global raster where -180 and 180 are equivalent longitudes.}
 }
 \value{
 a `wind_graph` object consisting of a gdistance \link[gdistance]{Transition-class} object and additional metadata

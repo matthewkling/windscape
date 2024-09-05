@@ -1,3 +1,5 @@
+#' An S4 object class representing a wind rose
+#'
 setClass("wind_rose",
          contains = "SpatRaster",
          slots = c(trans = "function",
@@ -11,11 +13,12 @@ setClass("wind_rose",
 #'    clockwise beginning in southwest.
 #' @param p Windspeed power, see documentation for `wind_rose`.
 #' @return A `wind_rose` `SpatRaster` object.
-as_wind_rose <- function(x, trans, n_steps = NULL){
+as_wind_rose <- function(x, trans, n_steps = NA_integer_){
       if(!inherits(x, "SpatRaster")) stop("x must be a SpatRaster")
       if(nlyr(x) != 8) stop("x must have 8 layers")
       names(x) <- c("SW", "W", "NW", "N", "NE", "E", "SE", "S")
       x <- as(x, "wind_rose")
+      if(inherits(trans, "numeric")) trans <- function(x) x^trans
       x@trans <- trans
       x@n_steps <- n_steps
       x
@@ -72,3 +75,12 @@ wind_rose <- function(x, trans = 1, ...){
       r <- terra::app(x, fun = rose, trans = trn)
       as_wind_rose(r, trn, x@n_steps)
 }
+
+
+
+# prevent use of gdistance::geoCorrection on wind roses
+setGeneric("geoCorrection", function(x) standardGeneric("geoCorrection"))
+geoCorrection.wind_rose <- function(x){
+      stop("The `geoCorrection` function should not be used on `wind_rose` objects, because they have already been georectified.")
+}
+setMethod("geoCorrection", "wind_rose", geoCorrection.wind_rose)

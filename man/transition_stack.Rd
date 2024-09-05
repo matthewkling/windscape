@@ -4,7 +4,7 @@
 \alias{transition_stack}
 \title{A modified version of `gdistance::transition`,}
 \usage{
-transition_stack(x, transitionFunction, directions, symm, ...)
+transition_stack(x, transitionFunction, directions, symm, wrap = FALSE, ...)
 }
 \description{
 This version accepts a raster stack and a custom transition function; the
