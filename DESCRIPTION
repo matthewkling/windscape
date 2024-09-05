@@ -22,7 +22,8 @@ Suggests:
     ncdf4,
     purrr,
     rmarkdown,
-    stringr
+    stringr,
+    tidyverse
 VignetteBuilder: knitr
 Depends: 
     gdistance,
