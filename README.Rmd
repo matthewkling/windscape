@@ -21,7 +21,7 @@ The `windscape` R package models landscape connectivity by wind dispersal. It in
 
 Here's a demonstration of a workflow to create a map of estimated wind travel times from a particular location. See the package vignette for details and other functionality.
 
-```{r example, eval = T}
+```{r example, eval = T, message = F, warning = F}
 library(windscape)
 library(tidyverse)
 
