@@ -42,6 +42,7 @@ Data for all factorial combinations of 'years', 'months', and 'days' are downloa
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">cfsr_dl</span><span class="op">(</span></span>
+<span>  variable <span class="op">=</span> <span class="st">"wnd10m"</span>,</span>
 <span>  years <span class="op">=</span> <span class="fl">1979</span>,</span>
 <span>  months <span class="op">=</span> <span class="fl">1</span>,</span>
 <span>  days <span class="op">=</span> <span class="fl">1</span>,</span>
@@ -54,7 +55,13 @@ Data for all factorial combinations of 'years', 'months', and 'days' are downloa
     <h2 id="arguments">Arguments<a class="anchor" aria-label="anchor" href="#arguments"></a></h2>
 
 
-<dl><dt id="arg-years">years<a class="anchor" aria-label="anchor" href="#arg-years"></a></dt>
+<dl><dt id="arg-variable">variable<a class="anchor" aria-label="anchor" href="#arg-variable"></a></dt>
+<dd><p>Name of the CFSR wind variable to download. Options include "wnd10m" (the default, representing wind speed
+10 m above the ground), as well as "wnd1000", "wnd850", "wnd700", "wnd500", and "wnd200" (representing higher altitudes,
+with the numbers indicating pressure levels in hPa).</p></dd>
+
+
+<dt id="arg-years">years<a class="anchor" aria-label="anchor" href="#arg-years"></a></dt>
 <dd><p>Integer vector representing the historic year(s) for which data are to be accessed, in the range 1979-2010.</p></dd>
 
 
