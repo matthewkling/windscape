@@ -5,6 +5,7 @@
 \title{Download wind data from the Climate Forecast System Reanalysis (CFSR)}
 \usage{
 cfsr_dl(
+  variable = "wnd10m",
   years = 1979,
   months = 1,
   days = 1,
@@ -13,6 +14,10 @@ cfsr_dl(
 )
 }
 \arguments{
+\item{variable}{Name of the CFSR wind variable to download. Options include "wnd10m" (the default, representing wind speed
+10 m above the ground), as well as "wnd1000", "wnd850", "wnd700", "wnd500", and "wnd200" (representing higher altitudes,
+with the numbers indicating pressure levels in hPa).}
+
 \item{years}{Integer vector representing the historic year(s) for which data are to be accessed, in the range 1979-2010.}
 
 \item{months}{Integer vector representing the month(s) for which data are to be accessed, in the range 1-12.}

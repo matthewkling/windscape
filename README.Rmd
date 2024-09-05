@@ -1,5 +1,5 @@
 ---
-title: "windscape: time-integrated wind dispersal modeling in R"
+title: "windscape: landscape connectivity modeling by wind"
 output: github_document
 ---
 

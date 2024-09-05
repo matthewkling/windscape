@@ -1,4 +1,6 @@
-cfsr_dl_day <- function(year = 1979, month = 1, day = 1,
+
+
+cfsr_dl_day <- function(variable = "wnd10m", year = 1979, month = 1, day = 1,
                         xmin = 260, xmax = 270, ymin = 40, ymax = 50){
 
       if(! year %in% 1979:2010) stop("'year' must be between 1979 and 2010")
@@ -7,7 +9,7 @@ cfsr_dl_day <- function(year = 1979, month = 1, day = 1,
 
       # open connection
       # example url: "https://thredds.rda.ucar.edu/thredds/dodsC/files/g/ds093.1/1990/wnd10m.gdas.199001.grb2"
-      url <- paste0("https://thredds.rda.ucar.edu/thredds/dodsC/files/g/ds093.1/", year, "/wnd10m.gdas.",
+      url <- paste0("https://thredds.rda.ucar.edu/thredds/dodsC/files/g/ds093.1/", year, "/", variable, ".gdas.",
                     year, stringr::str_pad(month, 2, "left", 0), ".grb2")
       ds <- ncdf4::nc_open(url)
 
@@ -43,9 +45,10 @@ cfsr_dl_day <- function(year = 1979, month = 1, day = 1,
 
       # get data
       message(paste0("... retrieving CFSR data for ", date, " ..."))
-      v <- ncdf4::ncvar_get(ds, "v-component_of_wind_height_above_ground",
+      tag <- ifelse(variable == "wnd10m", "height_above_ground", "isobaric")
+      v <- ncdf4::ncvar_get(ds, paste0("v-component_of_wind_", tag),
                             start = start, count = count)
-      u <- ncdf4::ncvar_get(ds, "u-component_of_wind_height_above_ground",
+      u <- ncdf4::ncvar_get(ds, paste0("u-component_of_wind_", tag),
                             start = start, count = count)
 
       # convert to raster object
@@ -67,6 +70,9 @@ cfsr_dl_day <- function(year = 1979, month = 1, day = 1,
 #' This function downloads hourly CFSR wind data from the NCAR THREDDS server, for one or more historic dates, within a spatial bounding box.
 #' Data for all factorial combinations of 'years', 'months', and 'days' are downloaded and combined.
 #'
+#' @param variable Name of the CFSR wind variable to download. Options include "wnd10m" (the default, representing wind speed
+#'    10 m above the ground), as well as "wnd1000", "wnd850", "wnd700", "wnd500", and "wnd200" (representing higher altitudes,
+#'    with the numbers indicating pressure levels in hPa).
 #' @param years Integer vector representing the historic year(s) for which data are to be accessed, in the range 1979-2010.
 #' @param months Integer vector representing the month(s) for which data are to be accessed, in the range 1-12.
 #' @param days Integer vector representing day(s) for which data is to be requested, in the range 0-31.
@@ -74,9 +80,10 @@ cfsr_dl_day <- function(year = 1979, month = 1, day = 1,
 #' @param ylim Vector of length 2, giving latitudinal limits of the data to download, in the range -90 to 90.
 #' @return A list containing u and v components of the wind field, each as a SpatRaster with a layer for each hour of each requested date.
 #' @export
-cfsr_dl <- function(years = 1979, months = 1, days = 1,
+cfsr_dl <- function(variable = "wnd10m",
+                    years = 1979, months = 1, days = 1,
                     xlim = c(260, 270), ylim = c(40, 50)){
-      q <- expand.grid(day = days, month = months, year = years,
+      q <- expand.grid(variable = variable, day = days, month = months, year = years,
                        xmin = min(xlim), xmax = max(xlim), ymin = min(ylim), ymax = max(ylim))
       w <- purrr::pmap(q, cfsr_dl_day)
       c(terra::rast(purrr::map(w, "u")),

@@ -1,4 +1,4 @@
-windscape: time-integrated wind dispersal modeling in R
+windscape: landscape connectivity modeling by wind
 ================
 
 ![](https://matthewkling.github.io/img/images/windscape_hawaii.png)
