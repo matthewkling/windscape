@@ -4,7 +4,7 @@ output: github_document
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = TRUE, fig.path = "man/figures/")
 ```
 
 ![](https://matthewkling.github.io/img/images/windscape_hawaii.png)

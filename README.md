@@ -22,7 +22,7 @@ details and other functionality.
 library(windscape)
 library(tidyverse)
 
-site <- vect(matrix(c(-105, 40), 1)) # 
+site <- vect(matrix(c(-105, 40), 1)) # lat-lon coordinates of a focal site
 
 rast(system.file("extdata/wind.tif", package = "windscape")) %>% # load wind time series rasters
       wind_field(order = "uuvv") %>% # convert to a formal wind field object
@@ -34,7 +34,7 @@ rast(system.file("extdata/wind.tif", package = "windscape")) %>% # load wind tim
 points(site, col = "red") # add origin location to map
 ```
 
-![](README_files/figure-gfm/example-1.png)<!-- -->
+![](man/figures/example-1.png)<!-- -->
 
 <!-- ### In the wild -->
 <!-- Publications that have used the `windscape` framework include: -->
