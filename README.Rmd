@@ -1,5 +1,5 @@
 ---
-title: "windscape: landscape connectivity modeling by wind"
+title: "windscape: model wind-borne landscape connectivity"
 output: github_document
 ---
 

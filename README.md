@@ -1,4 +1,4 @@
-windscape: landscape connectivity modeling by wind
+windscape: model wind-borne landscape connectivity
 ================
 
 ![](https://matthewkling.github.io/img/images/windscape_hawaii.png)
