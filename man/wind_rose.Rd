@@ -3,12 +3,12 @@
 \name{wind_rose}
 \alias{wind_rose}
 \alias{windrose_rasters}
-\title{Summarize a set of wind_field rasters into a wind_rose object}
+\title{Summarize a time series of wind fields into a wind rose}
 \usage{
 wind_rose(x, trans = 1, ...)
 }
 \arguments{
-\item{x}{Data set of class `wind_field`.}
+\item{x}{Data set of class `wind_field_ts`.}
 
 \item{trans}{Either a function, or a positive number indicating the power to raise windspeeds to; see details.}
 
@@ -20,10 +20,10 @@ An 8-layer raster stack, where each layer is wind conductance from
   If input windspeeds are in m/s and `trans = 1`, values are in (1 / hours)
 }
 \description{
-This function creates a `wind_rose` object summarizing the distribution of
-wind speed and direction observations in each grid cell. The result is a set
-of eight raster layers giving the average wind conductance toward each of a
-cell's 'queen' neighbors.
+This function converts a \code{wind_field_ts} into a \code{wind_rose} object
+summarizing the distribution of wind speed and direction observations in each grid
+cell. The result is a set of eight raster layers giving the average wind conductance
+toward each of a cell's 'queen' neighbors.
 }
 \details{
 The `trans` parameter defines the transformation function used to convert wind speed

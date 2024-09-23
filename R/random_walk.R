@@ -36,6 +36,14 @@ rw_max_step <- function(rose){
 }
 
 
+rw_prob <- function(x, t){
+      p <- sum(x)
+      p <- 1 / t - p
+      p <- c(p, x)
+      p / sum(p)
+}
+
+
 
 #' Simulate diffusion by wind advection
 #'
@@ -81,20 +89,10 @@ rw_max_step <- function(rose){
 #'    number of iterations, which is computationally optimal. Reducing this value may be useful for
 #'    smoothing the simulation dynamics, and/or setting the timestep to a desired duration.
 #'
-#' @return A list with two elements: `data`, a SpatRaster with a layer for each value of `record`,
-#'    and `step_length`, the duration of a single iteration (in hours, if trans = 1 and wind field
-#'    units are m/s; multiply this by `iter` to get the duration of the full simulation).
+#' @return A \code{wind_walk} raster object.
 #'
 #' @export
 random_walk <- function(rose, init, iter = 100, record = iter, mode = "pulse", timescale = 1){
-
-
-      transition_prob <- function(x, t){
-            p <- sum(x)
-            p <- 1 / t - p
-            p <- c(p, x)
-            p / sum(p)
-      }
 
       disperse <- function(n, p){
             a <- p
@@ -137,7 +135,7 @@ random_walk <- function(rose, init, iter = 100, record = iter, mode = "pulse", t
       message("\titeration timestep: ~", signif(t, 3),
               "\n\tsimulation duration: ~", signif(t * iter, 3),
               "\n(these values are in hours, IF trans == 1 and wind_field units are m/s)")
-      p <- transition_prob(rose, t)
+      p <- rw_prob(rose, t)
 
       # starting distribution
       if(inherits(init, "matrix")){

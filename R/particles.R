@@ -1,0 +1,269 @@
+
+#' Simulate the flow of particles across a wind field
+#'
+#' This function simulates the movement of particles over a wind field. At each iteration, particles
+#' are displaced in accordance with the direction and speed of the local wind conditions.
+#'
+#' @param x A \code{wind_field} object created by \link{wind_field}.
+#' @param p Either a two-column lon-lat matrix of initial particle locations (e.g. produced by \link{generate_particles}),
+#'    or an integer giving the number of particles to initialize (in which case, provide additional arguments to
+#'    \link{generate_particles} in \code{...}).
+#' @param n_iter Positive integer giving the number of iterations to simulate.
+#' @param scale A multiplier to convert step sizes from velocity (in whatever then native units of \code{x} are) to degrees
+#'    lon-lat. Smaller scale values yield smoother but shorter particle trails over a given number of iterations.
+#' @param wrap Either "vertical", "horizontal", "both", or "neither" (the default).
+#' @param direction Either "downwind", "upwind", or "both" (the default).
+#' @param ignore_speed Logical: if TRUE, only direction is considered and all particles are displaced the same distance. Default is FALSE.
+#' @param sf Logical indicating whether the output shoudl be break_trailted as an `sf` object instead of the default data frame.
+#' @param ... Further arguments to \link{generate_particles}, used only if \code{p} is an integer.
+#'
+#' @return If `sf = FALSE`, a data frame representing particle positions over time. Variables include "p" (the id number of the particle),
+#'    "x" (longitude), "y" (latitude), "v" (velocity, in the same units as the input wind data), and "t" (the iteration
+#'    number, which is positive for downwind and negative for upwind; arrange by this variable when plotting). If `sf = TRUE`,
+#'    a simple feature collection of linestrings (in this case, velocity is not included, and the iteration index is included
+#'    as the third coordination dimension).
+#' @export
+particle_flow <- function(x, p, n_iter = 100, scale = .01, wrap = "neither",
+                          direction = "both", ignore_speed = FALSE, sf = FALSE,
+                          ...){
+
+      if(!inherits(x, "wind_field")) stop("`x` must be a `wind_field` object.")
+
+      if(direction == "both") direction <- c("downwind", "upwind")
+      xlim <- ext(x)[1:2]
+      xrng <- diff(xlim)
+      ylim <- ext(x)[3:4]
+      yrng <- diff(ylim)
+
+      speed <- function(x) sqrt(sum(x^2))
+      if(length(p) == 1) p <- generate_particles(x, n = p, ...)
+      p0 <- p
+      b <- data.frame()
+
+      for(drn in direction){
+            s <- ifelse(drn == "downwind", 1, -1)
+            p <- p0
+            t <- array(NA, dim = c(nrow(p), 4, n_iter + 1))
+            g <- rep(0, nrow(p))
+            for(i in 1:(n_iter + 1)){
+
+                  uv <- as.matrix(terra::extract(x, p, method = "bilinear"))
+                  v <- apply(uv, 1, speed)
+                  t[, 1:2, i] <- p
+                  t[, 3, i] <- v
+                  t[, 4, i] <- g
+
+                  if(ignore_speed){
+                        d <- t(apply(uv, 1, function(z) z * scale / speed(z))) * s
+                  }else{
+                        d <- as.matrix(uv) * s
+                  }
+                  d[, 1] <- d[, 1] / aspect(d[, 2])
+                  p <- p + d * scale
+
+                  if(i <= n_iter & wrap %in% c("horizontal", "both")){
+                        z <- which(p[, 1] < xlim[1])
+                        p[z, 1] <- p[z, 1] + xrng
+                        g[z] <- g[z] + s
+                        z <- which(p[,1] > xlim[2])
+                        p[z, 1] <- p[z, 1] - xrng
+                        g[z] <- g[z] + s
+                  }
+                  if(i <= n_iter & wrap %in% c("vertical", "both")){
+                        z <- which(p[, 2] < ylim[1])
+                        p[z, 2] <- p[z, 2] + yrng
+                        g[z] <- g[z] + s
+                        z <- which(p[,2] > ylim[2])
+                        p[z, 2] <- p[z, 2] - yrng
+                        g[z] <- g[z] + s
+                  }
+            }
+
+            d <- lapply(1:(n_iter + 1), function(i) data.frame(p = 1:nrow(p),
+                                                               x = t[,1,i],
+                                                               y = t[,2,i],
+                                                               v = t[,3,i],
+                                                               g = t[,4,i],
+                                                               t = (i - 1) * s))
+            d <- do.call("rbind", d)
+            b <- rbind(b, d)
+      }
+
+      b <- unique(b)
+      b <- b[order(b$p, b$t),]
+      b <- na.omit(b)
+
+      b$g <- b$p + b$g / 1000
+
+      if(sf) b <- trails_to_sf(b)
+
+      b
+}
+
+
+
+#' Convert particle trails data frame to sf
+#'
+#' @param x Data frame generated by \link{particle_flow} or \link{particle_walk}.
+trails_to_sf <- function(x){
+      x %>%
+            st_as_sf(coords = c(2, 3, 5), dim = "XYM",
+                     crs = sf::st_crs(4326)) %>%
+            group_by(p) %>%
+            summarize(do_union = FALSE) %>%
+            st_cast("LINESTRING")
+}
+
+
+#' Generate spatial grid of points
+#'
+#' @param x A raster or extent
+#' @param n Number of sample points (approximate)
+geo_grid <- function(x, n){
+      dx <- xmax(x) - xmin(x)
+      dy <- ymax(x) - ymin(x)
+      ar <- dy / dx
+      nx <- round(sqrt(n / ar))
+      ny <- round(ar * sqrt(n / ar))
+      px <- rep(seq(xmin(x), xmax(x), length.out = nx + 1)[1:nx] + dx / nx / 2, ny)
+      py <- rep(seq(ymin(x), ymax(x), length.out = ny + 1)[1:ny] + dy / ny / 2, each = nx)
+      cbind(x = px, y = py)
+}
+
+#' Generate initial particle locations
+#'
+#' Initialize a set of particle locations for use in \link{particle_flow}.
+#'
+#' @param x A wind_field object.
+#' @param n Positive integer giving the total number of particles in the grid. If \code{sample = "random"} the result
+#'    will have this exact number of particles, while if \code{sample = "grid"} it will be approximate.
+#' @param sample Sampling scheme, either "random" (the default) to generate points at random locations, or "grid" to
+#'    generate points on a regular grid.
+#' @param equalarea Logical indicating whether to generate points on an equal area basis (TRUE, the default) or in
+#'    lon-lat space (FALSE, which over-samples higher-latitude regions).
+#' @param epsg EPSG code for the projection in which to generate points. Only used if \code{equalarea = TRUE} and
+#' \code{sample = "grid"}. The default is \code{8857}, the Equal Area projection.
+#' @param expand Proportion by which to expand the bounding box around \code{x} after projection, to capture the full
+#'    domain in projected space. Only used if \code{equalarea = TRUE} and \code{sample = "grid"}.
+#' @return A two-column matrix of x (longitude) and y (latitude) values, with a row for each particle.
+#' @export
+generate_particles <- function(x, n = 1000, sample = "random", equalarea = TRUE,
+                               epsg = 8857, expand = .25){
+
+      if(!equalarea & sample == "grid"){
+            p <- geo_grid(x, n)
+      }
+
+      if(equalarea & sample == "grid"){
+            require(sf)
+            g <- as.data.frame(geo_grid(x, n))
+            g <- st_as_sf(g, coords = 1:2, crs = sf::st_crs(4326))
+            g <- st_transform(g, crs = sf::st_crs(epsg))
+            h <- st_convex_hull(st_union(g))
+            p <- as.data.frame(geo_grid(ext(g) * (1 + expand), n))
+            p <- st_as_sf(p, coords = 1:2, crs = sf::st_crs(epsg))
+            p <- p[st_contains(h, p)[[1]],]
+            p <- st_coordinates(st_transform(p, crs = sf::st_crs(4326)))
+            colnames(p) <- c("x", "y")
+      }
+
+
+      if(equalarea & sample == "random"){
+            # calculate number of samples needed
+            y <- seq(ymin(x), ymax(x), length.out = 1000)
+            ws <- 1 / aspect(y)
+            ws <- ws / max(ws)
+            ns <- round(n / mean(ws)) + 1000 # safety margin of 1000
+
+            # weighted sample
+            px <- runif(ns, xmin(x), xmax(x))
+            py <- runif(ns, ymin(x), ymax(x))
+            w <- 1 / aspect(py)
+            s <- sample(ns, ns, prob = w / max(ws))
+            p <- cbind(x = px[s][1:n], y = py[s][1:n])
+      }
+
+      if(!equalarea & sample == "random"){
+            p <- cbind(runif(n, xmin(x), xmax(x)),
+                       runif(n, ymin(x), ymax(x)))
+      }
+
+      p
+}
+
+
+# # experimental
+# particle_walk <- function(x, p, n_iter = 100, scale = .1,
+#                           wrap = "neither",
+#                           direction = "both", #ignore_speed = FALSE,
+#                           sf = FALSE){
+#
+#       if(direction == "both") direction <- c("downwind", "upwind")
+#       xlim <- ext(x)[1:2]
+#       xrng <- diff(xlim)
+#       ylim <- ext(x)[3:4]
+#       yrng <- diff(ylim)
+#
+#       p0 <- p
+#       b <- data.frame()
+#
+#       # step <- matrix(c(0, 0,  -1, -1,  -1, 0,  -1, 1,  0, 1,
+#       #                  1, 1,  1, 0,  1, -1,  0, -1),
+#       #                byrow = T, ncol = 2) * res(x)
+#       step <- matrix(c(-1, -1,  -1, 0,  -1, 1,  0, 1,
+#                        1, 1,  1, 0,  1, -1,  0, -1),
+#                      byrow = T, ncol = 2) * res(x)
+#
+#       for(drn in direction){
+#             s <- ifelse(drn == "downwind", 1, -1)
+#             p <- p0
+#             t <- array(NA, dim = c(nrow(p), 2, n_iter + 1))
+#             for(i in 1:(n_iter + 1)){
+#
+#                   d <- as.matrix(terra::extract(x, p, method = "bilinear"))
+#                   # d <- t(apply(d, 1, function(x) step[sample.int(9, 1, prob = x, useHash = FALSE),]))
+#                   d <- t(apply(d, 1, function(x){
+#                         ss <- sample.int(8, 1, useHash = TRUE)
+#                         step[ss,] * x[ss]
+#                   }))
+#
+#                   t[, 1:2, i] <- p
+#                   p <- p + d * s * scale
+#
+#                   if(wrap %in% c("horizontal", "both")){
+#                         z <- which(p[, 1] < xlim[1])
+#                         p[z, 1] <- p[z, 1] + xrng
+#                         z <- which(p[,1] > xlim[2])
+#                         p[z, 1] <- p[z, 1] - xrng
+#                   }
+#                   if(wrap %in% c("vertical", "both")){
+#                         z <- which(p[, 2] < ylim[1])
+#                         p[z, 2] <- p[z, 2] + yrng
+#                         z <- which(p[,2] > ylim[2])
+#                         p[z, 2] <- p[z, 2] - yrng
+#                   }
+#             }
+#
+#             d <- lapply(1:(n_iter + 1), function(i) data.frame(p = 1:nrow(p),
+#                                                                x = t[,1,i],
+#                                                                y = t[,2,i],
+#                                                                t = (i - 1) * s))
+#             d <- do.call("rbind", d)
+#             b <- rbind(b, d)
+#       }
+#
+#       b <- distinct(b)
+#       b <- b[order(b$p, b$t),]
+#       b <- na.omit(b)
+#
+#       if(sf){
+#             bb <- b %>%
+#                   st_as_sf(coords = c(2, 3, 5), dim = "XYM",
+#                            crs = sf::st_crs(4326)) %>%
+#                   group_by(p) %>%
+#                   summarize(do_union = FALSE) %>%
+#                   st_cast("LINESTRING")
+#       }
+#
+#       b
+# }

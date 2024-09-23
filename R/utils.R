@@ -41,3 +41,22 @@ tesselate <- function(x, width = 20){
       x <- x %>% crop(extent(-180, -180 + width, -90, 90)) %>% terra::shift(360) %>% terra::merge(x)
       x
 }
+
+
+#' Aspect ratio of grid cell at a given latitude
+#'
+#' @param y Numeric vector of latitudes
+#' @param res Cell resolution, in degrees latitude; any sufficiently small value should yield reasonably precise results.
+aspect <- function(y, res = .00001){
+      y1 <- y * pi / 180
+      y2 <- (y + res) * pi / 180
+      x <- res * pi / 180
+      dy <- asin(sqrt((1 - cos(y2 - y1)) / 2))
+      dx <- asin(sqrt((cos(y1) * cos(y2) * (1 - cos(x))) / 2))
+      dy / dx
+
+      # # confirmation that formulation is correct (the below quantities should be equal):
+      # y = 70 # arbitrary
+      # aspect(y)
+      # geosphere::distHaversine(c(0, y), c(0, y + .0001)) / geosphere::distHaversine(c(0, y), c(0.0001, y))
+}

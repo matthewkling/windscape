@@ -41,6 +41,7 @@ Collate:
     'pairwise_matrices.R'
     'wind_rose.R'
     'plot.R'
+    'particles.R'
     'random_walk.R'
     'rose.R'
     'utils.R'

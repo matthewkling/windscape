@@ -2,21 +2,17 @@
 % Please edit documentation in R/wind_field.R
 \name{wind_field}
 \alias{wind_field}
-\title{Generate a wind field data set from a set of rasters}
+\title{Generate a wind field data set from a pair of rasters.}
 \usage{
-wind_field(x, order)
+wind_field(x)
 }
 \arguments{
-\item{x}{Multi-layer `SpatRaster` with layers containing u and v wind components;
+\item{x}{A `SpatRaster` with two layers representing u and v wind components;
 note that these must be in lat-long coordinates.}
-
-\item{order}{Either "uuvv", the default indicating `x` has all u components
-followed by all v components, or "uvuv", indicating the u and v components
-of `x` are alternating.}
 }
 \value{
 A `wind_field` object, which is a particular form of `SpatRaster`.
 }
 \description{
-Generate a wind field data set from a set of rasters
+Generate a wind field data set from a pair of rasters.
 }

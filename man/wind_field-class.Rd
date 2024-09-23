@@ -3,7 +3,7 @@
 \docType{class}
 \name{wind_field-class}
 \alias{wind_field-class}
-\title{An S4 object class representing a wind field time series}
+\title{An S4 object class representing a wind field}
 \description{
-An S4 object class representing a wind field time series
+An S4 object class representing a wind field
 }

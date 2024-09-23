@@ -40,9 +40,7 @@ number of iterations, which is computationally optimal. Reducing this value may 
 smoothing the simulation dynamics, and/or setting the timestep to a desired duration.}
 }
 \value{
-A list with two elements: `data`, a SpatRaster with a layer for each value of `record`,
-   and `step_length`, the duration of a single iteration (in hours, if trans = 1 and wind field
-   units are m/s; multiply this by `iter` to get the duration of the full simulation).
+A \code{wind_walk} raster object.
 }
 \description{
 This function estimates diffusion across a windscape by Markov random walk. On each iteration,
