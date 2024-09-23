@@ -158,17 +158,18 @@ a particular date and time.</p>
 <span><span class="co">#&gt; names       : u 2000-01-01, u 200~00:00, u 200~00:00, u 200~00:00, u 200~00:00, u 200~00:00, ... </span></span>
 <span><span class="co">#&gt; min values  :        -4.80,       -4.68,       -4.02,       -3.96,       -4.15,       -4.54, ... </span></span>
 <span><span class="co">#&gt; max values  :         7.84,        7.63,        9.20,        9.77,       10.05,       10.17, ...</span></span></code></pre></div>
-<p>Next we’ll convert these data into a formal <code>wind_field</code>
-object, which is a <code>SpatRaster</code> of wind data meeting certain
-criteria. To do this, we need to tell it that our <code>wind</code>
-dataset has <code>order = "uuvv"</code>, meaning all the u components
-come first, followed by all the v components; other data sets might have
+<p>Next we’ll convert these data into a formal wind field time series
+object of class <code>wind_series</code>, which is a
+<code>SpatRaster</code> of wind data meeting certain criteria. To do
+this, we need to tell it that our <code>wind</code> dataset has
+<code>order = "uuvv"</code>, meaning all the u components come first,
+followed by all the v components; other data sets might have
 <code>order = "uvuv"</code>. (It’s assumed that the order of the u’s is
 the same as the v’s, so we need to be confident of this based on
-knowledge of our data.) The <code><a href="../reference/wind_field.html">wind_field()</a></code> function creates a
-wind field object:</p>
+knowledge of our data.) The <code><a href="../reference/wind_series.html">wind_series()</a></code> function creates
+this object:</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">field</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/wind_field.html">wind_field</a></span><span class="op">(</span><span class="va">wind</span>, order <span class="op">=</span> <span class="st">"uuvv"</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="va">series</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/wind_series.html">wind_series</a></span><span class="op">(</span><span class="va">wind</span>, order <span class="op">=</span> <span class="st">"uuvv"</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="constructing-a-connectivity-graph">Constructing a connectivity graph<a class="anchor" aria-label="anchor" href="#constructing-a-connectivity-graph"></a>
@@ -209,11 +210,11 @@ individual time step in the wind field data set, and then averaged to
 produce the final wind rose object. If input speeds are in m/s and
 <code>trans = 1</code>, then the wind rose conductance values are in
 units of 1/hours.</p>
-<p>Let’s covert our <code>wind_field</code> into a
+<p>Let’s covert our <code>wind_field_ts</code> into a
 <code>wind_rose</code> here. Plotting it, we see that is has 8 layers,
 one for wind connectivity in each semi-cardinal direction.</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">rose</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/wind_rose.html">wind_rose</a></span><span class="op">(</span><span class="va">field</span>, trans <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="va">rose</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/wind_rose.html">wind_rose</a></span><span class="op">(</span><span class="va">series</span>, trans <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rspatial.github.io/terra/reference/plot.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">rose</span><span class="op">)</span></span></code></pre></div>
 <p><img src="windscape_files/figure-html/rose-1.png" width="95%"></p>
 </div>
@@ -450,7 +451,7 @@ location), we see the cloud of particle mass drifting and spreading as
 the walk proceeds:</p>
 <div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># create a cropped, non-downscaled wind rose so that example runs quickly</span></span>
-<span><span class="va">rose</span> <span class="op">&lt;-</span> <span class="va">field</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span> <span class="fu"><a href="../reference/wind_rose.html">wind_rose</a></span><span class="op">(</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span> <span class="fu"><a href="https://rspatial.github.io/terra/reference/crop.html" class="external-link">crop</a></span><span class="op">(</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/ext.html" class="external-link">ext</a></span><span class="op">(</span><span class="va">.</span><span class="op">)</span><span class="op">/</span><span class="fl">2</span><span class="op">)</span></span>
+<span><span class="va">rose</span> <span class="op">&lt;-</span> <span class="va">series</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span> <span class="fu"><a href="../reference/wind_rose.html">wind_rose</a></span><span class="op">(</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span> <span class="fu"><a href="https://rspatial.github.io/terra/reference/crop.html" class="external-link">crop</a></span><span class="op">(</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/ext.html" class="external-link">ext</a></span><span class="op">(</span><span class="va">.</span><span class="op">)</span><span class="op">/</span><span class="fl">2</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># run the RW computation</span></span>
 <span><span class="va">walk</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/random_walk.html">random_walk</a></span><span class="op">(</span><span class="va">rose</span>, init <span class="op">=</span> <span class="va">site</span>, iter <span class="op">=</span> <span class="fl">600</span>, record <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="fl">100</span>, <span class="fl">600</span>, <span class="fl">100</span><span class="op">)</span><span class="op">)</span></span>
@@ -566,7 +567,7 @@ influences as controls.</p>
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.0.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.1.</p>
 </div>
 
     </footer>
