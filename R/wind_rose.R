@@ -42,7 +42,7 @@ as_wind_rose <- function(x, trans, n_steps = NA_integer_){
 #' that only releases seeds when winds exceed 10 m/s, we could specify a threshold
 #' function `trans = function(x){x[x < 10] <- 0; return(x)}`.
 #'
-#' @param x Data set of class `wind_field_ts`.
+#' @param x Data set of class `wind_series`.
 #' @param trans Either a function, or a positive number indicating the power to raise windspeeds to; see details.
 #' @param ... Additional arguments passed to `terra::app`, e.g. 'filename'.
 #' @return An 8-layer raster stack, where each layer is wind conductance from
@@ -51,7 +51,7 @@ as_wind_rose <- function(x, trans, n_steps = NA_integer_){
 #' @aliases windrose_rasters
 wind_rose <- function(x, trans = 1, ...){
 
-      if(!inherits(x, "wind_field_ts")) stop("`x` must be an object of class `wind_field_ts`.")
+      if(!inherits(x, "wind_series")) stop("`x` must be an object of class `wind_series`.")
 
       trn <- trans
       if(inherits(trans, "numeric")) trn <- function(x) x^trans

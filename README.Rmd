@@ -28,7 +28,7 @@ library(tidyverse)
 site <- vect(matrix(c(-105, 40), 1)) # lat-lon coordinates of a focal site
 
 rast(system.file("extdata/wind.tif", package = "windscape")) %>% # load wind time series rasters
-      wind_field(order = "uuvv") %>% # convert to a formal wind field object
+      wind_series(order = "uuvv") %>% # convert to a formal wind field time series object
       wind_rose() %>% # summarize into wind rose conductance object
       wind_graph("downwind") %>% # format as connectivity graph
       least_cost_surface(site) %>% # calculate least cost path from coordinates

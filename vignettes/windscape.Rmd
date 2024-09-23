@@ -66,10 +66,10 @@ wind <- rast(system.file("extdata/wind.tif", package = "windscape"))
 wind
 ```
 
-Next we'll convert these data into a formal `wind_field` object, which is a `SpatRaster` of wind data meeting certain criteria. To do this, we need to tell it that our `wind` dataset has `order = "uuvv"`, meaning all the u components come first, followed by all the v components; other data sets might have `order = "uvuv"`. (It's assumed that the order of the u's is the same as the v's, so we need to be confident of this based on knowledge of our data.) The `wind_field()` function creates a wind field object:
+Next we'll convert these data into a formal wind field time series object of class `wind_series`, which is a `SpatRaster` of wind data meeting certain criteria. To do this, we need to tell it that our `wind` dataset has `order = "uuvv"`, meaning all the u components come first, followed by all the v components; other data sets might have `order = "uvuv"`. (It's assumed that the order of the u's is the same as the v's, so we need to be confident of this based on knowledge of our data.) The `wind_series()` function creates this object:
 
 ```{r field, eval = T}
-field <- wind_field(wind, order = "uuvv")
+series <- wind_series(wind, order = "uuvv")
 ```
 
 ## Constructing a connectivity graph
@@ -84,10 +84,10 @@ The main decision when creating a wind rose is the `trans` argument, which defin
 
 After a local wind vector for a particular time step is transformed from speed to conductance, this conductance is allocated between a cardinal and semi-cardinal neighbor, in proportion to the angle and distance between the downwind direction and the directions of the two adjacent downwind neighbors. Conductance values are calculated for each individual time step in the wind field data set, and then averaged to produce the final wind rose object. If input speeds are in m/s and `trans = 1`, then the wind rose conductance values are in units of 1/hours.
 
-Let's covert our `wind_field` into a `wind_rose` here. Plotting it, we see that is has 8 layers, one for wind connectivity in each semi-cardinal direction.
+Let's covert our `wind_field_ts` into a `wind_rose` here. Plotting it, we see that is has 8 layers, one for wind connectivity in each semi-cardinal direction.
 
 ```{r rose, eval = T}
-rose <- wind_rose(field, trans = 1)
+rose <- wind_rose(series, trans = 1)
 plot(rose)
 ```
 

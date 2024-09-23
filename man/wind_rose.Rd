@@ -8,7 +8,7 @@
 wind_rose(x, trans = 1, ...)
 }
 \arguments{
-\item{x}{Data set of class `wind_field_ts`.}
+\item{x}{Data set of class `wind_series`.}
 
 \item{trans}{Either a function, or a positive number indicating the power to raise windspeeds to; see details.}
 

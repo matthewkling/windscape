@@ -1,6 +1,6 @@
 #' An S4 object class representing a wind field time series
 #'
-setClass("wind_field_ts",
+setClass("wind_series",
          contains = "SpatRaster",
          slots = c(n_steps = "numeric"))
 
@@ -12,10 +12,10 @@ setClass("wind_field_ts",
 #' @param order Either \code{"uuvv"}, the default indicating `x` has all u components
 #'    followed by all v components, or \code{"uuvv"}, indicating the u and v components
 #'    of `x` are alternating.
-#' @return A `wind_field_ts` object, which is a particular form of \code{SpatRaster}.
-wind_field_ts <- function(x, order){
+#' @return A `wind_series` object, which is a particular form of \code{SpatRaster}.
+wind_series <- function(x, order){
 
-      x <- rast(x)
+      if(!inherits(x, "SpatRaster")) x <- rast(x)
       if(terra::nlyr(x) %% 2 != 0) stop("if `v` is not specified, `u` must have an even number of layers.")
 
       # collate layers
@@ -26,7 +26,7 @@ wind_field_ts <- function(x, order){
       }
 
       # create wind_field
-      y <- as(x, "wind_field_ts")
+      y <- as(x, "wind_series")
       y@n_steps <- nlyr(x)/2
       y
 }
