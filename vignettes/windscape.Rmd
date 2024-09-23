@@ -200,7 +200,7 @@ To run a random walk simulation, we need to specify the initial conditions (the 
 
 ```{r rw, eval = T, results='hide', fig.keep='all', message = F, warning = F}
 # create a cropped, non-downscaled wind rose so that example runs quickly
-rose <- field %>% wind_rose() %>% crop(ext(.)/2)
+rose <- series %>% wind_rose() %>% crop(ext(.)/2)
 
 # run the RW computation
 walk <- random_walk(rose, init = site, iter = 600, record = seq(100, 600, 100))
