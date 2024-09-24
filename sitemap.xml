@@ -8,9 +8,11 @@
 <url><loc>https://matthewkling.github.io/windscape/reference/add_coords.html</loc></url>
 <url><loc>https://matthewkling.github.io/windscape/reference/as_wind_rose.html</loc></url>
 <url><loc>https://matthewkling.github.io/windscape/reference/aspect.html</loc></url>
+<url><loc>https://matthewkling.github.io/windscape/reference/birch.html</loc></url>
 <url><loc>https://matthewkling.github.io/windscape/reference/cell_distance.html</loc></url>
 <url><loc>https://matthewkling.github.io/windscape/reference/cfsr_dl.html</loc></url>
 <url><loc>https://matthewkling.github.io/windscape/reference/cfsr_dl_land.html</loc></url>
+<url><loc>https://matthewkling.github.io/windscape/reference/cfsr_usa.html</loc></url>
 <url><loc>https://matthewkling.github.io/windscape/reference/check_cell_distance.html</loc></url>
 <url><loc>https://matthewkling.github.io/windscape/reference/circ_sd.html</loc></url>
 <url><loc>https://matthewkling.github.io/windscape/reference/direction.html</loc></url>
@@ -20,6 +22,7 @@
 <url><loc>https://matthewkling.github.io/windscape/reference/geo_grid.html</loc></url>
 <url><loc>https://matthewkling.github.io/windscape/reference/index.html</loc></url>
 <url><loc>https://matthewkling.github.io/windscape/reference/iter_length.html</loc></url>
+<url><loc>https://matthewkling.github.io/windscape/reference/katrina.html</loc></url>
 <url><loc>https://matthewkling.github.io/windscape/reference/least_cost_distance.html</loc></url>
 <url><loc>https://matthewkling.github.io/windscape/reference/least_cost_surface.html</loc></url>
 <url><loc>https://matthewkling.github.io/windscape/reference/mantel_test.html</loc></url>
@@ -28,6 +31,7 @@
 <url><loc>https://matthewkling.github.io/windscape/reference/particle_flow.html</loc></url>
 <url><loc>https://matthewkling.github.io/windscape/reference/point_distance.html</loc></url>
 <url><loc>https://matthewkling.github.io/windscape/reference/random_walk.html</loc></url>
+<url><loc>https://matthewkling.github.io/windscape/reference/read_wind_rose.html</loc></url>
 <url><loc>https://matthewkling.github.io/windscape/reference/rose.html</loc></url>
 <url><loc>https://matthewkling.github.io/windscape/reference/rw_max_step.html</loc></url>
 <url><loc>https://matthewkling.github.io/windscape/reference/spin90.html</loc></url>

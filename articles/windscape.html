@@ -147,17 +147,17 @@ see it’s a <code>SpatRaster</code> object with many layers, each a ‘u’
 (east-west) or ‘v’ (north-south) component of the local wind vector for
 a particular date and time.</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">wind</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rspatial.github.io/terra/reference/rast.html" class="external-link">rast</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"extdata/wind.tif"</span>, package <span class="op">=</span> <span class="st">"windscape"</span><span class="op">)</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="va">wind</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rspatial.github.io/terra/reference/rast.html" class="external-link">rast</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"extdata/cfsr_usa.tif"</span>, package <span class="op">=</span> <span class="st">"windscape"</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="va">wind</span></span>
 <span><span class="co">#&gt; class       : SpatRaster </span></span>
-<span><span class="co">#&gt; dimensions  : 64, 96, 1152  (nrow, ncol, nlyr)</span></span>
+<span><span class="co">#&gt; dimensions  : 64, 96, 960  (nrow, ncol, nlyr)</span></span>
 <span><span class="co">#&gt; resolution  : 0.3157895, 0.3174603  (x, y)</span></span>
 <span><span class="co">#&gt; extent      : -120.1579, -89.84211, 29.84127, 50.15873  (xmin, xmax, ymin, ymax)</span></span>
 <span><span class="co">#&gt; coord. ref. : lon/lat WGS 84 </span></span>
-<span><span class="co">#&gt; source      : wind.tif </span></span>
-<span><span class="co">#&gt; names       : u 2000-01-01, u 200~00:00, u 200~00:00, u 200~00:00, u 200~00:00, u 200~00:00, ... </span></span>
-<span><span class="co">#&gt; min values  :        -4.80,       -4.68,       -4.02,       -3.96,       -4.15,       -4.54, ... </span></span>
-<span><span class="co">#&gt; max values  :         7.84,        7.63,        9.20,        9.77,       10.05,       10.17, ...</span></span></code></pre></div>
+<span><span class="co">#&gt; source      : cfsr_usa.tif </span></span>
+<span><span class="co">#&gt; names       : u 200~00:00, u 200~00:00, u 200~00:00, u 200~00:00, u 200~00:00, u 200~00:00, ... </span></span>
+<span><span class="co">#&gt; min values  :       -9.30,      -10.16,      -10.20,      -10.79,      -11.53,      -10.94, ... </span></span>
+<span><span class="co">#&gt; max values  :       10.42,       10.30,       10.32,       10.16,       10.01,        9.60, ...</span></span></code></pre></div>
 <p>Next we’ll convert these data into a formal wind field time series
 object of class <code>wind_series</code>, which is a
 <code>SpatRaster</code> of wind data meeting certain criteria. To do
@@ -421,12 +421,12 @@ the inverse, wind flow rates per hour:</p>
 <div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">wind_time</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/least_cost_distance.html">least_cost_distance</a></span><span class="op">(</span><span class="va">downwind</span>, <span class="va">sites</span><span class="op">)</span></span>
 <span><span class="va">wind_time</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">5</span>, <span class="fl">1</span><span class="op">:</span><span class="fl">5</span><span class="op">]</span></span>
-<span><span class="co">#&gt;           [,1]       [,2]     [,3]     [,4]      [,5]</span></span>
-<span><span class="co">#&gt; [1,]       NaN   84.49788 402.9980 469.0898  717.1286</span></span>
-<span><span class="co">#&gt; [2,]  315.0642        NaN 381.4348 384.5526  808.0699</span></span>
-<span><span class="co">#&gt; [3,] 1099.7984  858.79371      NaN 422.9502  860.2448</span></span>
-<span><span class="co">#&gt; [4,] 1333.2703 1082.61184 415.3782      NaN 1144.4553</span></span>
-<span><span class="co">#&gt; [5,]  892.6488  921.87234 172.9208 591.5632       NaN</span></span></code></pre></div>
+<span><span class="co">#&gt;           [,1]      [,2]     [,3]     [,4]      [,5]</span></span>
+<span><span class="co">#&gt; [1,]       NaN  119.5523 379.1244 720.1041  519.7705</span></span>
+<span><span class="co">#&gt; [2,]  403.0177       NaN 426.1965 599.9876  689.3432</span></span>
+<span><span class="co">#&gt; [3,] 1172.0352  818.1965      NaN 539.9783  705.5348</span></span>
+<span><span class="co">#&gt; [4,] 1404.3221 1057.7030 407.2637      NaN 1073.4969</span></span>
+<span><span class="co">#&gt; [5,] 1076.2774 1038.5731 232.4783 719.9133       NaN</span></span></code></pre></div>
 <p>As discussed later in this document, these results can be used in
 downstream analyses, such as comparing them to ecological data from the
 same set of sites to assess the role of wind in structuring spatial
@@ -474,10 +474,10 @@ the walk proceeds:</p>
 depending on the data; it is computed internally to maximize the ratio
 of simulation time to computational processing time, and can be accessed
 by calling <code><a href="../reference/iter_length.html">iter_length()</a></code> on the random walk output. In our
-case, one iteration is 1.58 hours, so our full simulation represents 949
-hours. (It only represents actual clock time if you use a conductance
-value of <code>trans = 1</code> when creating the wind rose; otherwise,
-it represents a relative measure of diffusion speed with less
+case, one iteration is 1.82 hours, so our full simulation represents
+1094 hours. (It only represents actual clock time if you use a
+conductance value of <code>trans = 1</code> when creating the wind rose;
+otherwise, it represents a relative measure of diffusion speed with less
 interpretable units.)</p>
 <p>Our simulation tracked the fleeting diffusion of the initial “pulse”
 of particle mass, most of which will eventually leave the modeling
@@ -551,10 +551,10 @@ influences as controls.</p>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/str.html" class="external-link">str</a></span><span class="op">(</span><span class="va">r</span><span class="op">)</span></span>
 <span><span class="co">#&gt; List of 4</span></span>
-<span><span class="co">#&gt;  $ stat    : num 0.093</span></span>
-<span><span class="co">#&gt;  $ quantile: num 0.647</span></span>
-<span><span class="co">#&gt;  $ p.value : num 0.707</span></span>
-<span><span class="co">#&gt;  $ perm    : num [1:999] -0.187 -0.138 0.393 -0.19 -0.224 ...</span></span></code></pre></div>
+<span><span class="co">#&gt;  $ stat    : num 0.219</span></span>
+<span><span class="co">#&gt;  $ quantile: num 0.776</span></span>
+<span><span class="co">#&gt;  $ p.value : num 0.448</span></span>
+<span><span class="co">#&gt;  $ perm    : num [1:999] -0.292 -0.273 0.505 -0.239 -0.188 ...</span></span></code></pre></div>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>
