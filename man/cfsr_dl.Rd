@@ -9,6 +9,7 @@ cfsr_dl(
   years = 1979,
   months = 1,
   days = 1,
+  hlim = c(0, 23),
   xlim = c(260, 270),
   ylim = c(40, 50)
 )
@@ -24,6 +25,8 @@ with the numbers indicating pressure levels in hPa).}
 
 \item{days}{Integer vector representing day(s) for which data is to be requested, in the range 0-31.}
 
+\item{hlim}{Vector of length 2, containing integers between 0 and 23, giving the range of hours (in UTC time zone) to download.}
+
 \item{xlim}{Vector of length 2, giving longitudinal limits of the data to download, in the range 0 to 360.}
 
 \item{ylim}{Vector of length 2, giving latitudinal limits of the data to download, in the range -90 to 90.}
@@ -33,5 +36,5 @@ A list containing u and v components of the wind field, each as a SpatRaster wit
 }
 \description{
 This function downloads hourly CFSR wind data from the NCAR THREDDS server, for one or more historic dates, within a spatial bounding box.
-Data for all factorial combinations of 'years', 'months', and 'days' are downloaded and combined.
+Data for all factorial combinations of 'years', 'months', 'days', and 'hours' are downloaded and combined.
 }
