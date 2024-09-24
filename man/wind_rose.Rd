@@ -15,7 +15,7 @@ wind_rose(x, trans = 1, ...)
 \item{...}{Additional arguments passed to `terra::app`, e.g. 'filename'.}
 }
 \value{
-An 8-layer raster stack, where each layer is wind conductance from
+A \code{wind_rose} object. This is an 8-layer raster stack, where each layer is wind conductance from
   the focal cell to one of its neighbors (clockwise starting in the SW).
   If input windspeeds are in m/s and `trans = 1`, values are in (1 / hours)
 }

@@ -1,4 +1,4 @@
-#' setGeneric("plot", function(x) standardGeneric("plot"))
+#' if (!isGeneric("plot")){setGeneric("plot", function(x, y,...) standardGeneric("plot"))}
 #'
 #' #' Plot a wind_rose
 #' #'

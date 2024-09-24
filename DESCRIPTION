@@ -34,6 +34,7 @@ Collate:
     'RcppExports.R'
     'cfsr_dl.R'
     'circ_sd.R'
+    'datasets.R'
     'distance.R'
     'downscale.R'
     'least_cost.R'

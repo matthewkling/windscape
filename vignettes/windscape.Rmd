@@ -62,7 +62,7 @@ wind <- cfsr_dl(variable = "wnd10m", years = 2000, months = 6:9, days = seq(1, 2
 Alternatively we can load wind data locally from disk (a more likely scenario for an actual analysis), using `terra::rast()`. The data set loaded below, which ships with the `windscape` package, is the same one downloaded by the example code above. We can see it's a `SpatRaster` object with many layers, each a 'u' (east-west) or 'v' (north-south) component of the local wind vector for a particular date and time.
 
 ```{r load, eval = T}
-wind <- rast(system.file("extdata/wind.tif", package = "windscape"))
+wind <- rast(system.file("extdata/cfsr_usa.tif", package = "windscape"))
 wind
 ```
 
