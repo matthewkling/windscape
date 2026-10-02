@@ -52,7 +52,7 @@ sym_matrix <- function(x){
 g <- runif(45)
 w <- runif(45)
 d <- runif(45)
-e <- sample(0:1, 45, T)
+e <- sample(0:1, 45, TRUE)
 G <- sym_matrix(g) # e.g. a genetic matrix
 W <- sym_matrix(w) # e.g. a wind matrix
 D <- sym_matrix(d) # e.g. a distance matrix
@@ -66,8 +66,10 @@ mantel_test(G, W, method = "kendall")  # use of alternative test statistic
 # Demonstrate that the function matches vegan::mantel.partial output:
 # (using only symmetric matrices, and just one control variable, since
 # vegan does not work with asymmetric matrices or multiple controls)
-a <- mantel_test(G, W, list(D), nperm = 99999)
-b <- vegan::mantel.partial(G, W, D, permutations = 99999)
-c(a$stat, b$statistic)
-c(1 - a$quantile, b$signif) # will differ slightly due to randomization
+if(requireNamespace("vegan", quietly = TRUE)){
+  a <- mantel_test(G, W, list(D), nperm = 999)
+  b <- vegan::mantel.partial(G, W, D, permutations = 999)
+  c(a$stat, b$statistic)
+  c(1 - a$quantile, b$signif) # will differ slightly due to randomization
+}
 }

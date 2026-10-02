@@ -10,9 +10,11 @@ check_cell_distance(x, ll, return = FALSE)
 \item{x}{SpatRaster (e.g. a `wind_rose`)}
 
 \item{ll}{two-column matrix of site coordinates}
+
+\item{return}{Logical: return the matrix of ratios? Default is FALSE, which only prints a report.}
 }
 \value{
-A matrix of the ratios of point distances to cell distances
+If \code{return = TRUE}, a matrix of the ratios of cell distances to point distances
 }
 \description{
 Check for discrepancies between pairwise distances between a set of points, versus pairwise distances between the

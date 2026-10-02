@@ -2,14 +2,15 @@
 #'
 #' @param x A vector of wind data containing: latitude, resolution, u
 #'   windspeeds, v windspeeds
-#' @param p A positive number indicating the power to raise windspeeds to (see details)
+#' @param trans A function transforming wind speed into conductance (see details)
 #' @return A vector of 8 conductance values to neighboring cells, clockwise
 #'   starting with the southwest neighbor. If input windspeeds are in m/s,
 #'   values are in (1 / hours ^ p)
-#' @details A value of p = 0 will ignore speed, assigning weights based on
-#'   direction only. P = 1 assumes conductance is proportional to windspeed, p =
-#'   2 assumes it's proportional to aerodynamic drag, and p = 3 assumes it's
-#'   proportional to force. Any intermediate value can also be used.
+#' @details \code{trans} is applied to each wind speed observation. For example,
+#'   \code{function(s) s^0} ignores speed, assigning weights based on direction only;
+#'   \code{identity} (the default) assumes conductance is proportional to windspeed,
+#'   \code{function(s) s^2} assumes it's proportional to aerodynamic drag, and
+#'   \code{function(s) s^3} assumes it's proportional to force. See \link{wind_rose}.
 #' @export
 rose <- function(x, trans = identity){
 
@@ -22,7 +23,7 @@ rose <- function(x, trans = identity){
       # wind speed and direction
       speed <- sqrt(uv[,1]^2 + uv[,2]^2)
       weight <- trans(speed)
-      dir <- spin90(windscape::direction(uv[,2], -1*uv[,1]))
+      dir <- spin90(direction(uv[,2], -1*uv[,1]))
       dir[dir<0] <- dir[dir<0] + 360
       dir[dir==0] <- 360
 
@@ -44,8 +45,3 @@ rose <- function(x, trans = identity){
       # reorder, clockwise from SW
       l[c(6:8, 1:5)]
 }
-
-
-#' @useDynLib windscape
-#' @importFrom Rcpp sourceCpp
-NULL

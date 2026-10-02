@@ -2,11 +2,10 @@
 #'
 #' A wrapper around \link[geosphere]{distm}, returning distances in km.
 #'
-#' @param x two-column matrix of point coordinates
+#' @param ll two-column matrix of point coordinates
 #' @return Pairwise distances between the points, in km
 #' @export
 point_distance <- function(ll){
-      require(geosphere)
       geosphere::distm(ll) / 1000
 }
 
@@ -22,8 +21,7 @@ point_distance <- function(ll){
 #' @return Pairwise distances between the cell centroids, in km
 #' @export
 cell_distance <- function(x, ll){
-      xx <- x[[1]][[1]] %>% crop(extent(ll)*2) %>% setValues(1:ncell(.))
-      cc <- crds(xx)[as.vector(terra::extract(xx, ll))[[1]],] # cell centers
+      cc <- terra::xyFromCell(x, terra::cellFromXY(x, ll)) # cell centers
       point_distance(cc)
 }
 
@@ -41,7 +39,8 @@ cell_distance <- function(x, ll){
 #'
 #' @param x SpatRaster (e.g. a `wind_rose`)
 #' @param ll two-column matrix of site coordinates
-#' @return A matrix of the ratios of point distances to cell distances
+#' @param return Logical: return the matrix of ratios? Default is FALSE, which only prints a report.
+#' @return If \code{return = TRUE}, a matrix of the ratios of cell distances to point distances
 #' @export
 check_cell_distance <- function(x, ll, return = FALSE){
       cell <- cell_distance(x, ll)
@@ -51,14 +50,16 @@ check_cell_distance <- function(x, ll, return = FALSE){
       n <- sum(upper.tri(cell))
       f <- function(b) paste0("\n\t>= ", b*100, "%: ", sum(d >= b), " (", signif(mean(d >= b), 3), "%)")
       message("Total point pairs: ", n)
+      cells <- terra::cellFromXY(x, ll)
+      same <- outer(cells, cells, "==")[upper.tri(cell)] # compare cell IDs, not distances (which may not be exactly 0)
       message("Point pairs in the same grid cell: ",
-              sum(cell[upper.tri(cell)] == 0),
-              " (", signif(mean(cell[upper.tri(cell)] == 0) * 100, 3), "%)")
+              sum(same),
+              " (", signif(mean(same) * 100, 3), "%)")
       m <- apply(matrix(c(0, .01, .01, .025, .025, .05, .05, .1, .1, .25, .25, Inf), ncol = 2, byrow = T),
-            1, function(x){
-                  b <- between(d, x[1], x[2])
-                  paste0("\n\t", x[1]*100, "--", x[2]*100, "%: ", sum(b), " (", signif(mean(b)*100, 3), "%)")
-            })
+                 1, function(x){
+                       b <- d >= x[1] & d <= x[2]
+                       paste0("\n\t", x[1]*100, "--", x[2]*100, "%: ", sum(b), " (", signif(mean(b)*100, 3), "%)")
+                 })
       message("Distribution of cell-point distance discrepancies:",
               paste(m))
       if(return) return(r)

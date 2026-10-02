@@ -2,20 +2,24 @@ Package: windscape
 Type: Package
 Title: Landscape connectivity by wind
 Version: 1.1.0
-Author: Matthew Kling
-Maintainer: Matthew Kling <mattkling@gmail.com>
+Authors@R: person("Matthew", "Kling", email = "mattkling@berkeley.edu",
+                  role = c("aut", "cre", "cph"))
 Description: Import and visualize wind data, model landscape connectivity by
     wind dispersal, and test statistical relationships between wind and 
     ecological data.
 Encoding: UTF-8
 LazyData: true
-License: GPL (>= 2)
+LazyDataCompression: xz
 LinkingTo: Rcpp
 Imports: 
     Rcpp,
     raster,
-    geosphere
-RoxygenNote: 7.2.3
+    geosphere,
+    magrittr,
+    Matrix,
+    methods,
+    stats,
+    utils
 URL: https://matthewkling.github.io/windscape/
 Suggests: 
     knitr,
@@ -23,31 +27,16 @@ Suggests:
     ncdf4,
     purrr,
     rmarkdown,
+    sf,
     stringr,
+    testthat (>= 3.0.0),
+    vegan,
     tidyverse
 VignetteBuilder: knitr
 Depends: 
     gdistance,
     R (>= 2.10),
     terra
-Collate: 
-    'RcppExports.R'
-    'cfsr_dl.R'
-    'circ_sd.R'
-    'datasets.R'
-    'distance.R'
-    'downscale.R'
-    'least_cost.R'
-    'mantel.R'
-    'pairwise_matrices.R'
-    'wind_rose.R'
-    'plot.R'
-    'particles.R'
-    'random_walk.R'
-    'rose.R'
-    'utils.R'
-    'vrcd.R'
-    'weight_conductance.R'
-    'wind_field.R'
-    'wind_graph.R'
-    'ws_summarize.R'
+Config/testthat/edition: 3
+Config/roxygen2/version: 8.0.0
+License: MIT + file LICENSE

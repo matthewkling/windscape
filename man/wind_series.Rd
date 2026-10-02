@@ -4,15 +4,16 @@
 \alias{wind_series}
 \title{Generate a wind field time series data set from a set of rasters.}
 \usage{
-wind_series(x, order)
+wind_series(x, order = c("uuvv", "uvuv"))
 }
 \arguments{
 \item{x}{Multi-layer \code{SpatRaster} with layers containing u and v wind components, or
-an object like a file path that can be converted to a \code{SpatRaster}. Note that
-raster data must be in lat-long coordinates.}
+an object like a file path that can be converted to a \code{SpatRaster}. Data must be
+on a longitude/latitude grid with square cells (equal x and y resolution in degrees),
+with u and v components oriented to true east and north; see \link{wind_rose}.}
 
-\item{order}{Either \code{"uuvv"}, the default indicating `x` has all u components
-followed by all v components, or \code{"uuvv"}, indicating the u and v components
+\item{order}{Either \code{"uuvv"}, the default, indicating `x` has all u components
+followed by all v components, or \code{"uvuv"}, indicating the u and v components
 of `x` are alternating.}
 }
 \value{

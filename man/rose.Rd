@@ -10,7 +10,7 @@ rose(x, trans = identity)
 \item{x}{A vector of wind data containing: latitude, resolution, u
 windspeeds, v windspeeds}
 
-\item{p}{A positive number indicating the power to raise windspeeds to (see details)}
+\item{trans}{A function transforming wind speed into conductance (see details)}
 }
 \value{
 A vector of 8 conductance values to neighboring cells, clockwise
@@ -21,8 +21,9 @@ A vector of 8 conductance values to neighboring cells, clockwise
 Calculate 8-neighbor edge loadings from a time series of u and v windspeeds
 }
 \details{
-A value of p = 0 will ignore speed, assigning weights based on
-  direction only. P = 1 assumes conductance is proportional to windspeed, p =
-  2 assumes it's proportional to aerodynamic drag, and p = 3 assumes it's
-  proportional to force. Any intermediate value can also be used.
+\code{trans} is applied to each wind speed observation. For example,
+  \code{function(s) s^0} ignores speed, assigning weights based on direction only;
+  \code{identity} (the default) assumes conductance is proportional to windspeed,
+  \code{function(s) s^2} assumes it's proportional to aerodynamic drag, and
+  \code{function(s) s^3} assumes it's proportional to force. See \link{wind_rose}.
 }

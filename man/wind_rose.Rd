@@ -35,4 +35,11 @@ Any intermediate value can also be used. Any function that transforms a numeric
 vector can also be supplied; for example, to model seed dispersal for a species
 that only releases seeds when winds exceed 10 m/s, we could specify a threshold
 function `trans = function(x){x[x < 10] <- 0; return(x)}`.
+
+Grid geometry: windscape works on longitude/latitude grids with square cells. Distances
+and bearings to each cell's neighbors are computed on the ellipsoid at that cell's latitude,
+so conductance accounts for the narrowing of cells toward the poles. Projected grids are not
+currently supported. If source data are projected, reproject them to longitude/latitude
+before building a \code{wind_series}, rotating u and v to true east and north if they are
+defined relative to the projected grid (as in some reanalysis products).
 }

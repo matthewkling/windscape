@@ -4,6 +4,13 @@
 #' among a set of sites, using the least cost path algorithm. This function is a wrapper around
 #' \link[gdistance]{costDistance}.
 #'
+#' Paths are restricted to the eight neighbor directions, so cost distances are overestimated
+#' for routes between neighbor bearings. For uniform wind on square cells the maximum error is
+#' about 8 percent (routes 22.5 degrees off a grid axis). On a longitude/latitude grid, cells
+#' narrow east-west toward the poles and neighbor bearings become uneven, so the maximum error
+#' grows with latitude, to roughly 18 percent at 60 degrees. The \code{adjust} option corrects
+#' for point-versus-cell distance discrepancies, not for this directional bias.
+#'
 #' @param graph A \link{wind_graph}.
 #' @param sites A two-column matrix of point coordinates.
 #' @param adjust Whether to scale results to correct for discrepancies between point-to-point
@@ -16,7 +23,10 @@ least_cost_distance <- function(graph, sites, adjust = TRUE, rate = FALSE){
       d <- gdistance::costDistance(graph, sites)
       if(adjust){
             r <- rast(nrows = graph@nrows, ncols = graph@ncols, extent = graph@extent, crs = graph@crs)
-            d <- d * point_distance(sites) / cell_distance(r, sites)
+            pd <- point_distance(sites)
+            ratio <- pd / cell_distance(r, sites)
+            ratio[pd == 0] <- 1 # a site to itself (or an identical site): no adjustment
+            d <- d * ratio
       }
       if(rate){
             d <- 1 / d
@@ -30,6 +40,9 @@ least_cost_distance <- function(graph, sites, adjust = TRUE, rate = FALSE){
 #' Calculate the accumulated wind cost-distance (e.g. travel times) or flow rate (the inverse of cost-distance)
 #' from one or more sites to every grid cell across the domain, using the least cost path algorithm. This
 #' function is a wrapper around \link[gdistance]{accCost}.
+#'
+#' Paths are restricted to the eight neighbor directions, so cost distances are overestimated
+#' for routes between neighbor bearings; see \link{least_cost_distance} for magnitudes.
 #'
 #' @param graph A \link{wind_graph}.
 #' @param sites A two-column matrix of point coordinates.

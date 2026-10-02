@@ -1,9 +1,9 @@
 #' An S4 object class representing a wind graph
 #'
 setClass("wind_graph",
-        contains = "TransitionLayer",
-        slots = c(p = "numeric",
-                  direction = "character"))
+         contains = "TransitionLayer",
+         slots = c(p = "numeric",
+                   direction = "character"))
 
 #' Build a wind connectivity graph
 #'
@@ -24,12 +24,28 @@ wind_graph <- function(x, direction = "downwind", wrap = FALSE){
 }
 
 
+#' geoCorrection is not applicable to wind graphs
+#'
+#' Wind graph conductances already account for the distances between cell centers (see
+#' \link{wind_rose}), so \link[gdistance]{geoCorrection} must not be applied to them.
+#'
+#' @param x A \code{wind_graph}.
+#' @param type,... Ignored.
+#' @return Always an error.
+#' @export
+setMethod("geoCorrection", "wind_graph", function(x, type, ...){
+      stop("`geoCorrection()` should not be used on `wind_graph` objects, because their ",
+           "conductances already account for distances between cells.", call. = FALSE)
+})
+
+
 #' A wind transition function to supply to `transition_stack`.
 #'
 #' @param x as used internally within `transition_stack`, this is a vector of
 #'   collated windrose values for FROM and TO cells
 #' @param direction either "downwind" (the default) or "upwind", indicating
 #'   whether outbound or inbound wind conductance should be computed.
+#' @noRd
 flow <- function(x, direction = "downwind"){
 
       # node row and column indices
@@ -75,28 +91,29 @@ flow <- function(x, direction = "downwind"){
 #' This version accepts a raster stack and a custom transition function; the
 #' original does not support arbitrary transition functions for multi-layer
 #' transition data.
+#' @noRd
 transition_stack <- function(x, transitionFunction, directions, symm, wrap = FALSE, ...){
 
       brk <- raster::stack(x)
       x <- brk[[1]]
 
       tr <- new("TransitionLayer",
-                nrows=as.integer(nrow(x)),
-                ncols=as.integer(ncol(x)),
-                extent=extent(x),
-                crs=projection(x, asText=FALSE),
-                transitionMatrix = Matrix(0,ncell(x),ncell(x)),
-                transitionCells = 1:ncell(x))
-      transitionMatr <- transitionMatrix(tr)
-      Cells <- which(!is.na(getValues(x)))
-      adj <- adjacent(x, cells=Cells, pairs=TRUE, target=Cells, directions=directions)
+                nrows=as.integer(raster::nrow(x)),
+                ncols=as.integer(raster::ncol(x)),
+                extent=raster::extent(x),
+                crs=raster::projection(x, asText=FALSE),
+                transitionMatrix = Matrix::Matrix(0, raster::ncell(x), raster::ncell(x)),
+                transitionCells = 1:raster::ncell(x))
+      transitionMatr <- gdistance::transitionMatrix(tr)
+      Cells <- which(!is.na(raster::getValues(x)))
+      adj <- raster::adjacent(x, cells=Cells, pairs=TRUE, target=Cells, directions=directions)
 
 
       ##### start modifications to gdistance::transition #####
 
       # add adjacencies between left and right edges
       if(wrap){
-            i <- raster(x)
+            i <- raster::raster(x)
             i[] <- Cells
             i <- terra::as.matrix(i)
             nc <- ncol(i)
@@ -109,21 +126,16 @@ transition_stack <- function(x, transitionFunction, directions, symm, wrap = FAL
 
       # format raster data layers to feed to transitionFunction
       # col order is x[[1]][from, to] ... x[[n]][from,to]
-      dataVals <- lapply(1:nlayers(brk),
-                         function(i) cbind(values(brk[[i]])[adj[,1]],
-                                           values(brk[[i]])[adj[,2]]))
+      dataVals <- lapply(1:raster::nlayers(brk),
+                         function(i) cbind(raster::values(brk[[i]])[adj[,1]],
+                                           raster::values(brk[[i]])[adj[,2]]))
       dataVals <- do.call("cbind", dataVals)
 
       ##### end modifications #####
 
       transition.values <- apply(dataVals, 1, transitionFunction, ...)
       transitionMatr[adj] <- as.vector(transition.values)
-      transitionMatrix(tr) <- transitionMatr
-      matrixValues(tr) <- "resistance"
+      gdistance::transitionMatrix(tr) <- transitionMatr
+      gdistance::matrixValues(tr) <- "resistance"
       return(tr)
 }
-
-
-
-
-

@@ -23,6 +23,7 @@
 #'  \item{"windshed_size": }{Mean accessibility. This is the average of all accessibility values, weighted to correct for grid distortions. Higher values indicate landscapes with greater overall wind accessibility.}
 #'  \item{"windshed_landarea": }{A realative measure of the land area covered by grid cells with nonzero wind accessibility.}
 #' }
+#' @export
 ws_summarize <- function(x, origin, radius = NULL){
 
       z <- values(x %>% setNames("z"))

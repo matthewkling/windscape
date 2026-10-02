@@ -7,15 +7,19 @@ setClass("wind_series",
 #' Generate a wind field time series data set from a set of rasters.
 #'
 #' @param x Multi-layer \code{SpatRaster} with layers containing u and v wind components, or
-#'    an object like a file path that can be converted to a \code{SpatRaster}. Note that
-#'    raster data must be in lat-long coordinates.
-#' @param order Either \code{"uuvv"}, the default indicating `x` has all u components
-#'    followed by all v components, or \code{"uuvv"}, indicating the u and v components
+#'    an object like a file path that can be converted to a \code{SpatRaster}. Data must be
+#'    on a longitude/latitude grid with square cells (equal x and y resolution in degrees),
+#'    with u and v components oriented to true east and north; see \link{wind_rose}.
+#' @param order Either \code{"uuvv"}, the default, indicating `x` has all u components
+#'    followed by all v components, or \code{"uvuv"}, indicating the u and v components
 #'    of `x` are alternating.
 #' @return A `wind_series` object, which is a particular form of \code{SpatRaster}.
-wind_series <- function(x, order){
+#' @export
+wind_series <- function(x, order = c("uuvv", "uvuv")){
 
+      order <- match.arg(order)
       if(!inherits(x, "SpatRaster")) x <- rast(x)
+      check_grid(x)
       if(terra::nlyr(x) %% 2 != 0) stop("if `v` is not specified, `u` must have an even number of layers.")
 
       # collate layers
@@ -45,6 +49,7 @@ setClass("wind_field",
 #' @param x A `SpatRaster` with two layers representing u and v wind components;
 #'    note that these must be in lat-long coordinates.
 #' @return A `wind_field` object, which is a particular form of `SpatRaster`.
+#' @export
 wind_field <- function(x){
       if(terra::nlyr(x) != 2) stop("`x` must have two layers.")
       xt <- ext(x)

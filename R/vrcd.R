@@ -1,4 +1,4 @@
-#' variable-resolution costDistance
+#' Variable-resolution costDistance
 #'
 #' Increasing the spatial resolution of a wind data set (e.g. by interpolation using \link{downscale})
 #' can greatly improve wind connectivity estimates among nearby sites, but can make it computationally
@@ -42,7 +42,7 @@ vrcd <- function(rose, ll, threshold_km = 30, pad = 1, max_nodes = 1e6, directio
       message("... computing global connectivity ...")
       wdist <- wdist0 <- rose %>%
             wind_graph(direction) %>% # convert to connectivity graph
-            costDistance(ll) # calculate travel times between sites
+            gdistance::costDistance(ll) # calculate travel times between sites
       cdist <- cdist0 <- cell_distance(rose, ll)
 
       # bookkeeping
@@ -67,7 +67,7 @@ vrcd <- function(rose, ll, threshold_km = 30, pad = 1, max_nodes = 1e6, directio
                         # crop wind rose to local neighborhood of at least a few cells
                         expn <- lli %>% apply(2, range) %>% apply(2, diff) %>% max() %>% "*"(pad)
                         exp <- max(expn, res(rose)[2]*2)
-                        xt <- extent(t(apply(lli, 2, range))) + c(-exp, exp, -exp, exp)
+                        xt <- raster::extent(t(apply(lli, 2, range))) + c(-exp, exp, -exp, exp)
                         ri <- rose %>% crop(xt)
 
                         # interpolate
@@ -76,11 +76,11 @@ vrcd <- function(rose, ll, threshold_km = 30, pad = 1, max_nodes = 1e6, directio
 
                         # crop to immediate region around focal sites
                         exp <- max(expn, res(ri)[2]*2)
-                        xt <- extent(t(apply(lli, 2, range))) + c(-exp, exp, -exp, exp)
+                        xt <- raster::extent(t(apply(lli, 2, range))) + c(-exp, exp, -exp, exp)
                         ri <- ri %>% crop(xt)
 
                         # wind connectivity, cell distance, and pairwise flag
-                        wdist[wi, wi] <- ri %>% wind_graph(direction) %>% costDistance(lli)
+                        wdist[wi, wi] <- ri %>% wind_graph(direction) %>% gdistance::costDistance(lli)
                         cdist[wi, wi] <- cell_distance(ri, lli)
                   }
             }

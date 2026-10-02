@@ -25,3 +25,11 @@ Calculate pairwise wind cost-distances (e.g. travel times) or flow rates (the in
 among a set of sites, using the least cost path algorithm. This function is a wrapper around
 \link[gdistance]{costDistance}.
 }
+\details{
+Paths are restricted to the eight neighbor directions, so cost distances are overestimated
+for routes between neighbor bearings. For uniform wind on square cells the maximum error is
+about 8 percent (routes 22.5 degrees off a grid axis). On a longitude/latitude grid, cells
+narrow east-west toward the poles and neighbor bearings become uneven, so the maximum error
+grows with latitude, to roughly 18 percent at 60 degrees. The \code{adjust} option corrects
+for point-versus-cell distance discrepancies, not for this directional bias.
+}

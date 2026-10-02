@@ -2,7 +2,7 @@
 % Please edit documentation in R/vrcd.R
 \name{vrcd}
 \alias{vrcd}
-\title{variable-resolution costDistance}
+\title{Variable-resolution costDistance}
 \usage{
 vrcd(
   rose,

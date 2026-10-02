@@ -6,6 +6,7 @@
 #'
 #' @return A named vector including the bearing of the mean resultant vector
 #'   ("bearing") and the circular standard deviation ("iso")
+#' @noRd
 circ_sd <- function(x, # bearings -- in degrees, not radians
                     w=NULL,
                     ...){
@@ -18,6 +19,6 @@ circ_sd <- function(x, # bearings -- in degrees, not radians
       xy <- apply(xy, 2, weighted.mean, w=w, ...)  # mean resultant vector
       rbar <- sqrt(sum(xy^2)) # mean resultant vector length
       iso <- sqrt(1-rbar) # circular standard deviation
-      angle <- bearing(c(0,0), xy)
+      angle <- geosphere::bearing(c(0,0), xy)
       return(c(bearing=angle, iso=iso))
 }

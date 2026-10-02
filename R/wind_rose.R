@@ -56,6 +56,13 @@ as_wind_rose <- function(x, trans, n_steps = NA_integer_){
 #' that only releases seeds when winds exceed 10 m/s, we could specify a threshold
 #' function `trans = function(x){x[x < 10] <- 0; return(x)}`.
 #'
+#' Grid geometry: windscape works on longitude/latitude grids with square cells. Distances
+#' and bearings to each cell's neighbors are computed on the ellipsoid at that cell's latitude,
+#' so conductance accounts for the narrowing of cells toward the poles. Projected grids are not
+#' currently supported. If source data are projected, reproject them to longitude/latitude
+#' before building a \code{wind_series}, rotating u and v to true east and north if they are
+#' defined relative to the projected grid (as in some reanalysis products).
+#'
 #' @param x Data set of class `wind_series`.
 #' @param trans Either a function, or a positive number indicating the power to raise windspeeds to; see details.
 #' @param ... Additional arguments passed to `terra::app`, e.g. 'filename'.
@@ -63,9 +70,11 @@ as_wind_rose <- function(x, trans, n_steps = NA_integer_){
 #'   the focal cell to one of its neighbors (clockwise starting in the SW).
 #'   If input windspeeds are in m/s and `trans = 1`, values are in (1 / hours)
 #' @aliases windrose_rasters
+#' @export
 wind_rose <- function(x, trans = 1, ...){
 
       if(!inherits(x, "wind_series")) stop("`x` must be an object of class `wind_series`.")
+      check_grid(x)
 
       trn <- trans
       if(inherits(trans, "numeric")) trn <- function(x) x^trans
@@ -86,12 +95,3 @@ wind_rose <- function(x, trans = 1, ...){
       r <- terra::app(x, fun = rose, trans = trn)
       as_wind_rose(r, trn, x@n_steps)
 }
-
-
-
-# prevent use of gdistance::geoCorrection on wind roses
-setGeneric("geoCorrection", function(x) standardGeneric("geoCorrection"))
-geoCorrection.wind_rose <- function(x){
-      stop("The `geoCorrection` function should not be used on `wind_rose` objects, because they have already been georectified.")
-}
-setMethod("geoCorrection", "wind_rose", geoCorrection.wind_rose)

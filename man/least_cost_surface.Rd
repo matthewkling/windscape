@@ -22,3 +22,7 @@ Calculate the accumulated wind cost-distance (e.g. travel times) or flow rate (t
 from one or more sites to every grid cell across the domain, using the least cost path algorithm. This
 function is a wrapper around \link[gdistance]{accCost}.
 }
+\details{
+Paths are restricted to the eight neighbor directions, so cost distances are overestimated
+for routes between neighbor bearings; see \link{least_cost_distance} for magnitudes.
+}

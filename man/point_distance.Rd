@@ -7,7 +7,7 @@
 point_distance(ll)
 }
 \arguments{
-\item{x}{two-column matrix of point coordinates}
+\item{ll}{two-column matrix of point coordinates}
 }
 \value{
 Pairwise distances between the points, in km

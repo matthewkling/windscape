@@ -1,8 +1,6 @@
-
-
 cfsr_dl_block <- function(variable = "wnd10m",
-                        year = 1979, month = 1, day = 1, hmin = 0, hmax = 23,
-                        xmin = 260, xmax = 270, ymin = 40, ymax = 50){
+                          year = 1979, month = 1, day = 1, hmin = 0, hmax = 23,
+                          xmin = 260, xmax = 270, ymin = 40, ymax = 50){
 
       if(! year %in% 1979:2010) stop("'year' must be between 1979 and 2010")
       if(! month %in% 1:12) stop("'month' must be between 1 and 12")
@@ -33,7 +31,7 @@ cfsr_dl_block <- function(variable = "wnd10m",
       t <- as.POSIXct(paste0(date, c(paste0(" ", stringr::str_pad(hmin, 2, "left", 0), ":00:00 UTC"),
                                      paste0(" ", stringr::str_pad(hmax, 2, "left", 0), ":00:00 UTC"))), tz = "UTC")
 
-            # indices
+      # indices
       btw <- function(data, z) range(which(data <= max(z) & data >= min(z)))
       lon_i <- btw(lon, x)
       lat_i <- btw(lat, y)
@@ -108,9 +106,9 @@ cfsr_dl <- function(variable = "wnd10m",
 cfsr_dl_land <- function(xlim = c(260, 270), ylim = c(40, 50)){
 
       # open connection
-      require(ncdf4)
+      if(!requireNamespace("ncdf4", quietly = TRUE)) stop("the ncdf4 package is required to download CFSR data")
       url <- paste0("https://thredds.rda.ucar.edu/thredds/dodsC/files/g/ds093.1/1980/soilt1.gdas.198001.grb2")
-      ds <- nc_open(url)
+      ds <- ncdf4::nc_open(url)
 
       # dimensions
       lon <- ncdf4::ncvar_get(ds, "lon")
