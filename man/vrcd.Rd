@@ -41,11 +41,11 @@ In this context, changing this parameter is equivalent to transposing the result
 \value{
 A list of square matrices:
 \describe{
- \item{wind_dist}{Wind cost-distances between site pairs, in hours if \code{rose} has a p = 1. Computed using \link[gdistance]{costDistance}.}
- \item{wind_dist_coarse}{Wind cost-distances using the coarse input wind grid (\code{rose}); this will differ from \code{wind_dist} only for site pairs closer than \code{threshold_km}. This is provided for reference, to judge how higher-resolution models impact results relative to the coarse grid.}
- \item{point_dist}{Distances between sites, in km.}
- \item{cell_dist}{Distances between the centroids of the grid cells used to model wind connectivity, in km. For site pairs where this distance deviates from \code{point_dist} by a substantial percentage, \code{wind_dist} estimates may contain nontrivial rounding noise resulting from the discrete grid.}
- \item{cell_dist_coarse}{Distances between the cell centroids in the coarse-resolution input wind dataset (\code{rose}), in km. This is provided for reference, to judge improvements relative to \code{cell_dist}.}
+\item{wind_dist}{Wind cost-distances between site pairs, in hours if \code{rose} has a p = 1. Computed using \link[gdistance]{costDistance}.}
+\item{wind_dist_coarse}{Wind cost-distances using the coarse input wind grid (\code{rose}); this will differ from \code{wind_dist} only for site pairs closer than \code{threshold_km}. This is provided for reference, to judge how higher-resolution models impact results relative to the coarse grid.}
+\item{point_dist}{Distances between sites, in km.}
+\item{cell_dist}{Distances between the centroids of the grid cells used to model wind connectivity, in km. For site pairs where this distance deviates from \code{point_dist} by a substantial percentage, \code{wind_dist} estimates may contain nontrivial rounding noise resulting from the discrete grid.}
+\item{cell_dist_coarse}{Distances between the cell centroids in the coarse-resolution input wind dataset (\code{rose}), in km. This is provided for reference, to judge improvements relative to \code{cell_dist}.}
 }
 }
 \description{

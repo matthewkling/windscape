@@ -27,10 +27,10 @@ mantel_test(
 \value{
 A list with the following components:
 \itemize{
- \item{`stat`: }{The correlation coefficient between \code{x} and \code{y}, measured on the data provided. This will be a partial correlation if \code{z} is specified.}
- \item{`quantile`: }{The quantile of the observed stat in the null distribution.}
- \item{`p.value`: }{Significance, derived from the combination of \code{quantile} and \code{alternative}.}
- \item{`perm`: }{A vector of null correlations based on permuted data.}
+\item{\code{stat}: }{The correlation coefficient between \code{x} and \code{y}, measured on the data provided. This will be a partial correlation if \code{z} is specified.}
+\item{\code{quantile}: }{The quantile of the observed stat in the null distribution.}
+\item{\code{p.value}: }{Significance, derived from the combination of \code{quantile} and \code{alternative}.}
+\item{\code{perm}: }{A vector of null correlations based on permuted data.}
 }
 }
 \description{

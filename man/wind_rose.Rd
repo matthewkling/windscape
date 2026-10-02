@@ -8,16 +8,16 @@
 wind_rose(x, trans = 1, ...)
 }
 \arguments{
-\item{x}{Data set of class `wind_series`.}
+\item{x}{Data set of class \code{wind_series}.}
 
 \item{trans}{Either a function, or a positive number indicating the power to raise windspeeds to; see details.}
 
-\item{...}{Additional arguments passed to `terra::app`, e.g. 'filename'.}
+\item{...}{Additional arguments passed to \code{terra::app}, e.g. 'filename'.}
 }
 \value{
 A \code{wind_rose} object. This is an 8-layer raster stack, where each layer is wind conductance from
-  the focal cell to one of its neighbors (clockwise starting in the SW).
-  If input windspeeds are in m/s and `trans = 1`, values are in (1 / hours)
+the focal cell to one of its neighbors (clockwise starting in the SW).
+If input windspeeds are in m/s and \code{trans = 1}, values are in (1 / hours)
 }
 \description{
 This function converts a \code{wind_field_ts} into a \code{wind_rose} object
@@ -26,7 +26,7 @@ cell. The result is a set of eight raster layers giving the average wind conduct
 toward each of a cell's 'queen' neighbors.
 }
 \details{
-The `trans` parameter defines the transformation function used to convert wind speed
+The \code{trans} parameter defines the transformation function used to convert wind speed
 into conductance. If a numeric value is supplied, the function speed^trans is used.
 A value of trans = 0 will ignore speed, assigning weights based on direction only;
 trans = 1 assumes conductance is proportional to windspeed, trans = 2 assumes it's
@@ -34,7 +34,7 @@ proportional to aerodynamic drag, and trans = 3 assumes it's proportional to for
 Any intermediate value can also be used. Any function that transforms a numeric
 vector can also be supplied; for example, to model seed dispersal for a species
 that only releases seeds when winds exceed 10 m/s, we could specify a threshold
-function `trans = function(x){x[x < 10] <- 0; return(x)}`.
+function \code{trans = function(x){x[x < 10] <- 0; return(x)}}.
 
 Grid geometry: windscape works on longitude/latitude grids with square cells. Distances
 and bearings to each cell's neighbors are computed on the ellipsoid at that cell's latitude,

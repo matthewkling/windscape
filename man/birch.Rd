@@ -5,19 +5,19 @@
 \alias{birch}
 \title{Silver birch landscape genetic data from Tsuda et al. (2017)}
 \format{
-`birch`
+\code{birch}
 A list with 4 entries:
 \describe{
-  \item{sites}{A matrix with two columns giving the longitude and latitude of each site.}
-  \item{div}{A numeric vector giving the allelic richness sampled at each site.}
-  \item{mig}{A square, asymmetric matrix with estimated gene flow rates for each pair of sites.}
-  \item{fst}{A square, symmetric matrix with Fst values for each pair of sites.}
+\item{sites}{A matrix with two columns giving the longitude and latitude of each site.}
+\item{div}{A numeric vector giving the allelic richness sampled at each site.}
+\item{mig}{A square, asymmetric matrix with estimated gene flow rates for each pair of sites.}
+\item{fst}{A square, symmetric matrix with Fst values for each pair of sites.}
 }
 }
 \source{
 Y. Tsuda, V. Semerikov, F. Sebastiani, G. G. Vendramin, M. Lascoux, Multispecies genetic
-   structure and hybridization in the Betula genus across Eurasia. Molecular Ecology 26, 589-605 (2017).
-   <https://doi.org/10.1111/mec.13885>
+structure and hybridization in the Betula genus across Eurasia. Molecular Ecology 26, 589-605 (2017).
+\url{https://doi.org/10.1111/mec.13885}
 }
 \usage{
 birch

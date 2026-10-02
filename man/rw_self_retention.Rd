@@ -7,43 +7,51 @@
 rw_self_retention(
   rose,
   half_life = Inf,
+  timescale = 1,
+  latitude_correction = TRUE,
   cells = NULL,
   exact = FALSE,
-  timescale = 1,
   chunk = 200
 )
 }
 \arguments{
 \item{rose}{A \code{wind_rose}.}
 
-\item{half_life}{Half-life of airborne mass, in hours; see \link{random_walk}. Must match
-the value used for the stream-mode walk.}
+\item{half_life}{Half-life of airborne mass, in hours. Must match the value used for the
+stream-mode walk; see \code{\link[=random_walk]{random_walk()}}.}
 
-\item{cells}{Optional cell numbers, or a two-column coordinate matrix. Required if
+\item{timescale}{Time step scaling factor; see \code{\link[=random_walk]{random_walk()}}. Affects only the approximate
+values; exact values are independent of \code{timescale}.}
+
+\item{latitude_correction}{Logical. Must match the value used for the stream-mode walk; see
+\code{\link[=random_walk]{random_walk()}}.}
+
+\item{cells}{Cell numbers, or a two-column matrix of coordinates, at which to compute
+\code{G_cc}. Optional for the approximation (which defaults to every cell); required if
 \code{exact = TRUE}.}
 
-\item{exact}{Logical: compute exact values rather than the diagonal approximation?}
+\item{exact}{Logical: compute exact values rather than the approximation? Exact values are a
+sparse solve per cell (sharing one factorization), practical for a set of occupied cells
+but not for every cell of a large grid. The approximation is a lower bound. Default \code{FALSE}.}
 
-\item{timescale}{Time step scaling factor; see \link{random_walk}. Must match the value
-used for the stream-mode walk.}
-
-\item{chunk}{Number of right-hand sides per solve when \code{exact = TRUE}.}
+\item{chunk}{With \code{exact = TRUE}: number of cells to solve for at once. Larger values are
+faster but use more memory.}
 }
 \value{
-If \code{cells} is NULL, a SpatRaster of approximate G_cc. Otherwise a numeric
-   vector with one value per cell.
+\code{G_cc} in hours per unit of release: a SpatRaster of approximate values for every
+cell if \code{cells} is NULL, otherwise a numeric vector with one value per cell. For a
+leave-one-out surface, \code{residence_loo = residence - init * G_cc} and
+\code{deposition_loo = log(2) / half_life * residence_loo}, using the \code{residence} layer from
+\code{\link[=random_walk]{random_walk()}} and \code{init} values at the source cells.
 }
 \description{
-Computes G_cc, the steady-state airborne mass in cell c per unit of per-step release
-from cell c, i.e. the diagonal of G = (I - (1 - lambda) P')^-1. Multiplying by a cell's
-release gives its contribution to its own value, which can be subtracted for a
-leave-one-out surface: \code{n_loo = n - n0 * G_cc}.
+Computes \code{G_cc}, the stream-mode residence time in cell \code{c} per unit of release from cell
+\code{c} (see \code{\link[=random_walk]{random_walk()}}). This is each source's contribution to its own value, which can be
+subtracted for a leave-one-out surface, e.g. to avoid a site predicting itself.
 }
 \details{
-The approximation \code{G_cc ~ 1 / (1 - (1 - lambda) p_cc)} counts only paths in which
-mass never leaves the cell, and is therefore a lower bound. It omits mass that leaves and
-returns, which is substantial in a nearest-neighbor walk, especially in fast cells where
-the retention probability p_cc is near zero. The exact value requires one sparse solve
-per cell (sharing a single factorization), so is practical for a set of occupied cells
-but not for every cell of a large grid.
+The approximation \code{G_cc ~ (1 - lambda) * t / (1 - (1 - lambda) * p_cc)} counts only paths in
+which mass never leaves the cell (\code{p_cc} is the retention probability; see \code{\link[=random_walk]{random_walk()}}).
+It omits mass that leaves and returns, which is substantial in a nearest-neighbor walk,
+especially in fast cells where \code{p_cc} is near zero.
 }

@@ -5,7 +5,7 @@
 \title{Example wind data sets}
 \source{
 Climate Forecast System Reanalysis (Saha et al. 2010), via the NSF NCAR Research
-   Data Archive.
+Data Archive.
 }
 \usage{
 windscape_example(name = c("wind_series", "wind_rose", "wind_field"))
@@ -23,17 +23,17 @@ Load one of the example data sets shipped with windscape, as a ready-to-use obje
 All three are derived from 10 m hourly wind from the Climate Forecast System Reanalysis (CFSR),
 on CFSR's native grid of approximately 0.32 degrees:
 \describe{
-  \item{"wind_series"}{A \code{wind_series} for the western and central United States
-    (120-90 W, 30-50 N), with 96 time steps: every sixth hour on the 1st and 15th of each month
-    in 2000. Values are rounded to 0.1 m/s. This is for demonstrating the
-    \code{wind_series} -> \code{wind_rose} workflow; a real analysis would use a longer
-    and denser time series.}
-  \item{"wind_rose"}{A \code{wind_rose} (with \code{trans = 1}) for the same region, built from
-    all 576 hours on those days. Because it uses six times as many observations as
-    \code{"wind_series"}, it is a better estimate of the region's wind regime, and is the
-    better choice for demonstrating connectivity analyses.}
-  \item{"wind_field"}{A \code{wind_field} for Hurricane Katrina in the Gulf of Mexico, at
-    2005-08-28 23:00 UTC (99-78 W, 17-35 N), rounded to 0.1 m/s.}
+\item{"wind_series"}{A \code{wind_series} for the western and central United States
+(120-90 W, 30-50 N), with 96 time steps: every sixth hour on the 1st and 15th of each month
+in 2000. Values are rounded to 0.1 m/s. This is for demonstrating the
+\code{wind_series} -> \code{wind_rose} workflow; a real analysis would use a longer
+and denser time series.}
+\item{"wind_rose"}{A \code{wind_rose} (with \code{trans = 1}) for the same region, built from
+all 576 hours on those days. Because it uses six times as many observations as
+\code{"wind_series"}, it is a better estimate of the region's wind regime, and is the
+better choice for demonstrating connectivity analyses.}
+\item{"wind_field"}{A \code{wind_field} for Hurricane Katrina in the Gulf of Mexico, at
+2005-08-28 23:00 UTC (99-78 W, 17-35 N), rounded to 0.1 m/s.}
 }
 }
 \examples{

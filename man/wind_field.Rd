@@ -7,11 +7,11 @@
 wind_field(x)
 }
 \arguments{
-\item{x}{A `SpatRaster` with two layers representing u and v wind components;
+\item{x}{A \code{SpatRaster} with two layers representing u and v wind components;
 note that these must be in lat-long coordinates.}
 }
 \value{
-A `wind_field` object, which is a particular form of `SpatRaster`.
+A \code{wind_field} object, which is a particular form of \code{SpatRaster}.
 }
 \description{
 Generate a wind field data set from a pair of rasters.

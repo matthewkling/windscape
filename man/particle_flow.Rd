@@ -34,16 +34,16 @@ lon-lat. Smaller scale values yield smoother but shorter particle trails over a 
 
 \item{ignore_speed}{Logical: if TRUE, only direction is considered and all particles are displaced the same distance. Default is FALSE.}
 
-\item{sf}{Logical indicating whether the output shoudl be break_trailted as an `sf` object instead of the default data frame.}
+\item{sf}{Logical indicating whether the output shoudl be break_trailted as an \code{sf} object instead of the default data frame.}
 
 \item{...}{Further arguments to \link{generate_particles}, used only if \code{p} is an integer.}
 }
 \value{
-If `sf = FALSE`, a data frame representing particle positions over time. Variables include "p" (the id number of the particle),
-   "x" (longitude), "y" (latitude), "v" (velocity, in the same units as the input wind data), and "t" (the iteration
-   number, which is positive for downwind and negative for upwind; arrange by this variable when plotting). If `sf = TRUE`,
-   a simple feature collection of linestrings (in this case, velocity is not included, and the iteration index is included
-   as the third coordination dimension).
+If \code{sf = FALSE}, a data frame representing particle positions over time. Variables include "p" (the id number of the particle),
+"x" (longitude), "y" (latitude), "v" (velocity, in the same units as the input wind data), and "t" (the iteration
+number, which is positive for downwind and negative for upwind; arrange by this variable when plotting). If \code{sf = TRUE},
+a simple feature collection of linestrings (in this case, velocity is not included, and the iteration index is included
+as the third coordination dimension).
 }
 \description{
 This function simulates the movement of particles over a wind field. At each iteration, particles

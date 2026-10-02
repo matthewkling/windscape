@@ -14,16 +14,16 @@ windspeeds, v windspeeds}
 }
 \value{
 A vector of 8 conductance values to neighboring cells, clockwise
-  starting with the southwest neighbor. If input windspeeds are in m/s,
-  values are in (1 / hours ^ p)
+starting with the southwest neighbor. If input windspeeds are in m/s,
+values are in (1 / hours ^ p)
 }
 \description{
 Calculate 8-neighbor edge loadings from a time series of u and v windspeeds
 }
 \details{
 \code{trans} is applied to each wind speed observation. For example,
-  \code{function(s) s^0} ignores speed, assigning weights based on direction only;
-  \code{identity} (the default) assumes conductance is proportional to windspeed,
-  \code{function(s) s^2} assumes it's proportional to aerodynamic drag, and
-  \code{function(s) s^3} assumes it's proportional to force. See \link{wind_rose}.
+\code{function(s) s^0} ignores speed, assigning weights based on direction only;
+\code{identity} (the default) assumes conductance is proportional to windspeed,
+\code{function(s) s^2} assumes it's proportional to aerodynamic drag, and
+\code{function(s) s^3} assumes it's proportional to force. See \link{wind_rose}.
 }

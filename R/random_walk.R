@@ -1,57 +1,119 @@
-#' Simulate diffusion by wind advection
+#' Simulate wind dispersal by random walk
 #'
-#' This function estimates diffusion across a windscape by Markov random walk. On each iteration,
-#' the "particle mass" in each grid cell is dispersed within the local 9-cell neighborhood in
-#' proportion with wind conductance. Depending on usage, this "mass" could represent probability,
-#' number of individuals, etc. As the simulation proceeds, the mass diffuses across the landscape.
+#' Estimates the dispersal of particles across a windscape with a Markov random walk on the
+#' grid. Each iteration, the "particle mass" in each grid cell is dispersed within its 9-cell
+#' neighborhood in proportion to wind conductance. Depending on the application, this mass could
+#' represent probability, numbers of seeds or spores, etc. Particles can be released once
+#' (`mode = "pulse"`) or continuously (`mode = "stream"`), and can be deposited along the way
+#' (`half_life`).
 #'
-#' The input wind rose raster is converted to a simplex of nine probabilities for each grid
-#' cell, giving the rates at which particles are retained in a cell or moved to each of its
-#' eight neighbors. Probabilities of moving to a neighboring cell are proportional to conductance
-#' in the wind rose data set, with the probabilities of remaining in a cell scaled so that the
-#' cell with the highest conductance has a zero retention probability; this allows conductance
-#' to be normalized locally to a simplex while remaining proportional across cells and
-#' maximizing the dispersal occurring at each iteration. This is uniformization of the
-#' continuous-time Markov chain defined by the conductances (which are rates, in units of
-#' 1 / time): with time step t and rate matrix Q, the transition matrix is P = I + tQ. Pulse
-#' iterations are therefore a first-order approximation of the continuous-time process at
-#' times t, 2t, ...; reducing `timescale` improves their accuracy.
+#' @param rose A `wind_rose`.
+#' @param init Where particles are released: either a two-column matrix of coordinates, which
+#'    places a mass of 1 in each cell containing a coordinate, or a single-layer SpatRaster of
+#'    non-negative mass values with the same geometry as `rose`. In stream mode, `init` can be
+#'    read either as a release rate (mass per hour) or as a one-time release; see Value.
+#' @param mode Release mode. `"pulse"` (the default) releases `init` once and tracks the
+#'    drifting, spreading cloud through time. `"stream"` releases particles continuously and
+#'    returns the steady state, where release is balanced by deposition and loss across domain
+#'    edges; equivalently, this is the all-time total for a single release (see Value). It is
+#'    computed directly rather than by simulating forward.
+#' @param half_life Half-life of airborne mass, in hours of transport time (assuming
+#'    `trans = 1` and wind speeds in m/s; see [wind_rose()]). Particles are deposited at the
+#'    continuous rate `k = log(2) / half_life`, in the cell where they are airborne. Default
+#'    `Inf`: no deposition.
+#' @param timescale A value between 0 and 1 that scales the time step length (see
+#'    [rw_max_step()]). The default of 1 uses the longest possible step, advancing the simulation
+#'    farthest per iteration. Smaller values give more accurate pulse-mode dynamics or set the
+#'    step to a desired duration. Stream-mode results do not depend on `timescale`.
+#' @param latitude_correction Logical: correct the compression of east-west spread on
+#'    longitude/latitude grids, where cells narrow toward the poles? Default `TRUE`. This adds
+#'    conductance to east and west edges without changing drift, which shortens the time step
+#'    (pulse mode needs about 1.3 times as many iterations at 45 degrees, 1.9 at 60). Has no effect
+#'    on projected rasters. See Details.
+#' @param iter Pulse mode only: number of iterations (time steps) to simulate.
+#' @param record Pulse mode only: integer vector of iterations to return, between 0 (the initial
+#'    state) and `iter`. Default is the final iteration only.
+#' @param method Stream mode only: how to compute the steady state. `"solve"` is exact, using a
+#'    sparse LU solve. `"iterate"` repeats the stream update rule until the estimated error is
+#'    below `tol`; it uses less memory for very large grids. `"auto"` (the default) uses `"solve"`
+#'    for grids of up to 5e5 cells and `"iterate"` otherwise.
+#' @param tol Stream mode with `method = "iterate"` only: convergence tolerance, as estimated
+#'    L1 error relative to total airborne mass. For finite `half_life` the error estimate is a
+#'    rigorous bound; for `half_life = Inf` it is extrapolated from the observed convergence rate.
+#' @param max_iter Stream mode with `method = "iterate"` only: maximum number of iterations,
+#'    after which a warning is given.
 #'
-#' The `mode` argument determines how particles are released. With `mode = "pulse"` (the
-#' default), the mass in `init` is released once, at the start of the simulation, and drifts
-#' and spreads like a cloud. The function returns the airborne mass at the iterations listed in
-#' `record`. With `mode = "stream"`, the mass in `init` is released at every time step, and the
-#' function returns the steady state: the airborne mass in each cell once release and loss
-#' (by deposition and across domain edges) are in balance. `iter` and `record` are ignored in
-#' "stream" mode.
+#' @return A named list of two `wind_walk` rasters: `airborne` and `deposition` in pulse mode,
+#'    or `residence` and `deposition` in stream mode. Masses are in the units of `init`, and
+#'    hours assume `trans = 1` and wind speeds in m/s. Cells that are NA in `rose` are NA in the
+#'    output.
 #'
-#' In both modes, airborne mass can be lost by deposition, controlled by `half_life`. In
-#' continuous time, deposition is a first-order process at rate k = ln(2) / half_life. Each time
-#' step, airborne mass disperses and a fraction lambda = kt / (1 + kt) of it is deposited
-#' (removed from the air), where t is the time step length (see \link{rw_max_step}). This is
-#' the uniformization of transport and deposition together, so stream-mode results are exact
-#' solutions of the continuous-time process, independent of `timescale`. In pulse mode, mass
-#' halves after approximately `half_life` hours (exactly in the limit of small `timescale`).
-#' The pulse update rule is n <- (1 - lambda) * disperse(n). The stream update rule is
-#' n <- n0 + (1 - lambda) * disperse(n), and the returned surface is its fixed point,
-#' n* = (I - (1 - lambda) P')^-1 n0. The two modes are linked exactly: the stream steady state
-#' equals the sum of the pulse surfaces over all time steps, starting from step 0. The default
-#' `half_life = Inf` means no deposition.
+#' **Pulse mode.** Each element has one layer per iteration in `record` (named `iter0`,
+#' `iter1`, ...):
+#' * `airborne`: the mass airborne over each cell at that iteration.
+#' * `deposition`: the cumulative mass deposited in each cell up to that iteration. Zero
+#'   everywhere if `half_life = Inf`.
 #'
-#' Deposition per time step is `lambda` times airborne mass (see \link{rw_deposition}), which
-#' treats each cell's resident airborne mass as depositing in that cell. Because of linearity,
-#' stream-mode deposition per unit of per-step release is also the probability distribution of
-#' where a single particle released from `init` is deposited. Stream-mode deposition is
-#' invariant to `timescale`. Airborne mass scales with 1 / t, because shorter steps mean more
-#' release events per unit time; `airborne * (1 - lambda) * t` is the continuous-time
-#' steady-state airborne mass per unit release rate, and is invariant to `timescale`.
+#' At every iteration, airborne mass plus deposition plus mass lost across domain edges equals
+#' the released mass. Use [iter_length()] to convert iterations to hours.
 #'
-#' In stream mode with `method = "solve"`, the steady state is computed exactly with a sparse
-#' LU solve. With `method = "iterate"`, the update rule is iterated until the estimated L1 error
-#' falls below `tol` relative to the total airborne mass. For finite `half_life` the estimate is
-#' the rigorous bound ((1 - lambda) / lambda) * |n_k - n_(k-1)|; for `half_life = Inf` it is
-#' extrapolated from the observed rate of convergence, which is driven by loss across domain
-#' edges.
+#' **Stream mode.** Each element is a single layer, and neither depends on `timescale`. The two
+#' differ in units by a factor of time:
+#' * `residence`: airborne mass integrated over time, in mass-hours (units of `init` times
+#'   hours).
+#' * `deposition`: deposited mass, in units of `init`. It equals `k * residence`, where
+#'   `k = log(2) / half_life` is the deposition rate per hour, so it is zero everywhere if
+#'   `half_life = Inf`.
+#'
+#' Stream results have two equivalent readings. They are the steady state when `init` is
+#' released continuously as a rate (mass per hour), in which case `residence` is the
+#' steady-state airborne mass and `deposition` the steady-state deposition rate (mass per hour).
+#' They are also the all-time totals for a single release of `init`, in which case `residence`
+#' is the total mass-hours spent airborne over each cell and `deposition` the total mass
+#' eventually deposited; for a unit release from one cell, `deposition` is the probability
+#' distribution of where a particle lands.
+#'
+#' **Relationship between modes.** For the same `rose`, `init`, `half_life`, and
+#' `latitude_correction`, stream results are the totals that a pulse walk accumulates over all
+#' time, at any `timescale`. Stream `deposition` equals pulse `deposition` once the pulse has run
+#' until negligible mass remains airborne, and stream `residence` equals pulse `airborne` mass
+#' integrated over time (exactly, `(1 - lambda) * t` times its sum over iterations 0, 1, 2, ...;
+#' see Details). This holds because the walk is linear (particles move independently, so their
+#' contributions add) and time-invariant (the same `rose` applies at every time step), which is
+#' also why continuous and single releases give the same numbers.
+#'
+#' @details
+#' ## Transition probabilities
+#'
+#' The wind rose is converted to a simplex of nine probabilities for each grid cell, giving the
+#' rates at which particles remain in the cell or move to each of its eight neighbors.
+#' Probabilities of moving to a neighbor are proportional to conductance, and retention
+#' probabilities are scaled so that the cell with the highest total conductance has zero
+#' retention. This keeps conductance proportional across cells while maximizing the dispersal
+#' occurring at each iteration.
+#'
+#' This is uniformization of the continuous-time Markov chain defined by the conductances,
+#' which are rates (in units of 1 / hours, if `trans = 1` and wind speeds are in m/s). With time
+#' step `t` and rate matrix `Q`, the transition matrix is `P = I + tQ`. Pulse iterations are
+#' therefore a first-order approximation of the continuous-time process at times `t`, `2t`,
+#' ...; reducing `timescale` improves their accuracy.
+#'
+#' ## Deposition and the two release modes
+#'
+#' Each time step, airborne mass disperses and a fraction `lambda = kt / (1 + kt)` of it is
+#' deposited, where `k = log(2) / half_life`. This is the uniformization of transport and
+#' deposition together, so stream-mode results are exact solutions of the continuous-time
+#' process and independent of `timescale`. In pulse mode, mass halves after approximately
+#' `half_life` hours (exactly in the limit of small `timescale`).
+#'
+#' The pulse update rule is `n <- (1 - lambda) * disperse(n)`, with `lambda * n` deposited
+#' in place each step before dispersal. The stream update rule is
+#' `n <- n0 + (1 - lambda) * disperse(n)`, with fixed point
+#' `n* = (I - (1 - lambda) P')^-1 n0`; residence is `(1 - lambda) * t * n*`. The two modes are
+#' linked exactly: stream-mode residence equals `(1 - lambda) * t` times the sum of the
+#' pulse-mode surfaces over all time steps, starting from step 0.
+#'
+#' ## Domain edges
 #'
 #' Domain edges are absorbing: mass that disperses off the grid, or into NA cells, is lost and
 #' never returns. Values near edges are therefore biased low, because they receive no inflow
@@ -62,50 +124,32 @@
 #' leave, so the result measures connectivity within the chosen domain and depends on its
 #' extent; every valid cell must have a path to an edge or NA cell, or an error is raised.
 #'
-#' Grid geometry: conductances account for latitude (see \link{wind_rose}), so the speed at which
-#' mass drifts is correct at all latitudes for winds aligned with a neighbor direction. Two biases
-#' remain, both inherent to a nearest-neighbor walk on a longitude/latitude grid. First, the
-#' spread of mass is numerical diffusion whose magnitude scales with cell dimensions, so it
-#' depends on grid resolution, and because cells narrow east-west toward the poles, spread is
-#' compressed east-west at high latitude: for isotropic wind, east-west spread is roughly 0.86,
-#' 0.70, and 0.49 times north-south spread at 30, 45, and 60 degrees latitude. Second, drift is
-#' slightly too slow for winds blowing between neighbor directions (up to about 8 percent at the
-#' equator, more at high latitude, e.g. about 14 percent for a northeast wind at 60 degrees).
+#' ## Latitude correction
 #'
-#' @param rose A \code{wind_rose}.
-#' @param init Initial conditions from which to begin diffusion, either a two-column
-#'    matrix of coordinates, or a SpatRaster layer with non-negative mass values and the
-#'    same spatial properties as \code{rose}. If coordinates, the simulation starts with a
-#'    mass of 1 at each coordinate location. If a SpatRaster, diffusion is done
-#'    directly on the raster; this could be the ouput from a prior random_walk, or any
-#'    other data representing quantities to be spatially dispersed. In stream mode, this is
-#'    the mass released per time step.
-#' @param iter Number of simulation iterations (positive integer). Pulse mode only.
-#' @param record Integer vector specifying which iterations to record, between 0 (the initial
-#'    state) and \code{iter}. Default is to record only the final iteration, i.e. \code{iter}.
-#'    One raster layer is returned for each value in \code{record}. Pulse mode only.
-#' @param mode Release mode: "pulse" (default) or "stream". See details.
-#' @param timescale A value between 0 and 1, giving the factor by which to
-#'    scale the default time step length (which is calculated from the data; see \link{rw_max_step}).
-#'    At each iteration, particle mass either exits cells at the rates given in the wind rose object,
-#'    or remains in the cell. The default timescale value of 1 sets the timestep length to the
-#'    maximum possible value, allowing the simulation to advance as far as possible in space given the
-#'    number of iterations, which is computationally optimal. Reducing this value may be useful for
-#'    smoothing the simulation dynamics, and/or setting the timestep to a desired duration.
-#' @param half_life Half-life of airborne mass, in hours of transport time (assuming
-#'    \code{trans = 1} and wind speeds in m/s, as for \link{rw_max_step}). Default \code{Inf}
-#'    (no deposition).
-#' @param method Stream mode only: "auto" (default), "solve", or "iterate". "auto" uses "solve"
-#'    for grids with up to 5e5 cells and "iterate" otherwise.
-#' @param tol Stream mode with \code{method = "iterate"} only: relative convergence tolerance.
-#' @param max_iter Stream mode with \code{method = "iterate"} only: maximum iterations.
+#' Conductances account for latitude (see [wind_rose()]), so the speed at which mass drifts is
+#' correct at all latitudes for winds aligned with a neighbor direction. However, the spread of
+#' mass in a nearest-neighbor walk is numerical diffusion whose magnitude scales with hop
+#' length. Because longitude/latitude cells narrow east-west toward the poles, east-west hops are
+#' shorter than north-south hops, and without correction east-west spread is compressed: for
+#' isotropic wind, to roughly 0.86, 0.70, and 0.49 times north-south spread at 30, 45, and 60
+#' degrees latitude.
 #'
-#' @return A \code{wind_walk} raster object of airborne mass. In pulse mode, one layer per
-#'    value of \code{record}; in stream mode, a single layer named "airborne".
+#' The correction scales each cell's east-west spread rate up to what the same rose would
+#' produce on square cells of the same north-south size, by adding equal conductance to its east
+#' and west edges. Because these two neighbors are exactly opposite, drift is unchanged. In tests
+#' against the same winds on square cells, the correction brings east-west spread to within about
+#' 8 percent of the square-cell value across a range of wind regimes at 45 and 60 degrees. It
+#' does not correct the orientation (east-west/north-south covariance) of spread for oblique
+#' winds, which remains underestimated at high latitude, nor the small drift bias for winds
+#' blowing between neighbor directions (up to about 8 percent at the equator, more at high
+#' latitude). The added conductance shortens the time step by an amount set by the
+#' highest-latitude cells in the domain. Spread remains dependent on grid resolution with or
+#' without the correction.
 #'
 #' @export
-random_walk <- function(rose, init, iter = 100, record = iter, mode = c("pulse", "stream"),
-                        timescale = 1, half_life = Inf,
+random_walk <- function(rose, init, mode = c("pulse", "stream"), half_life = Inf, timescale = 1,
+                        latitude_correction = TRUE,
+                        iter = 100, record = iter,
                         method = c("auto", "solve", "iterate"), tol = 1e-8, max_iter = 1e5){
 
       mode <- match.arg(mode)
@@ -131,21 +175,29 @@ random_walk <- function(rose, init, iter = 100, record = iter, mode = c("pulse",
 
       diffuse <- function(n, p, i, rec = i, lambda = 0){
             rec <- sort(rec)
-            r <- terra::as.array(rast(n, nlyrs = length(rec), vals = 0))
+            air <- terra::as.array(rast(n, nlyrs = length(rec), vals = 0))
+            dep <- air
             n <- matrix(n, nrow(n), byrow = T)
-            if(0 %in% rec) r[,,1] <- n
+            d <- n * 0
+            if(0 %in% rec) air[,,1] <- n
             p <- terra::as.array(p)
             pb <- txtProgressBar(min = 0, max = i, initial = 0, style = 3)
             for(j in 1:i){
+                  d <- d + lambda * n # airborne mass deposits in place, before dispersing
                   n <- (1 - lambda) * disperse(n, p)
-                  if(j %in% rec) r[,,match(j, rec)] <- n
+                  if(j %in% rec){
+                        k <- match(j, rec)
+                        air[,,k] <- n
+                        dep[,,k] <- d
+                  }
                   setTxtProgressBar(pb, j+1)
             }
             close(pb)
-            r
+            list(air = air, dep = dep)
       }
 
       if(!(timescale > 0 && timescale <= 1)) stop("'timescale' must be greater than 0 and less than or equal to 1.")
+      if(latitude_correction) rose <- rw_latitude_correction(rose)
       t <- rw_max_step(rose) * timescale
       lambda <- rw_decay(half_life, t)
       if(mode == "stream") return(rw_stream(rose, init, t, lambda, method, tol, max_iter))
@@ -161,10 +213,13 @@ random_walk <- function(rose, init, iter = 100, record = iter, mode = c("pulse",
 
       n <- rw_init(rose, init)
 
-      w <- diffuse(n, p, iter, record, lambda)
-      n <- rast(n, nlyrs = length(record), vals = w)
-      names(n) <- paste0("iter", record)
-      as_wind_walk(n, mode = mode, n_iter = iter, iter_length = t, decay = lambda)
+      out <- diffuse(n, p, iter, record, lambda)
+      walk <- function(a){
+            x <- rast(n, nlyrs = length(record), vals = a)
+            names(x) <- paste0("iter", record)
+            as_wind_walk(x, mode = mode, n_iter = iter, iter_length = t, decay = lambda)
+      }
+      list(airborne = walk(out$air), deposition = walk(out$dep))
 }
 
 
@@ -189,10 +244,14 @@ as_wind_walk <- function(x, mode, n_iter, iter_length, decay = NA_real_){
 
 #' Iteration step length of a random walk
 #'
-#' @param x A \code{wind_walk} generated by \code{random_walk()}.
+#' @param x The list returned by [random_walk()], or one of its elements.
+#' @return Length of one iteration (time step), in hours if `trans = 1` and wind speeds are in m/s.
 #'
 #' @export
-iter_length <- function(x) x@iter_length
+iter_length <- function(x){
+      if(is.list(x)) x <- x[[1]]
+      x@iter_length
+}
 
 
 #' Maximum iteration duration for a random walk
@@ -209,61 +268,50 @@ rw_max_step <- function(rose){
 }
 
 
-#' Deposition from a random walk
-#'
-#' Converts airborne mass from \code{random_walk()} into deposition per time step,
-#' \code{lambda * airborne}, where lambda is the per-step decay fraction implied by
-#' \code{half_life}. For a stream-mode walk this is steady-state deposition per step; for a
-#' pulse-mode walk it is the deposition during each recorded time step.
-#'
-#' @param x A \code{wind_walk} generated by \code{random_walk()}.
-#' @return A SpatRaster of deposition per time step, with one layer per layer of \code{x}.
-#' @export
-rw_deposition <- function(x){
-      if(!inherits(x, "wind_walk")) stop("`x` must be a wind_walk generated by random_walk()")
-      if(is.na(x@decay)) stop("`x` has no stored decay rate; regenerate it with random_walk()")
-      if(x@decay == 0) warning("`x` was generated with `half_life = Inf`, so deposition is zero")
-      d <- as(x, "SpatRaster") * x@decay
-      names(d) <- if(x@mode == "stream") "deposition" else sub("^iter", "deposition_iter", names(x))
-      d
-}
-
-
 #' Self-contribution of each source cell in a stream-mode random walk
 #'
-#' Computes G_cc, the steady-state airborne mass in cell c per unit of per-step release
-#' from cell c, i.e. the diagonal of G = (I - (1 - lambda) P')^-1. Multiplying by a cell's
-#' release gives its contribution to its own value, which can be subtracted for a
-#' leave-one-out surface: \code{n_loo = n - n0 * G_cc}.
+#' Computes `G_cc`, the stream-mode residence time in cell `c` per unit of release from cell
+#' `c` (see [random_walk()]). This is each source's contribution to its own value, which can be
+#' subtracted for a leave-one-out surface, e.g. to avoid a site predicting itself.
 #'
-#' The approximation \code{G_cc ~ 1 / (1 - (1 - lambda) p_cc)} counts only paths in which
-#' mass never leaves the cell, and is therefore a lower bound. It omits mass that leaves and
-#' returns, which is substantial in a nearest-neighbor walk, especially in fast cells where
-#' the retention probability p_cc is near zero. The exact value requires one sparse solve
-#' per cell (sharing a single factorization), so is practical for a set of occupied cells
-#' but not for every cell of a large grid.
+#' The approximation `G_cc ~ (1 - lambda) * t / (1 - (1 - lambda) * p_cc)` counts only paths in
+#' which mass never leaves the cell (`p_cc` is the retention probability; see [random_walk()]).
+#' It omits mass that leaves and returns, which is substantial in a nearest-neighbor walk,
+#' especially in fast cells where `p_cc` is near zero.
 #'
-#' @param rose A \code{wind_rose}.
-#' @param half_life Half-life of airborne mass, in hours; see \link{random_walk}. Must match
-#'    the value used for the stream-mode walk.
-#' @param cells Optional cell numbers, or a two-column coordinate matrix. Required if
-#'    \code{exact = TRUE}.
-#' @param exact Logical: compute exact values rather than the diagonal approximation?
-#' @param timescale Time step scaling factor; see \link{random_walk}. Must match the value
-#'    used for the stream-mode walk.
-#' @param chunk Number of right-hand sides per solve when \code{exact = TRUE}.
-#' @return If \code{cells} is NULL, a SpatRaster of approximate G_cc. Otherwise a numeric
-#'    vector with one value per cell.
+#' @param rose A `wind_rose`.
+#' @param half_life Half-life of airborne mass, in hours. Must match the value used for the
+#'    stream-mode walk; see [random_walk()].
+#' @param timescale Time step scaling factor; see [random_walk()]. Affects only the approximate
+#'    values; exact values are independent of `timescale`.
+#' @param latitude_correction Logical. Must match the value used for the stream-mode walk; see
+#'    [random_walk()].
+#' @param cells Cell numbers, or a two-column matrix of coordinates, at which to compute
+#'    `G_cc`. Optional for the approximation (which defaults to every cell); required if
+#'    `exact = TRUE`.
+#' @param exact Logical: compute exact values rather than the approximation? Exact values are a
+#'    sparse solve per cell (sharing one factorization), practical for a set of occupied cells
+#'    but not for every cell of a large grid. The approximation is a lower bound. Default `FALSE`.
+#' @param chunk With `exact = TRUE`: number of cells to solve for at once. Larger values are
+#'    faster but use more memory.
+#' @return `G_cc` in hours per unit of release: a SpatRaster of approximate values for every
+#'    cell if `cells` is NULL, otherwise a numeric vector with one value per cell. For a
+#'    leave-one-out surface, `residence_loo = residence - init * G_cc` and
+#'    `deposition_loo = log(2) / half_life * residence_loo`, using the `residence` layer from
+#'    [random_walk()] and `init` values at the source cells.
 #' @export
-rw_self_retention <- function(rose, half_life = Inf, cells = NULL, exact = FALSE, timescale = 1, chunk = 200){
+rw_self_retention <- function(rose, half_life = Inf, timescale = 1, latitude_correction = TRUE,
+                              cells = NULL, exact = FALSE, chunk = 200){
       if(!(timescale > 0 && timescale <= 1)) stop("'timescale' must be greater than 0 and less than or equal to 1.")
+      if(latitude_correction) rose <- rw_latitude_correction(rose)
       t <- rw_max_step(rose) * timescale
       lambda <- rw_decay(half_life, t)
       p <- rw_prob(rose, t)
       if(inherits(cells, "matrix")) cells <- terra::cellFromXY(rose, cells)
 
+      scale <- (1 - lambda) * t # converts per-step airborne mass to residence time
       if(!exact){
-            g <- 1 / (1 - (1 - lambda) * p[[1]])
+            g <- scale / (1 - (1 - lambda) * p[[1]])
             names(g) <- "self_retention"
             if(is.null(cells)) return(g)
             return(terra::values(g)[cells, 1])
@@ -282,6 +330,7 @@ rw_self_retention <- function(rose, half_life = Inf, cells = NULL, exact = FALSE
             X <- Matrix::solve(lu, B)
             g[s] <- X[cbind(cells[s], seq_along(s))]
       }
+      g <- g * scale
       g[!attr(P, "valid")[cells]] <- NA
       g
 }
@@ -296,6 +345,49 @@ rw_prob <- function(x, t){
       p <- c(p, x)
       p / sum(p)
 }
+
+# Displacement vectors (km) from a cell center at latitude `lat` to its 8 neighbors, in rose
+# layer order (SW, W, NW, N, NE, E, SE, S), using the same geometry as rose().
+rw_neighbor_displacements <- function(lat, res){
+      nc <- cbind(c(-1, -1, -1, 0, 1, 1, 1, 0) * res,
+                  pmax(pmin(lat + c(-1, 0, 1, 1, 1, 0, -1, -1) * res, 90), -90))
+      d <- geosphere::distGeo(c(0, lat), nc) / 1000
+      b <- geosphere::bearingRhumb(c(0, lat), nc) * pi / 180
+      cbind(dx = d * sin(b), dy = d * cos(b))
+}
+
+
+# Latitude correction for random walks on longitude/latitude grids. East-west hops are shorter
+# than north-south hops, so a walk spreads mass less east-west than north-south. For each cell,
+# scale the east-west spread rate, sum_k c_k dx_k^2, by the ratio of north-south to east-west
+# cell size (what the same rose would give on square cells of the north-south size), by adding
+# equal conductance to the W and E edges. W and E neighbors are exactly opposite, so drift,
+# sum_k c_k (dx_k, dy_k), is unchanged. No-op for non-lonlat rasters.
+rw_latitude_correction <- function(rose){
+      if(!isTRUE(terra::is.lonlat(rose, perhaps = TRUE, warn = FALSE))) return(rose)
+      res <- mean(terra::res(rose)) # as in wind_rose()
+      nr <- terra::nrow(rose)
+      nc <- terra::ncol(rose)
+      lats <- terra::yFromRow(rose, seq_len(nr))
+      pad <- vapply(lats, function(lat){
+            D <- rw_neighbor_displacements(lat, res)
+            dx <- D[6, "dx"] # east neighbor
+            dy <- D[4, "dy"] # north neighbor
+            # per unit of east-west variance rate: conductance to add to each of W and E
+            max(dy / dx - 1, 0) / (2 * dx^2)
+      }, numeric(1))
+      ewvar <- vapply(lats, function(lat) rw_neighbor_displacements(lat, res)[, "dx"]^2, numeric(8))
+      v <- terra::values(rose)
+      row <- rep(seq_len(nr), each = nc)
+      vx <- rowSums(v * t(ewvar)[row, ]) # east-west spread rate of each cell
+      delta <- vx * pad[row]
+      v[, c(2, 6)] <- v[, c(2, 6)] + delta
+      out <- terra::rast(rose, nlyrs = 8)
+      terra::values(out) <- v
+      names(out) <- names(rose)
+      as_wind_rose(out, trans = rose@trans, n_steps = rose@n_steps)
+}
+
 
 # Starting distribution: coordinates -> unit mass per cell, or a SpatRaster used as-is.
 rw_init <- function(rose, init){
@@ -441,8 +533,12 @@ rw_stream <- function(rose, init, t, lambda, method = "auto", tol = 1e-8, max_it
       }
 
       n[!valid] <- NA
-      out <- terra::rast(rose, nlyrs = 1)
-      terra::values(out) <- n
-      names(out) <- "airborne"
-      as_wind_walk(out, mode = "stream", n_iter = iters, iter_length = t, decay = lambda)
+      walk <- function(v, name){
+            x <- terra::rast(rose, nlyrs = 1)
+            terra::values(x) <- v
+            names(x) <- name
+            as_wind_walk(x, mode = "stream", n_iter = iters, iter_length = t, decay = lambda)
+      }
+      list(residence = walk(n * (1 - lambda) * t, "residence"), # continuous-time residence
+           deposition = walk(n * lambda, "deposition"))          # = k * residence
 }

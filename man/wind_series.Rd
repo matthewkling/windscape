@@ -12,12 +12,12 @@ an object like a file path that can be converted to a \code{SpatRaster}. Data mu
 on a longitude/latitude grid with square cells (equal x and y resolution in degrees),
 with u and v components oriented to true east and north; see \link{wind_rose}.}
 
-\item{order}{Either \code{"uuvv"}, the default, indicating `x` has all u components
+\item{order}{Either \code{"uuvv"}, the default, indicating \code{x} has all u components
 followed by all v components, or \code{"uvuv"}, indicating the u and v components
-of `x` are alternating.}
+of \code{x} are alternating.}
 }
 \value{
-A `wind_series` object, which is a particular form of \code{SpatRaster}.
+A \code{wind_series} object, which is a particular form of \code{SpatRaster}.
 }
 \description{
 Generate a wind field time series data set from a set of rasters.

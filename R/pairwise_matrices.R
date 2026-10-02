@@ -9,7 +9,7 @@
 #' @param log Should ratios be log-transformed? Default is \code{TRUE}, since this generates a symmetrical frequency distribution desirable for most analyses.
 #' @return A square matrix the same size as \code{x}, with ones in the diagonal and reciprocal values in the upper and lower triangles.
 #' If \code{x} is a matrix, the output represents the ratios of above-diagonal to below-diagonal values in \code{x}.
-#' If \code{x} is a vector, the output represents the ratios of every pairwise combination of \code{x} values; e.g. a matrix in which the value of cell [2,4] equals x[2] / x[4].
+#' If \code{x} is a vector, the output represents the ratios of every pairwise combination of \code{x} values; e.g. a matrix in which the value of cell `[2, 4]` equals `x[2] / x[4]`.
 #' @references Kling and Ackerly (2021). Global wind patterns shape genetic differentiation, asymmetric gene flow, and genetic diversity in trees. Proceedings of the National Academy of Sciences. https://doi.org/10.1073/pnas.2017317118
 #' @export
 pairwise_ratios <- function(x, log = TRUE){

@@ -15,7 +15,7 @@ a function. See documentation for \link{wind_rose}.}
 \item{n_steps}{An integer giving the number of time steps represented in \code{x}.}
 }
 \value{
-A `wind_rose` object.
+A \code{wind_rose} object.
 }
 \description{
 Load a wind_rose from a raster file on disk

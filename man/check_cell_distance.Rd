@@ -7,7 +7,7 @@
 check_cell_distance(x, ll, return = FALSE)
 }
 \arguments{
-\item{x}{SpatRaster (e.g. a `wind_rose`)}
+\item{x}{SpatRaster (e.g. a \code{wind_rose})}
 
 \item{ll}{two-column matrix of site coordinates}
 

@@ -8,7 +8,7 @@ ws_summarize(x, origin, radius = NULL)
 }
 \arguments{
 \item{x}{SpatRaster representing wind accessibility, with higher values indicating greater accessibility.
-(For example, this could be the output of `random_walk()`, or `least_cost_surface(..., rate = TRUE)`.)}
+(For example, this could be the output of \code{random_walk()}, or \code{least_cost_surface(..., rate = TRUE)}.)}
 
 \item{origin}{Coordinates of center point (matrix with 2 columns and 1 row).}
 
@@ -18,15 +18,15 @@ from the summary statistics.}
 \value{
 A named vector of summary statistics:
 \itemize{
- \item{"centroid_x": }{Longitude of windshed "centroid". The centroid is the mean of all lon-lat coordinates, weighed by the wind accessibility values in \code{x}.}
- \item{"centroid_y": }{Latitude of windshed centroid.}
- \item{"centroid_distance": }{Distance from origin to windshed centroid, in km.}
- \item{"centroid_bearing": }{Bearing from origin to windshed centroid, in degrees.}
- \item{"windshed_distance: }{Mean distance from origin, in km. This is the average distance from the origin to every grid cell, weighted by accessibility.}
- \item{"windshed_bearing": }{Mean bearing from origin, in degrees. This is the circular-mean bearing from the origin to every other grid cell, weighted by accessibility.}
- \item{"windshed_isotropy": }{Circular standard deviation of the bearing from the origin to every other grid cell, weighted by accessibility. Low values indicate that accessible sites are concentrated in a narrow range of compass directions, while high values indicate a wide distribution of directions. The range of possible values is 0-1.}
- \item{"windshed_size": }{Mean accessibility. This is the average of all accessibility values, weighted to correct for grid distortions. Higher values indicate landscapes with greater overall wind accessibility.}
- \item{"windshed_landarea": }{A realative measure of the land area covered by grid cells with nonzero wind accessibility.}
+\item{"centroid_x": }{Longitude of windshed "centroid". The centroid is the mean of all lon-lat coordinates, weighed by the wind accessibility values in \code{x}.}
+\item{"centroid_y": }{Latitude of windshed centroid.}
+\item{"centroid_distance": }{Distance from origin to windshed centroid, in km.}
+\item{"centroid_bearing": }{Bearing from origin to windshed centroid, in degrees.}
+\item{"windshed_distance: }{Mean distance from origin, in km. This is the average distance from the origin to every grid cell, weighted by accessibility.}
+\item{"windshed_bearing": }{Mean bearing from origin, in degrees. This is the circular-mean bearing from the origin to every other grid cell, weighted by accessibility.}
+\item{"windshed_isotropy": }{Circular standard deviation of the bearing from the origin to every other grid cell, weighted by accessibility. Low values indicate that accessible sites are concentrated in a narrow range of compass directions, while high values indicate a wide distribution of directions. The range of possible values is 0-1.}
+\item{"windshed_size": }{Mean accessibility. This is the average of all accessibility values, weighted to correct for grid distortions. Higher values indicate landscapes with greater overall wind accessibility.}
+\item{"windshed_landarea": }{A realative measure of the land area covered by grid cells with nonzero wind accessibility.}
 }
 }
 \description{

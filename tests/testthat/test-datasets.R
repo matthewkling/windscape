@@ -37,7 +37,7 @@ test_that("example rose works in the connectivity functions", {
       d <- least_cost_distance(wind_graph(rose), xy)
       expect_true(all(is.finite(d)))
       w <- quietly(random_walk(rose, xy[1, , drop = FALSE], mode = "stream", half_life = 24))
-      expect_gt(terra::global(w, "sum", na.rm = TRUE)[[1]], 0)
+      expect_gt(terra::global(w[["deposition"]], "sum", na.rm = TRUE)[[1]], 0)
 })
 
 test_that("windscape_example rejects unknown names", {

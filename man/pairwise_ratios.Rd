@@ -15,7 +15,7 @@ or a numeric vector with a value for each node.}
 \value{
 A square matrix the same size as \code{x}, with ones in the diagonal and reciprocal values in the upper and lower triangles.
 If \code{x} is a matrix, the output represents the ratios of above-diagonal to below-diagonal values in \code{x}.
-If \code{x} is a vector, the output represents the ratios of every pairwise combination of \code{x} values; e.g. a matrix in which the value of cell [2,4] equals x[2] / x[4].
+If \code{x} is a vector, the output represents the ratios of every pairwise combination of \code{x} values; e.g. a matrix in which the value of cell \verb{[2, 4]} equals \code{x[2] / x[4]}.
 }
 \description{
 This function produces a "pairwise ratio matrix" that can be used in tests about asymmetric flows among nodes in a data set

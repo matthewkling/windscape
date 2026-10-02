@@ -11,6 +11,7 @@ Encoding: UTF-8
 LazyData: true
 LazyDataCompression: xz
 LinkingTo: Rcpp
+Roxygen: list(markdown = TRUE)
 Imports: 
     Rcpp,
     raster,
