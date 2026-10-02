@@ -47,3 +47,14 @@ test_that("conductance accounts for east-west cell width at each latitude", {
       expect_lt(diff(range(ec)) / mean(ec), 0.01)
       expect_gt(e[which.max(lat)] / e[which.min(lat)], 1.9)
 })
+
+test_that("nearly square cells (within 1%) are accepted", {
+      # CFSR's native Gaussian grid is about 0.316 x 0.317 degrees
+      expect_s4_class(wind_series(uv_raster(xres = 0.3158, yres = 0.3175)), "wind_series")
+})
+
+test_that("numeric trans is stored as a working power function", {
+      r <- as_wind_rose(methods::as(noisy_rose(), "SpatRaster"), trans = 2)
+      expect_equal(r@trans(3), 9)
+      expect_equal(as_wind_rose(methods::as(noisy_rose(), "SpatRaster"), trans = sqrt)@trans(9), 3)
+})

@@ -59,10 +59,10 @@ wind <- cfsr_dl(variable = "wnd10m", years = 2000, months = 6:9, days = seq(1, 2
       shift(dx = -360) # shift longitude back to the standard [-180, 180] range
 ```
 
-Alternatively we can load wind data locally from disk (a more likely scenario for an actual analysis), using `terra::rast()`. The data set loaded below, which ships with the `windscape` package, is the same one downloaded by the example code above. We can see it's a `SpatRaster` object with many layers, each a 'u' (east-west) or 'v' (north-south) component of the local wind vector for a particular date and time.
+Alternatively we can load wind data locally from disk (a more likely scenario for an actual analysis), using `terra::rast()`. The data set loaded below ships with the `windscape` package; it covers the same region, for every sixth hour on the 1st and 15th of each month in 2000 (see `?windscape_example`). We can see it's a `SpatRaster` object with many layers, each a 'u' (east-west) or 'v' (north-south) component of the local wind vector for a particular date and time.
 
 ```{r load, eval = T}
-wind <- rast(system.file("extdata/cfsr_usa.tif", package = "windscape"))
+wind <- rast(system.file("extdata/wind_usa.tif", package = "windscape"))
 wind
 ```
 
@@ -97,7 +97,7 @@ In some cases, you may want to account for factors other than wind that influenc
 
 As an example, let's downweight conductance by 90% in grid cells with open water. Large water bodies could reduce landscape genetic connectivity for wind-dispersed terrestrial organisms, since water can't support the intermediate populations that help facilitate long-term gene flow across a landscape. In the example below, we'll use the `cfsr_dl_land()` function to download a land-water raster layer corresponding to our CFSR wind data set, `classify()` its values to convert 0's (water) to 0.1 while leaving 1's (land) as is, and then use this weights layer to adjust our wind rose. Plotting the first layer of the modified wind rose, we can see ocean and lake areas in the southwest and northeast corners where conductance has been reduced:
 
-```{r weight, eval = T, warning = F, message = F}
+```{r weight, eval = F, warning = F, message = F}
 weights <- cfsr_dl_land(xlim = c(-120, -90) + 360, ylim = c(30, 50)) %>% shift(dx = -360) %>%
       classify(matrix(c(0, .1), 1)) # change all 0's to 0.1
 rose <- weight_conductance(rose, weights)

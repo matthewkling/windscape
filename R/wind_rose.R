@@ -32,7 +32,10 @@ as_wind_rose <- function(x, trans, n_steps = NA_integer_){
       if(nlyr(x) != 8) stop("x must have 8 layers")
       names(x) <- c("SW", "W", "NW", "N", "NE", "E", "SE", "S")
       x <- as(x, "wind_rose")
-      if(inherits(trans, "numeric")) trans <- function(x) x^trans
+      if(is.numeric(trans)){
+            p <- trans
+            trans <- function(x) x^p
+      }
       x@trans <- trans
       x@n_steps <- n_steps
       x
@@ -77,7 +80,7 @@ wind_rose <- function(x, trans = 1, ...){
       check_grid(x)
 
       trn <- trans
-      if(inherits(trans, "numeric")) trn <- function(x) x^trans
+      if(is.numeric(trans)) trn <- function(x) x^trans
 
       rsn <- function(x){
             r <- x[[1]]

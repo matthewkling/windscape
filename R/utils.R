@@ -74,9 +74,12 @@ check_grid <- function(x){
                  "projected CRS (or an unknown CRS with a non-geographic extent). Reproject the ",
                  "data to longitude/latitude first; if u and v are defined relative to the ",
                  "projected grid, they must also be rotated to true east and north.", call. = FALSE)
+      # rose() uses a single cell size, mean(res), for both axes. A 1% mismatch gives at most ~0.5%
+      # error in neighbor distances; this tolerance admits nearly-square grids such as CFSR's
+      # Gaussian grid (0.316 x 0.317 degrees).
       rs <- terra::res(x)
-      if(abs(rs[1] - rs[2]) > 1e-6 * max(rs))
-            stop("grid cells must be square in degrees, but `x` has resolution ",
+      if(abs(rs[1] - rs[2]) > 0.01 * max(rs))
+            stop("grid cells must be square in degrees (within 1%), but `x` has resolution ",
                  signif(rs[1], 4), " x ", signif(rs[2], 4), ". Resample to equal x and y resolution.",
                  call. = FALSE)
       invisible(TRUE)
