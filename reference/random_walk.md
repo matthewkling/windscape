@@ -1,0 +1,186 @@
+# Simulate diffusion by wind advection
+
+This function estimates diffusion across a windscape by Markov random
+walk. On each iteration, the "particle mass" in each grid cell is
+dispersed within the local 9-cell neighborhood in proportion with wind
+conductance. Depending on usage, this "mass" could represent
+probability, number of individuals, etc. As the simulation proceeds, the
+mass diffuses across the landscape.
+
+## Usage
+
+``` r
+random_walk(
+  rose,
+  init,
+  iter = 100,
+  record = iter,
+  mode = c("pulse", "stream"),
+  timescale = 1,
+  half_life = Inf,
+  method = c("auto", "solve", "iterate"),
+  tol = 1e-08,
+  max_iter = 1e+05
+)
+```
+
+## Arguments
+
+- rose:
+
+  A `wind_rose`.
+
+- init:
+
+  Initial conditions from which to begin diffusion, either a two-column
+  matrix of coordinates, or a SpatRaster layer with non-negative mass
+  values and the same spatial properties as `rose`. If coordinates, the
+  simulation starts with a mass of 1 at each coordinate location. If a
+  SpatRaster, diffusion is done directly on the raster; this could be
+  the ouput from a prior random_walk, or any other data representing
+  quantities to be spatially dispersed. In stream mode, this is the mass
+  released per time step.
+
+- iter:
+
+  Number of simulation iterations (positive integer). Pulse mode only.
+
+- record:
+
+  Integer vector specifying which iterations to record, between 0 (the
+  initial state) and `iter`. Default is to record only the final
+  iteration, i.e. `iter`. One raster layer is returned for each value in
+  `record`. Pulse mode only.
+
+- mode:
+
+  Release mode: "pulse" (default) or "stream". See details.
+
+- timescale:
+
+  A value between 0 and 1, giving the factor by which to scale the
+  default time step length (which is calculated from the data; see
+  [rw_max_step](https://matthewkling.github.io/windscape/reference/rw_max_step.md)).
+  At each iteration, particle mass either exits cells at the rates given
+  in the wind rose object, or remains in the cell. The default timescale
+  value of 1 sets the timestep length to the maximum possible value,
+  allowing the simulation to advance as far as possible in space given
+  the number of iterations, which is computationally optimal. Reducing
+  this value may be useful for smoothing the simulation dynamics, and/or
+  setting the timestep to a desired duration.
+
+- half_life:
+
+  Half-life of airborne mass, in hours of transport time (assuming
+  `trans = 1` and wind speeds in m/s, as for
+  [rw_max_step](https://matthewkling.github.io/windscape/reference/rw_max_step.md)).
+  Default `Inf` (no deposition).
+
+- method:
+
+  Stream mode only: "auto" (default), "solve", or "iterate". "auto" uses
+  "solve" for grids with up to 5e5 cells and "iterate" otherwise.
+
+- tol:
+
+  Stream mode with `method = "iterate"` only: relative convergence
+  tolerance.
+
+- max_iter:
+
+  Stream mode with `method = "iterate"` only: maximum iterations.
+
+## Value
+
+A `wind_walk` raster object of airborne mass. In pulse mode, one layer
+per value of `record`; in stream mode, a single layer named "airborne".
+
+## Details
+
+The input wind rose raster is converted to a simplex of nine
+probabilities for each grid cell, giving the rates at which particles
+are retained in a cell or moved to each of its eight neighbors.
+Probabilities of moving to a neighboring cell are proportional to
+conductance in the wind rose data set, with the probabilities of
+remaining in a cell scaled so that the cell with the highest conductance
+has a zero retention probability; this allows conductance to be
+normalized locally to a simplex while remaining proportional across
+cells and maximizing the dispersal occurring at each iteration. This is
+uniformization of the continuous-time Markov chain defined by the
+conductances (which are rates, in units of 1 / time): with time step t
+and rate matrix Q, the transition matrix is P = I + tQ. Pulse iterations
+are therefore a first-order approximation of the continuous-time process
+at times t, 2t, ...; reducing \`timescale\` improves their accuracy.
+
+The \`mode\` argument determines how particles are released. With \`mode
+= "pulse"\` (the default), the mass in \`init\` is released once, at the
+start of the simulation, and drifts and spreads like a cloud. The
+function returns the airborne mass at the iterations listed in
+\`record\`. With \`mode = "stream"\`, the mass in \`init\` is released
+at every time step, and the function returns the steady state: the
+airborne mass in each cell once release and loss (by deposition and
+across domain edges) are in balance. \`iter\` and \`record\` are ignored
+in "stream" mode.
+
+In both modes, airborne mass can be lost by deposition, controlled by
+\`half_life\`. In continuous time, deposition is a first-order process
+at rate k = ln(2) / half_life. Each time step, airborne mass disperses
+and a fraction lambda = kt / (1 + kt) of it is deposited (removed from
+the air), where t is the time step length (see
+[rw_max_step](https://matthewkling.github.io/windscape/reference/rw_max_step.md)).
+This is the uniformization of transport and deposition together, so
+stream-mode results are exact solutions of the continuous-time process,
+independent of \`timescale\`. In pulse mode, mass halves after
+approximately \`half_life\` hours (exactly in the limit of small
+\`timescale\`). The pulse update rule is n \<- (1 - lambda) \*
+disperse(n). The stream update rule is n \<- n0 + (1 - lambda) \*
+disperse(n), and the returned surface is its fixed point, n\* = (I -
+(1 - lambda) P')^-1 n0. The two modes are linked exactly: the stream
+steady state equals the sum of the pulse surfaces over all time steps,
+starting from step 0. The default \`half_life = Inf\` means no
+deposition.
+
+Deposition per time step is \`lambda\` times airborne mass (see
+[rw_deposition](https://matthewkling.github.io/windscape/reference/rw_deposition.md)),
+which treats each cell's resident airborne mass as depositing in that
+cell. Because of linearity, stream-mode deposition per unit of per-step
+release is also the probability distribution of where a single particle
+released from \`init\` is deposited. Stream-mode deposition is invariant
+to \`timescale\`. Airborne mass scales with 1 / t, because shorter steps
+mean more release events per unit time; \`airborne \* (1 - lambda) \*
+t\` is the continuous-time steady-state airborne mass per unit release
+rate, and is invariant to \`timescale\`.
+
+In stream mode with \`method = "solve"\`, the steady state is computed
+exactly with a sparse LU solve. With \`method = "iterate"\`, the update
+rule is iterated until the estimated L1 error falls below \`tol\`
+relative to the total airborne mass. For finite \`half_life\` the
+estimate is the rigorous bound ((1 - lambda) / lambda) \* \|n_k -
+n\_(k-1)\|; for \`half_life = Inf\` it is extrapolated from the observed
+rate of convergence, which is driven by loss across domain edges.
+
+Domain edges are absorbing: mass that disperses off the grid, or into NA
+cells, is lost and never returns. Values near edges are therefore biased
+low, because they receive no inflow from beyond the edge. In stream mode
+with finite \`half_life\`, the fraction of released mass lost across
+edges is reported as a message; the domain should be buffered by several
+decay lengths beyond the area of interest, until this fraction is small
+or the bias in the area of interest is acceptable. With \`half_life =
+Inf\`, edges are the only place stream-mode mass can leave, so the
+result measures connectivity within the chosen domain and depends on its
+extent; every valid cell must have a path to an edge or NA cell, or an
+error is raised.
+
+Grid geometry: conductances account for latitude (see
+[wind_rose](https://matthewkling.github.io/windscape/reference/wind_rose.md)),
+so the speed at which mass drifts is correct at all latitudes for winds
+aligned with a neighbor direction. Two biases remain, both inherent to a
+nearest-neighbor walk on a longitude/latitude grid. First, the spread of
+mass is numerical diffusion whose magnitude scales with cell dimensions,
+so it depends on grid resolution, and because cells narrow east-west
+toward the poles, spread is compressed east-west at high latitude: for
+isotropic wind, east-west spread is roughly 0.86, 0.70, and 0.49 times
+north-south spread at 30, 45, and 60 degrees latitude. Second, drift is
+slightly too slow for winds blowing between neighbor directions (up to
+about 8 percent at the equator, more at high latitude, e.g. about 14
+percent for a northeast wind at 60 degrees).

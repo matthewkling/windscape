@@ -1,0 +1,57 @@
+# Summarize a time series of wind fields into a wind rose
+
+This function converts a `wind_field_ts` into a `wind_rose` object
+summarizing the distribution of wind speed and direction observations in
+each grid cell. The result is a set of eight raster layers giving the
+average wind conductance toward each of a cell's 'queen' neighbors.
+
+## Usage
+
+``` r
+wind_rose(x, trans = 1, ...)
+```
+
+## Arguments
+
+- x:
+
+  Data set of class \`wind_series\`.
+
+- trans:
+
+  Either a function, or a positive number indicating the power to raise
+  windspeeds to; see details.
+
+- ...:
+
+  Additional arguments passed to \`terra::app\`, e.g. 'filename'.
+
+## Value
+
+A `wind_rose` object. This is an 8-layer raster stack, where each layer
+is wind conductance from the focal cell to one of its neighbors
+(clockwise starting in the SW). If input windspeeds are in m/s and
+\`trans = 1\`, values are in (1 / hours)
+
+## Details
+
+The \`trans\` parameter defines the transformation function used to
+convert wind speed into conductance. If a numeric value is supplied, the
+function speed^trans is used. A value of trans = 0 will ignore speed,
+assigning weights based on direction only; trans = 1 assumes conductance
+is proportional to windspeed, trans = 2 assumes it's proportional to
+aerodynamic drag, and trans = 3 assumes it's proportional to force. Any
+intermediate value can also be used. Any function that transforms a
+numeric vector can also be supplied; for example, to model seed
+dispersal for a species that only releases seeds when winds exceed 10
+m/s, we could specify a threshold function \`trans = function(x)x\[x \<
+10\] \<- 0; return(x)\`.
+
+Grid geometry: windscape works on longitude/latitude grids with square
+cells. Distances and bearings to each cell's neighbors are computed on
+the ellipsoid at that cell's latitude, so conductance accounts for the
+narrowing of cells toward the poles. Projected grids are not currently
+supported. If source data are projected, reproject them to
+longitude/latitude before building a `wind_series`, rotating u and v to
+true east and north if they are defined relative to the projected grid
+(as in some reanalysis products).
