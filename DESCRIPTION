@@ -13,6 +13,7 @@ LazyDataCompression: xz
 LinkingTo: Rcpp
 Roxygen: list(markdown = TRUE)
 Imports: 
+    gdistance,
     Rcpp,
     raster,
     geosphere,
@@ -35,7 +36,6 @@ Suggests:
     withr
 VignetteBuilder: knitr
 Depends: 
-    gdistance,
     R (>= 2.10),
     terra
 Config/testthat/edition: 3

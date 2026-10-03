@@ -15,7 +15,10 @@ least_cost_surface(graph, sites, rate = FALSE)
 are the inverse of cost distances, representing flow rather than travel time.}
 }
 \value{
-A SpatRaster of wind connectivity values.
+A single-layer SpatRaster. With \code{rate = FALSE}, the layer is named \code{hours} and gives
+the travel cost from the nearest site to each cell, in hours if \code{trans = 1} in \code{\link[=wind_rose]{wind_rose()}}
+and wind speeds are in m/s (otherwise in relative units). With \code{rate = TRUE}, it is named
+\code{rate} and gives the inverse.
 }
 \description{
 Calculate the accumulated wind cost-distance (e.g. travel times) or flow rate (the inverse of cost-distance)

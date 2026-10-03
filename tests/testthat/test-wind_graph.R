@@ -52,10 +52,12 @@ test_that("least_cost_surface agrees with pairwise_least_cost", {
       g <- wind_graph(r)
       s <- least_cost_surface(g, xy[1, , drop = FALSE])
       expect_s4_class(s, "SpatRaster")
+      expect_equal(names(s), "hours")
       d <- pairwise_least_cost(g, xy, adjust = FALSE)
       expect_equal(terra::extract(s, xy)[, 1], d[1, ], tolerance = 1e-8)
       sr <- least_cost_surface(g, xy[1, , drop = FALSE], rate = TRUE)
-      expect_equal(terra::values(sr), 1 / terra::values(s))
+      expect_equal(names(sr), "rate")
+      expect_equal(terra::values(sr), 1 / terra::values(s), ignore_attr = TRUE)
 })
 
 test_that("wrap connects the eastern and western edges", {
