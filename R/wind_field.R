@@ -30,7 +30,7 @@ wind_series <- function(x, order = c("uuvv", "uvuv")){
       }
 
       # create wind_field
-      y <- as(x, "wind_series")
+      y <- as(as(x, "SpatRaster"), "wind_series")
       y@n_steps <- nlyr(x)/2
       y
 }
@@ -54,5 +54,5 @@ wind_field <- function(x){
       if(terra::nlyr(x) != 2) stop("`x` must have two layers.")
       xt <- ext(x)
       if(any(c(xt$xmin < -180, xt$xmax > 360, xt$ymin < -90, xt$ymax > 90))) stop("wind field rasters must be in lon-lat coordinates")
-      as(x, "wind_field")
+      as(as(x, "SpatRaster"), "wind_field") # via SpatRaster, so subclasses (e.g. wind_series layers) work
 }

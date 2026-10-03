@@ -35,5 +35,5 @@ domain in projected space. Only used if \code{equalarea = TRUE} and \code{sample
 A two-column matrix of x (longitude) and y (latitude) values, with a row for each particle.
 }
 \description{
-Initialize a set of particle locations for use in \link{particle_flow}.
+Initialize a set of particle locations for use in \code{\link[=wind_trails]{wind_trails()}}.
 }

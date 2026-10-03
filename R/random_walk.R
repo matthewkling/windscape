@@ -219,7 +219,7 @@ random_walk <- function(rose, init, mode = c("pulse", "stream"), half_life = Inf
             names(x) <- paste0("iter", record)
             as_wind_walk(x, mode = mode, n_iter = iter, iter_length = t, decay = lambda)
       }
-      list(airborne = walk(out$air), deposition = walk(out$dep))
+      structure(list(airborne = walk(out$air), deposition = walk(out$dep)), class = c("random_walk", "list"))
 }
 
 
@@ -539,6 +539,7 @@ rw_stream <- function(rose, init, t, lambda, method = "auto", tol = 1e-8, max_it
             names(x) <- name
             as_wind_walk(x, mode = "stream", n_iter = iters, iter_length = t, decay = lambda)
       }
-      list(residence = walk(n * (1 - lambda) * t, "residence"), # continuous-time residence
-           deposition = walk(n * lambda, "deposition"))          # = k * residence
+      structure(list(residence = walk(n * (1 - lambda) * t, "residence"), # continuous-time residence
+                     deposition = walk(n * lambda, "deposition")),         # = k * residence
+                class = c("random_walk", "list"))
 }

@@ -16,6 +16,8 @@ Imports:
     Rcpp,
     raster,
     geosphere,
+    ggplot2,
+    graphics,
     magrittr,
     Matrix,
     methods,
