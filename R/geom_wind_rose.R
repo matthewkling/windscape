@@ -19,7 +19,7 @@
 #'    `geom_wind_rose()`.
 #' @param position Position adjustment; see [ggplot2::layer()].
 #' @param ... Other arguments passed to [ggplot2::layer()], such as fixed aesthetics like
-#'    `colour = "black"`.
+#'    `color = "black"`.
 #' @param res Approximate number of glyphs along the longer side of the data's extent. Blocks
 #'    of grid cells are sized to be approximately square in km. The same blocks are used in
 #'    every panel, so faceted glyphs are directly comparable. Default 15.

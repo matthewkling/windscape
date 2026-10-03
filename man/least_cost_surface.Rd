@@ -24,5 +24,5 @@ function is a wrapper around \link[gdistance]{accCost}.
 }
 \details{
 Paths are restricted to the eight neighbor directions, so cost distances are overestimated
-for routes between neighbor bearings; see \link{least_cost_distance} for magnitudes.
+for routes between neighbor bearings; see \link{pairwise_least_cost} for magnitudes.
 }

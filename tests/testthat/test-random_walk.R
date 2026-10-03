@@ -463,3 +463,283 @@ test_that("latitude correction widens east-west spread in a pulse walk", {
       expect_gt(cor[["x"]] / cor[["y"]], 0.85)
       expect_equal(cor[["y"]], raw[["y"]], tolerance = 0.15)
 })
+
+
+# upwind walks ------------------------
+
+test_that("upwind stream is the adjoint: upwind from r at s equals downwind from s at r", {
+      r <- noisy_rose()
+      for(cells in list(c(20, 140), c(90, 33), c(150, 7))){
+            s <- cells[1]
+            rc <- cells[2]
+            down <- quietly(random_walk(r, point_raster(r, s), mode = "stream", half_life = 24))
+            up <- quietly(random_walk(r, point_raster(r, rc), mode = "stream", direction = "upwind",
+                                      half_life = 24))
+            expect_equal(vals(up$deposition)[s], vals(down$deposition)[rc], tolerance = 1e-10)
+            expect_equal(vals(up$residence)[s], vals(down$residence)[rc], tolerance = 1e-10)
+      }
+})
+
+test_that("upwind pulse is the adjoint at each iteration", {
+      r <- noisy_rose()
+      s <- 20
+      rc <- 60
+      down <- quietly(random_walk(r, point_raster(r, s), iter = 6, record = c(2, 6), half_life = 24))
+      up <- quietly(random_walk(r, point_raster(r, rc), iter = 6, record = c(2, 6), half_life = 24,
+                                direction = "upwind"))
+      expect_equal(terra::values(up$airborne)[s, ], terra::values(down$airborne)[rc, ], tolerance = 1e-12)
+      expect_equal(terra::values(up$deposition)[s, ], terra::values(down$deposition)[rc, ], tolerance = 1e-12)
+      expect_equal(up$airborne@direction, "upwind")
+      expect_equal(down$airborne@direction, "downwind")
+})
+
+test_that("upwind deposition is a probability over origins", {
+      r <- noisy_rose()
+      up <- quietly(random_walk(r, point_raster(r, 90), mode = "stream", direction = "upwind",
+                                half_life = 24))
+      d <- vals(up$deposition)
+      expect_true(all(d >= 0 & d <= 1))
+      # equals the direct calculation for every origin: deposition at 90 from a unit release
+      P <- rw_matrix(rw_prob(rw_latitude_correction(r), iter_length(up)))
+      lam <- up$residence@decay
+      G <- solve(diag(terra::ncell(r)) - (1 - lam) * as.matrix(Matrix::t(P)))
+      expect_equal(d, lam * G[90, ], tolerance = 1e-8)
+})
+
+test_that("upwind windsheds lie upwind", {
+      r <- uniform_rose(u = 3)
+      down <- quietly(random_walk(r, point_raster(r, 221), mode = "stream", half_life = 24))
+      up <- quietly(random_walk(r, point_raster(r, 221), mode = "stream", half_life = 24,
+                                direction = "upwind"))
+      expect_gt(centroid(down$residence)[["col"]], 11)
+      expect_lt(centroid(up$residence)[["col"]], 11)
+      expect_equal(11 - centroid(up$residence)[["col"]], centroid(down$residence)[["col"]] - 11,
+                   tolerance = 1e-8) # mirror images in a uniform field
+})
+
+test_that("upwind works with iteration and infinite half-life", {
+      r <- noisy_rose()
+      a <- quietly(random_walk(r, point_raster(r, 90), mode = "stream", direction = "upwind",
+                               method = "solve"))
+      b <- quietly(random_walk(r, point_raster(r, 90), mode = "stream", direction = "upwind",
+                               method = "iterate", tol = 1e-10))
+      expect_equal(vals(a$residence), vals(b$residence), tolerance = 1e-7)
+      expect_true(all(vals(a$deposition) == 0))
+      msgs <- capture_messages(random_walk(r, point_raster(r, 90), mode = "stream",
+                                           direction = "upwind", half_life = 24))
+      expect_false(any(grepl("lost across domain edges", msgs)))
+      expect_error(random_walk(r, point_raster(r, 90), direction = "sideways"))
+})
+
+
+# net flux ------------------------
+
+test_that("net flux satisfies the mass budget: net outflow = release - deposition", {
+      r <- noisy_rose()
+      init <- point_raster(r, c(30, 90), c(1, 2))
+      w <- quietly(random_walk(r, init, mode = "stream", half_life = 24, flux = TRUE))
+      res <- vals(w$residence)
+      J <- rw_edge_flows(res, rw_prob(rw_latitude_correction(r), iter_length(w)), iter_length(w))
+      expect_equal(rowSums(J), vals(init) - log(2) / 24 * res, tolerance = 1e-10)
+      # with no deposition, net outflow is the release itself
+      w0 <- quietly(random_walk(r, init, mode = "stream", flux = TRUE))
+      J0 <- rw_edge_flows(vals(w0$residence), rw_prob(rw_latitude_correction(r), iter_length(w0)),
+                          iter_length(w0))
+      expect_equal(rowSums(J0), vals(init), tolerance = 1e-10)
+})
+
+test_that("net flux is a wind_field usable by the wind geoms", {
+      r <- noisy_rose()
+      w <- quietly(random_walk(r, cbind(-90, 35), mode = "stream", half_life = 24, flux = TRUE))
+      expect_named(w, c("residence", "deposition", "flux"))
+      expect_s4_class(w$flux, "wind_field")
+      expect_equal(names(w$flux), c("u", "v"))
+      d <- ggplot2::fortify(w$flux)
+      expect_named(d, c("x", "y", "u", "v", "speed", "bearing"))
+      p <- ggplot2::ggplot(d, ggplot2::aes(x, y)) + geom_wind_arrow(fixed_length = TRUE)
+      expect_s3_class(ggplot2::ggplotGrob(p), "gtable")
+      expect_named(quietly(random_walk(r, cbind(-90, 35), mode = "stream", half_life = 24)),
+                   c("residence", "deposition"))
+})
+
+test_that("in a uniform westerly, flux runs downwind, also across the plume's flanks", {
+      th <- (1:72 - 0.5) / 72 * 2 * pi
+      r <- build_rose(21, 41, function(x, y) list(u = 3 + 2 * sin(th), v = 2 * cos(th)),
+                      xmin = -110, ymin = 30)
+      src <- terra::cellFromRowCol(r, 11, 8)
+      w <- quietly(random_walk(r, point_raster(r, src), mode = "stream", half_life = 48, flux = TRUE))
+      f <- ggplot2::fortify(w$flux)
+      rc <- terra::rowColFromCell(r, seq_len(nrow(f)))
+      downwind <- rc[, 2] > 12 & f$speed > 1e-3 * max(f$speed)
+      expect_true(all(abs(f$bearing[downwind] - 90) < 60))      # eastward-ish everywhere downwind
+      axis <- downwind & rc[, 1] == 11
+      expect_true(all(abs(f$bearing[axis] - 90) < 1))           # due east on the axis
+})
+
+test_that("flux is validated by mode and direction", {
+      r <- noisy_rose()
+      expect_error(quietly(random_walk(r, cbind(-90, 35), flux = TRUE)), "stream mode")
+      expect_error(random_walk(r, cbind(-90, 35), mode = "stream", direction = "upwind", flux = TRUE),
+                   "finite")
+})
+
+
+test_that("upwind flux satisfies the destined-material budget", {
+      r <- noisy_rose()
+      init <- point_raster(r, c(60, 140), c(1, 0.5))           # weighted receptors
+      w <- quietly(random_walk(r, init, mode = "stream", direction = "upwind", half_life = 24,
+                               flux = TRUE))
+      expect_s4_class(w$flux, "wind_field")
+      t <- iter_length(w)
+      rc <- rw_latitude_correction(r)
+      area <- vals(terra::cellSize(methods::as(r, "SpatRaster")[[1]], unit = "km"))
+      m <- vals(quietly(random_walk(r, terra::rast(r, nlyrs = 1, vals = area), mode = "stream",
+                                    half_life = 24))$residence)
+      h <- vals(w$deposition)
+      J <- rw_edge_flows(m, rw_prob(rc, t), t, h = h)
+      # net outflow of destined material = destined release (area x h, at 1 unit per km^2 per
+      # hour) minus destined deposition (k * mass, at the receptors, weighted)
+      k <- log(2) / 24
+      expect_equal(rowSums(J), area * h - k * m * vals(init), tolerance = 1e-10)
+})
+
+test_that("upwind flux converges on the receptor along the wind", {
+      th <- (1:72 - 0.5) / 72 * 2 * pi
+      r <- build_rose(21, 41, function(x, y) list(u = 3 + 2 * sin(th), v = 2 * cos(th)),
+                      xmin = -110, ymin = 30)
+      rec <- terra::cellFromRowCol(r, 11, 30)
+      w <- quietly(random_walk(r, point_raster(r, rec), mode = "stream", direction = "upwind",
+                               half_life = 48, flux = TRUE))
+      f <- ggplot2::fortify(w$flux)
+      rcl <- terra::rowColFromCell(r, seq_len(nrow(f)))
+      upwind_axis <- rcl[, 1] == 11 & rcl[, 2] < 26 & rcl[, 2] > 5 & f$speed > 1e-3 * max(f$speed)
+      expect_true(any(upwind_axis))
+      expect_true(all(abs(f$bearing[upwind_axis] - 90) < 1)) # due east, toward the receptor
+})
+
+
+
+# density ------------------------
+
+area_of <- function(r) vals(terra::cellSize(methods::as(r, "SpatRaster")[[1]], unit = "km"))
+
+test_that("downwind density divides each cell's values by its area", {
+      r <- noisy_rose()
+      a <- area_of(r)
+      s <- quietly(random_walk(r, cbind(-90, 35), mode = "stream", half_life = 24, flux = TRUE))
+      sd <- quietly(random_walk(r, cbind(-90, 35), mode = "stream", half_life = 24, flux = TRUE,
+                                density = TRUE))
+      expect_equal(vals(sd$residence), vals(s$residence) / a)
+      expect_equal(vals(sd$deposition), vals(s$deposition) / a)
+      expect_equal(terra::values(sd$flux), terra::values(s$flux) / a, ignore_attr = TRUE)
+      expect_s3_class(sd, "random_walk")
+      expect_s4_class(sd$flux, "wind_field")
+      p <- quietly(random_walk(r, cbind(-90, 35), iter = 3, record = c(1, 3), half_life = 24))
+      pd <- quietly(random_walk(r, cbind(-90, 35), iter = 3, record = c(1, 3), half_life = 24,
+                                density = TRUE))
+      expect_equal(terra::values(pd$airborne), terra::values(p$airborne) / a, ignore_attr = TRUE)
+      expect_equal(terra::values(pd$deposition), terra::values(p$deposition) / a, ignore_attr = TRUE)
+})
+
+test_that("upwind density divides by receptor area, each receptor's own", {
+      r <- noisy_rose()
+      a <- area_of(r)
+      rec <- c(20, 160)                                   # receptors at different latitudes
+      init <- point_raster(r, rec, c(1, 2))
+      u <- quietly(random_walk(r, init, mode = "stream", direction = "upwind", half_life = 24))
+      ud <- quietly(random_walk(r, init, mode = "stream", direction = "upwind", half_life = 24,
+                                density = TRUE))
+      u1 <- quietly(random_walk(r, point_raster(r, rec[1]), mode = "stream", direction = "upwind",
+                                half_life = 24))
+      u2 <- quietly(random_walk(r, point_raster(r, rec[2]), mode = "stream", direction = "upwind",
+                                half_life = 24))
+      expected <- vals(u1$deposition) / a[rec[1]] + 2 * vals(u2$deposition) / a[rec[2]]
+      expect_equal(vals(ud$deposition), expected, tolerance = 1e-10)
+      expect_false(isTRUE(all.equal(vals(ud$deposition), vals(u$deposition) / a))) # not per origin area
+})
+
+test_that("density matches pairwise_random_walk", {
+      r <- noisy_rose()
+      cells <- c(20, 75, 140)
+      sites <- terra::xyFromCell(r, cells)
+      m <- pairwise_random_walk(r, sites, half_life = 24)
+      w <- quietly(random_walk(r, sites[2, , drop = FALSE], mode = "stream", half_life = 24,
+                               density = TRUE))
+      expect_equal(m[2, ], vals(w$deposition)[cells], tolerance = 1e-10)
+})
+
+
+# origin and source ------------------------
+
+test_that("origin follows Bayes' rule: downwind deposition from each source times its release", {
+      r <- noisy_rose()
+      rec <- 90
+      srcs <- c(20, 75, 140)
+      q <- c(1, 3, 0.5)
+      source <- point_raster(r, srcs, q)
+      up <- quietly(random_walk(r, point_raster(r, rec), mode = "stream", direction = "upwind",
+                                half_life = 24, source = source))
+      expect_equal(sum(vals(up$origin)), 1)
+      expect_true(all(vals(up$origin)[-srcs] == 0))          # no release, no attribution
+      # independently: deposition at the receptor from each source, by downwind walks
+      d <- vapply(srcs, function(s){
+            w <- quietly(random_walk(r, point_raster(r, s), mode = "stream", half_life = 24))
+            vals(w$deposition)[rec]
+      }, numeric(1))
+      expect_equal(vals(up$origin)[srcs], d * q / sum(d * q), tolerance = 1e-8)
+})
+
+test_that("default origin uses uniform release per km^2", {
+      r <- noisy_rose()
+      a <- area_of(r)
+      up <- quietly(random_walk(r, point_raster(r, 90), mode = "stream", direction = "upwind",
+                                half_life = 24))
+      h <- vals(up$deposition)
+      expect_equal(vals(up$origin), h * a / sum(h * a), tolerance = 1e-10)
+      upd <- quietly(random_walk(r, point_raster(r, 90), mode = "stream", direction = "upwind",
+                                 half_life = 24, density = TRUE))
+      expect_equal(sum(vals(upd$origin) * a), 1, tolerance = 1e-10)       # integrates to 1 per km^2
+      expect_equal(vals(upd$origin) / sum(vals(upd$origin)), h / sum(h),  # proportional to reach
+                   tolerance = 1e-10)
+})
+
+test_that("origin for a multi-cell receptor ignores receptor-area normalization", {
+      r <- noisy_rose()
+      a <- area_of(r)
+      patch <- point_raster(r, c(20, 160))                     # cells at different latitudes
+      up <- quietly(random_walk(r, patch, mode = "stream", direction = "upwind", half_life = 24))
+      upd <- quietly(random_walk(r, patch, mode = "stream", direction = "upwind", half_life = 24,
+                                 density = TRUE))
+      expect_equal(vals(upd$origin) * a, vals(up$origin), tolerance = 1e-10)
+})
+
+test_that("source drives upwind flux", {
+      r <- noisy_rose()
+      init <- point_raster(r, 90)
+      q <- terra::rast(r, nlyrs = 1, vals = rep(c(0, 2), length.out = terra::ncell(r)))
+      w <- quietly(random_walk(r, init, mode = "stream", direction = "upwind", half_life = 24,
+                               flux = TRUE, source = q))
+      t <- iter_length(w)
+      m <- vals(quietly(random_walk(r, q, mode = "stream", half_life = 24))$residence)
+      h <- vals(w$deposition)
+      J <- rw_edge_flows(m, rw_prob(rw_latitude_correction(r), t), t, h = h)
+      expect_equal(rowSums(J), vals(q) * h - log(2) / 24 * m * vals(init), tolerance = 1e-10)
+      expect_named(w, c("residence", "deposition", "origin", "flux"))
+})
+
+test_that("origin and source scope and validation", {
+      r <- noisy_rose()
+      init <- point_raster(r, 90)
+      expect_false("origin" %in% names(quietly(random_walk(r, init, mode = "stream", direction = "upwind"))))
+      expect_false("origin" %in% names(quietly(random_walk(r, init, mode = "stream", half_life = 24))))
+      expect_error(random_walk(r, init, mode = "stream", half_life = 24, source = init), "upwind stream")
+      expect_error(random_walk(r, init, direction = "upwind", half_life = 24, source = init), "upwind stream")
+      expect_error(random_walk(r, init, mode = "stream", direction = "upwind", half_life = 24,
+                               source = point_raster(r, 5, -1)), "non-negative")
+      expect_warning(utils::capture.output(suppressMessages(
+            random_walk(r, init, mode = "stream", direction = "upwind", half_life = 24,
+                        source = terra::rast(r, nlyrs = 1, vals = 0)))), "undefined")
+      d <- ggplot2::fortify(quietly(random_walk(r, init, mode = "stream", direction = "upwind",
+                                                half_life = 24)))
+      expect_named(d, c("x", "y", "residence", "deposition", "origin"))
+})

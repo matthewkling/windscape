@@ -6,7 +6,7 @@ test_that("vrcd refines only nearby site pairs", {
       v <- quietly(vrcd(r, ll, threshold_km = 50, max_nodes = 400))
       expect_named(v, c("wind_dist", "wind_dist_coarse", "point_dist", "cell_dist", "cell_dist_coarse"))
       expect_equal(v$point_dist, point_distance(ll))
-      expect_equal(v$wind_dist_coarse, least_cost_distance(wind_graph(r), ll, adjust = FALSE),
+      expect_equal(v$wind_dist_coarse, pairwise_least_cost(wind_graph(r), ll, adjust = FALSE),
                    ignore_attr = TRUE)
       far <- cbind(c(1, 2, 3, 3), c(3, 3, 1, 2))
       expect_equal(v$wind_dist[far], v$wind_dist_coarse[far])

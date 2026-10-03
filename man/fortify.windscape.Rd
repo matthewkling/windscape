@@ -40,10 +40,12 @@ direction).
 \item \code{wind_field}: wind components \code{u} and \code{v}; \code{speed}, in the units of \code{u} and \code{v}; and
 \code{bearing}, the direction the wind blows toward, in degrees clockwise from north.
 \item \code{wind_series}: one row per grid cell and time step, with \code{step} (the time step's index),
-\code{time} (parsed from layer names where possible, otherwise \code{NA}), \code{u}, and \code{v}.
+\code{time} (parsed from layer names where possible, otherwise \code{NA}), and \code{u}, \code{v}, \code{speed},
+and \code{bearing} as for a \code{wind_field}.
 \item \code{random_walk()} result, pulse mode: one row per grid cell and recorded iteration, with
 \code{iteration}, \code{hours} (elapsed time), \code{airborne}, and \code{deposition}.
-\item \code{random_walk()} result, stream mode: \code{residence} and \code{deposition}.
+\item \code{random_walk()} result, stream mode: \code{residence}, \code{deposition}, and for upwind walks,
+\code{origin} (the \code{flux} element is a \code{wind_field}; fortify it separately).
 }
 }
 \description{

@@ -11,12 +11,17 @@
 #' @param init Where particles are released: either a two-column matrix of coordinates, which
 #'    places a mass of 1 in each cell containing a coordinate, or a single-layer SpatRaster of
 #'    non-negative mass values with the same geometry as `rose`. In stream mode, `init` can be
-#'    read either as a release rate (mass per hour) or as a one-time release; see Value.
+#'    read either as a release rate (mass per hour) or as a one-time release; see Value. With
+#'    `direction = "upwind"`, `init` instead gives the receptor locations (and weights) whose
+#'    sources are traced.
 #' @param mode Release mode. `"pulse"` (the default) releases `init` once and tracks the
 #'    drifting, spreading cloud through time. `"stream"` releases particles continuously and
 #'    returns the steady state, where release is balanced by deposition and loss across domain
 #'    edges; equivalently, this is the all-time total for a single release (see Value). It is
 #'    computed directly rather than by simulating forward.
+#' @param direction `"downwind"` (the default) simulates where particles released at `init`
+#'    go: their outbound windshed. `"upwind"` simulates where particles reaching `init` come
+#'    from: its inbound windshed, or catchment. See Value and Details.
 #' @param half_life Half-life of airborne mass, in hours of transport time (assuming
 #'    `trans = 1` and wind speeds in m/s; see [wind_rose()]). Particles are deposited at the
 #'    continuous rate `k = log(2) / half_life`, in the cell where they are airborne. Default
@@ -30,6 +35,14 @@
 #'    conductance to east and west edges without changing drift, which shortens the time step
 #'    (pulse mode needs about 1.3 times as many iterations at 45 degrees, 1.9 at 60). Has no effect
 #'    on projected rasters. See Details.
+#' @param density Logical: express results per km^2 rather than per grid cell? Default
+#'    `FALSE`. On a longitude/latitude grid, cell area shrinks toward the poles, so per-cell
+#'    values are biased toward lower latitudes; use `density = TRUE` for maps spanning a wide
+#'    range of latitudes, or for comparisons across grid resolutions. Downwind, each cell's values
+#'    are divided by its own area. Upwind, values are per particle released from each origin,
+#'    so they are instead divided by the area of the receptor (each receptor's own, if several).
+#'    `flux` is divided by each cell's area in either direction. Per-cell values (the default)
+#'    are what sum to totals, e.g. in the pulse-mode mass balance.
 #' @param iter Pulse mode only: number of iterations (time steps) to simulate.
 #' @param record Pulse mode only: integer vector of iterations to return, between 0 (the initial
 #'    state) and `iter`. Default is the final iteration only.
@@ -42,6 +55,14 @@
 #'    rigorous bound; for `half_life = Inf` it is extrapolated from the observed convergence rate.
 #' @param max_iter Stream mode with `method = "iterate"` only: maximum number of iterations,
 #'    after which a warning is given.
+#' @param flux Stream mode only: logical: also return the net flux of material, the direction
+#'    and rate at which it moves through each cell? Default `FALSE`. For upwind walks, requires
+#'    a finite `half_life`. See Value.
+#' @param source Upwind stream mode only: where material is released, used for `origin` and
+#'    `flux`: either a two-column matrix of coordinates (a unit release in each cell containing a
+#'    coordinate) or a single-layer SpatRaster of non-negative release per grid cell, like
+#'    `init`. Default `NULL` releases uniformly per km^2 (each cell in proportion to its area).
+#'    To use a map of release per km^2, multiply it by [terra::cellSize()].
 #'
 #' @return A named list of two `wind_walk` rasters: `airborne` and `deposition` in pulse mode,
 #'    or `residence` and `deposition` in stream mode. Masses are in the units of `init`, and
@@ -73,6 +94,25 @@
 #' eventually deposited; for a unit release from one cell, `deposition` is the probability
 #' distribution of where a particle lands.
 #'
+#' **Net flux.** With `flux = TRUE`, the list also contains `flux`, a [wind_field()] whose `u`
+#' and `v` layers are the eastward and northward components of the net transport of material
+#' through each cell: the flow from the cell to each neighbor minus the flow back, times the
+#' distance to that neighbor, halved (each flow is shared between two cells). Units are mass
+#' times km per hour (if `init` is a release rate, `trans = 1`, and wind speeds are in m/s);
+#' direction and relative magnitude are usually what matter. Draw it with
+#' [geom_wind_arrow()], or [stat_wind_trail()] with `fixed_length = TRUE`. Unlike the gradient
+#' of `residence` or `deposition`, which describes the shape of the windshed, net flux shows the
+#' transport that produces it: across a plume's flanks, for example, material moves mostly
+#' downwind, not sideways down the gradient. Each cell's net outflow equals its release minus
+#' its deposition.
+#'
+#' For upwind walks, `flux` is the transport of the material that ends up at the receptor:
+#' material released per `source` (by default, uniformly, one unit per km^2 per hour) and
+#' eventually deposited at the receptor (weighted by `init`). It shows the routes by which the
+#' receptor's material arrives. Each cell's net outflow equals its release of such material (its
+#' release times its probability of eventual deposition at the receptor) minus the amount
+#' deposited in the cell, which is nonzero only at the receptor.
+#'
 #' **Relationship between modes.** For the same `rose`, `init`, `half_life`, and
 #' `latitude_correction`, stream results are the totals that a pulse walk accumulates over all
 #' time, at any `timescale`. Stream `deposition` equals pulse `deposition` once the pulse has run
@@ -81,6 +121,26 @@
 #' see Details). This holds because the walk is linear (particles move independently, so their
 #' contributions add) and time-invariant (the same `rose` applies at every time step), which is
 #' also why continuous and single releases give the same numbers.
+#'
+#' **Upwind walks.** With `direction = "upwind"`, each cell's values describe particles released
+#' from that cell and their contribution to the receptor at `init` (weighted by its values, if a
+#' raster):
+#' * Stream `deposition`: the probability that a particle released from the cell is deposited at
+#'   the receptor. This maps where the receptor's deposited material comes from.
+#' * Stream `residence`: the time, in hours, that a unit release from the cell spends airborne
+#'   over the receptor.
+#' * Pulse `airborne` at iteration `k`: the probability that a particle released from the cell is
+#'   airborne over the receptor `k` time steps later; and pulse `deposition`: the probability
+#'   it has been deposited there by then.
+#' * Stream `origin` (with a finite `half_life`): the probability that a particle deposited at
+#'   the receptor was released from the cell. Where `deposition` asks "if a particle were
+#'   released here, would it reach the receptor?", `origin` asks "of the particles reaching the
+#'   receptor, what share came from here?" By Bayes' rule, `origin` is `deposition` times
+#'   release (see `source`), normalized to sum to 1 over cells, or with `density = TRUE`, to
+#'   integrate to 1 per km^2. With the default uniform release per km^2, `origin` with
+#'   `density = TRUE` is proportional to `deposition`. Shares are among sources inside the
+#'   domain: material from beyond its edges is not represented. For a receptor spanning several
+#'   cells, `origin` covers particles landing anywhere in it.
 #'
 #' @details
 #' ## Transition probabilities
@@ -112,6 +172,16 @@
 #' `n* = (I - (1 - lambda) P')^-1 n0`; residence is `(1 - lambda) * t * n*`. The two modes are
 #' linked exactly: stream-mode residence equals `(1 - lambda) * t` times the sum of the
 #' pulse-mode surfaces over all time steps, starting from step 0.
+#'
+#' ## Upwind walks
+#'
+#' Write the downwind stream solution as `n* = G n0`, where entry `G[r, s]` is the airborne mass
+#' at cell `r` per unit released at cell `s`. A downwind walk from a source `s` gives column `s`
+#' of `G`: everywhere that source's particles go. An upwind walk to a receptor `r` gives row
+#' `r`: every source's contribution to that receptor. It is computed with the adjoint process,
+#' using the transpose of the downwind transition matrix (`P` in place of `P'`), not by
+#' reversing the wind, so for any source `s` and receptor `r`, the upwind value at `s` equals
+#' the downwind value at `r`. The same holds for each pulse iteration.
 #'
 #' ## Domain edges
 #'
@@ -147,12 +217,14 @@
 #' without the correction.
 #'
 #' @export
-random_walk <- function(rose, init, mode = c("pulse", "stream"), half_life = Inf, timescale = 1,
-                        latitude_correction = TRUE,
-                        iter = 100, record = iter,
-                        method = c("auto", "solve", "iterate"), tol = 1e-8, max_iter = 1e5){
+random_walk <- function(rose, init, mode = c("pulse", "stream"), direction = c("downwind", "upwind"),
+                        half_life = Inf, timescale = 1, latitude_correction = TRUE,
+                        density = FALSE, iter = 100, record = iter,
+                        method = c("auto", "solve", "iterate"), tol = 1e-8, max_iter = 1e5,
+                        flux = FALSE, source = NULL){
 
       mode <- match.arg(mode)
+      direction <- match.arg(direction)
       method <- match.arg(method)
 
       disperse <- function(n, p){
@@ -197,10 +269,33 @@ random_walk <- function(rose, init, mode = c("pulse", "stream"), half_life = Inf
       }
 
       if(!(timescale > 0 && timescale <= 1)) stop("'timescale' must be greater than 0 and less than or equal to 1.")
+      if(!is.null(source) && !(mode == "stream" && direction == "upwind"))
+            stop("`source` is only used by upwind stream walks")
+      raw_init <- NULL
+      if(density){
+            area <- rw_cell_area(rose)
+            if(direction == "upwind") raw_init <- init
+            # upwind values are per particle released from each origin, so normalize by receptor
+            # area (each receptor's own), via the receptor weights; exact by linearity
+            if(direction == "upwind") init <- rw_init(rose, init) / area
+      }
       if(latitude_correction) rose <- rw_latitude_correction(rose)
       t <- rw_max_step(rose) * timescale
       lambda <- rw_decay(half_life, t)
-      if(mode == "stream") return(rw_stream(rose, init, t, lambda, method, tol, max_iter))
+      if(isTRUE(flux) && mode != "stream") stop("`flux = TRUE` is only available in stream mode")
+      if(isTRUE(flux) && direction == "upwind" && lambda == 0)
+            stop("`flux = TRUE` for upwind walks requires a finite `half_life`: it traces material ",
+                 "deposited at the receptor, and with no deposition there is none")
+      if(mode == "stream"){
+            if(!is.null(source)){
+                  source <- rw_init(rose, source)
+                  if(any(terra::values(source) < 0, na.rm = TRUE)) stop("`source` values must be non-negative")
+            }
+            out <- rw_stream(rose, init, t, lambda, method, tol, max_iter, direction,
+                             flux = isTRUE(flux), source = source, raw_init = raw_init)
+            if(density) out <- rw_per_area(out, area, direction)
+            return(out)
+      }
 
       if(any(record < 0 | record > iter | record != round(record)))
             stop("`record` values must be integers between 0 and `iter`")
@@ -213,32 +308,39 @@ random_walk <- function(rose, init, mode = c("pulse", "stream"), half_life = Inf
 
       n <- rw_init(rose, init)
 
-      out <- diffuse(n, p, iter, record, lambda)
+      out <- if(direction == "downwind") diffuse(n, p, iter, record, lambda) else
+            diffuse_upwind(n, p, iter, record, lambda)
       walk <- function(a){
             x <- rast(n, nlyrs = length(record), vals = a)
             names(x) <- paste0("iter", record)
-            as_wind_walk(x, mode = mode, n_iter = iter, iter_length = t, decay = lambda)
+            as_wind_walk(x, mode = mode, n_iter = iter, iter_length = t, decay = lambda,
+                         direction = direction)
       }
-      structure(list(airborne = walk(out$air), deposition = walk(out$dep)), class = c("random_walk", "list"))
+      out <- structure(list(airborne = walk(out$air), deposition = walk(out$dep)),
+                       class = c("random_walk", "list"))
+      if(density) out <- rw_per_area(out, area, direction)
+      out
 }
 
 
 setClass("wind_walk",
          contains = "SpatRaster",
          slots = c(mode = "character",
+                   direction = "character",
                    n_iter = "numeric",
                    iter_length = "numeric",
                    decay = "numeric"),
-         prototype = list(decay = NA_real_))
+         prototype = list(decay = NA_real_, direction = "downwind"))
 
 
-as_wind_walk <- function(x, mode, n_iter, iter_length, decay = NA_real_){
+as_wind_walk <- function(x, mode, n_iter, iter_length, decay = NA_real_, direction = "downwind"){
       if(!inherits(x, "SpatRaster")) stop("x must be a SpatRaster")
       x <- as(as(x, "SpatRaster"), "wind_walk")
       x@mode <- mode
       x@n_iter <- n_iter
       x@iter_length <- iter_length
       x@decay <- decay
+      x@direction <- direction
       x
 }
 
@@ -389,6 +491,117 @@ rw_latitude_correction <- function(rose){
 }
 
 
+# Cell areas in km^2, as a single-layer SpatRaster. For rasters without a usable CRS (e.g.
+# planar test grids), falls back to the product of the resolution, in squared map units.
+rw_cell_area <- function(rose){
+      r <- as(rose, "SpatRaster")[[1]]
+      tryCatch(terra::cellSize(r, unit = "km"),
+               error = function(e) terra::init(r, prod(terra::res(r))))
+}
+
+
+# Convert random walk results to per-km^2 values: downwind, every element is divided by each
+# cell's area; upwind (residence and deposition already normalized by receptor area via
+# `init`), only origin and flux are.
+rw_per_area <- function(out, area, direction){
+      cls <- class(out)
+      for(nm in names(out)){
+            if(direction == "upwind" && !nm %in% c("origin", "flux")) next
+            x <- out[[nm]]
+            v <- terra::values(x) / terra::values(area)[, 1]
+            terra::values(x) <- v
+            out[[nm]] <- x
+      }
+      class(out) <- cls
+      out
+}
+
+
+# Net flows (mass per hour) from each cell to each of its 8 neighbors, in rose layer order
+# (SW, W, NW, N, NE, E, SE, S), given continuous-time steady-state mass (residence) `res`, the
+# transition probabilities `p` (from rw_prob()), and step length `t`. The flow from c to k is
+# res_c * p_ck / t minus the reverse flow res_k * p_kc / t. Flows across domain edges or into
+# NA cells count as outflow only. If `h` is given (the probability, from each cell, of eventual
+# deposition at a receptor), flows are restricted to material destined for the receptor:
+# res_c * p_ck * h_k / t minus res_k * p_kc * h_c / t, and nothing destined leaves the domain.
+rw_edge_flows <- function(res, p, t, h = NULL){
+      nr <- terra::nrow(p)
+      nc <- terra::ncol(p)
+      v <- terra::values(p)
+      valid <- stats::complete.cases(v)
+      v[!valid, ] <- 0
+      row <- rep(seq_len(nr), each = nc)
+      col <- rep(seq_len(nc), times = nr)
+      dr <- c(1, 0, -1, -1, -1, 0, 1, 1)  # SW, W, NW, N, NE, E, SE, S
+      dc <- c(-1, -1, -1, 0, 1, 1, 1, 0)
+      opposite <- c(5, 6, 7, 8, 1, 2, 3, 4)
+      J <- matrix(0, nr * nc, 8)
+      for(k in 1:8){
+            r2 <- row + dr[k]
+            c2 <- col + dc[k]
+            inside <- r2 >= 1 & r2 <= nr & c2 >= 1 & c2 <= nc
+            j <- (r2 - 1) * nc + c2
+            ok <- inside & valid
+            ok[ok] <- valid[j[ok]]
+            back <- numeric(nr * nc)
+            if(is.null(h)){
+                  out <- res * v[, k + 1] / t
+                  back[ok] <- res[j[ok]] * v[j[ok], opposite[k] + 1] / t
+            }else{
+                  hk <- numeric(nr * nc)
+                  hk[ok] <- h[j[ok]]
+                  out <- res * v[, k + 1] * hk / t
+                  back[ok] <- res[j[ok]] * v[j[ok], opposite[k] + 1] * h[ok] / t
+            }
+            J[, k] <- ifelse(valid, out - back, 0)
+      }
+      J
+}
+
+# Net flux vector at each cell, half the sum over neighbors of (net flow x displacement in km),
+# as (u, v) columns: eastward and northward components, in mass x km per hour.
+rw_flux_vectors <- function(J, rose){
+      nr <- terra::nrow(rose)
+      nc <- terra::ncol(rose)
+      lats <- terra::yFromRow(rose, seq_len(nr))
+      cell <- mean(terra::res(rose))
+      lonlat <- isTRUE(terra::is.lonlat(rose, perhaps = TRUE, warn = FALSE))
+      D <- lapply(lats, function(l){
+            if(lonlat) rw_neighbor_displacements(l, cell) else
+                  cbind(dx = c(-1, -1, -1, 0, 1, 1, 1, 0) * cell, dy = c(-1, 0, 1, 1, 1, 0, -1, -1) * cell)
+      })
+      dx <- t(vapply(D, function(d) d[, 1], numeric(8)))[rep(seq_len(nr), each = nc), ]
+      dy <- t(vapply(D, function(d) d[, 2], numeric(8)))[rep(seq_len(nr), each = nc), ]
+      cbind(u = 0.5 * rowSums(J * dx), v = 0.5 * rowSums(J * dy))
+}
+
+
+# Upwind (adjoint) pulse: n <- (1 - lambda) P n, with lambda * n deposited each step, recording
+# the iterations in `rec`. Returns arrays matching diffuse() in random_walk().
+diffuse_upwind <- function(n, p, i, rec = i, lambda = 0){
+      rec <- sort(rec)
+      nr <- terra::nrow(n)
+      nc <- terra::ncol(n)
+      P <- rw_matrix(p)
+      v <- terra::values(n)[, 1]
+      v[is.na(v) | !attr(P, "valid")] <- 0
+      d <- v * 0
+      air <- dep <- array(0, c(nr, nc, length(rec)))
+      as_grid <- function(z) matrix(z, nr, nc, byrow = TRUE)
+      if(0 %in% rec) air[, , 1] <- as_grid(v)
+      for(j in seq_len(i)){
+            d <- d + lambda * v
+            v <- (1 - lambda) * as.vector(P %*% v)
+            if(j %in% rec){
+                  k <- match(j, rec)
+                  air[, , k] <- as_grid(v)
+                  dep[, , k] <- as_grid(d)
+            }
+      }
+      list(air = air, dep = dep)
+}
+
+
 # Starting distribution: coordinates -> unit mass per cell, or a SpatRaster used as-is.
 rw_init <- function(rose, init){
       if(inherits(init, "matrix")){
@@ -470,7 +683,8 @@ rw_check_drainage <- function(P){
 
 
 # Steady-state airborne mass under constant per-step release with per-step decay.
-rw_stream <- function(rose, init, t, lambda, method = "auto", tol = 1e-8, max_iter = 1e5){
+rw_stream <- function(rose, init, t, lambda, method = "auto", tol = 1e-8, max_iter = 1e5,
+                      direction = "downwind", flux = FALSE, source = NULL, raw_init = NULL){
 
       n0r <- rw_init(rose, init)
       n0 <- terra::values(n0r)[, 1]
@@ -488,7 +702,8 @@ rw_stream <- function(rose, init, t, lambda, method = "auto", tol = 1e-8, max_it
               "\n\tdecay per step (lambda): ~", signif(lambda, 3),
               "\n(timestep and half_life are in hours IF trans == 1 and wind_field units are m/s)")
 
-      Pt <- Matrix::t(P)
+      # downwind: n = n0 + (1 - lambda) P' n. Upwind (the adjoint): n = n0 + (1 - lambda) P n.
+      Pt <- if(direction == "downwind") Matrix::t(P) else P
       if(method == "solve"){
             A <- Matrix::Diagonal(N) - (1 - lambda) * Pt
             n <- as.vector(Matrix::solve(A, n0))
@@ -520,8 +735,11 @@ rw_stream <- function(rose, init, t, lambda, method = "auto", tol = 1e-8, max_it
                                    signif(err / sum(n), 3), " (relative L1)")
       }
 
-      # mass balance: release = deposition + edge loss
-      if(sum(n0) > 0){
+      # mass balance: release = deposition + edge loss (downwind only; upwind values are
+      # per-origin probabilities, which don't sum to a released mass)
+      if(sum(n0) > 0 && direction == "upwind" && lambda == 0){
+            message("\thalf_life is Inf: results depend on domain extent")
+      }else if(sum(n0) > 0 && direction == "downwind"){
             if(lambda > 0){
                   edge_loss <- (1 - lambda) * sum(n * (1 - Matrix::rowSums(P)))
                   message("\tfraction of released mass lost across domain edges: ",
@@ -537,9 +755,60 @@ rw_stream <- function(rose, init, t, lambda, method = "auto", tol = 1e-8, max_it
             x <- terra::rast(rose, nlyrs = 1)
             terra::values(x) <- v
             names(x) <- name
-            as_wind_walk(x, mode = "stream", n_iter = iters, iter_length = t, decay = lambda)
+            as_wind_walk(x, mode = "stream", n_iter = iters, iter_length = t, decay = lambda,
+                         direction = direction)
       }
-      structure(list(residence = walk(n * (1 - lambda) * t, "residence"), # continuous-time residence
-                     deposition = walk(n * lambda, "deposition")),         # = k * residence
-                class = c("random_walk", "list"))
+      out <- list(residence = walk(n * (1 - lambda) * t, "residence"), # continuous-time residence
+                  deposition = walk(n * lambda, "deposition"))          # = k * residence
+
+      if(direction == "upwind" && lambda > 0){
+            # probability of deposition at the receptor(s) from each origin, from the receptor
+            # weights as given (not normalized by receptor area), so that a multi-cell receptor
+            # counts all particles landing anywhere in it
+            if(is.null(raw_init)){
+                  h <- n * lambda
+            }else{
+                  h <- terra::values(suppressMessages(
+                        rw_stream(rose, raw_init, t, lambda, method, tol, max_iter, "upwind"))$deposition)[, 1]
+            }
+            h[!valid] <- 0
+            # release per cell: `source`, or uniform per km^2 by default
+            q <- if(is.null(source)) terra::values(rw_cell_area(rose))[, 1] else
+                  terra::values(source)[, 1]
+            q[is.na(q) | !valid] <- 0
+            o <- h * q
+            if(sum(o) > 0){
+                  o <- o / sum(o)
+            }else{
+                  warning("no released material reaches the receptor, so `origin` is undefined")
+                  o[] <- NaN
+            }
+            out$origin <- walk(o, "origin") # origins of particles deposited at the receptor
+      }
+
+      if(flux){
+            res <- n * (1 - lambda) * t
+            res[!valid] <- 0
+            if(direction == "downwind"){
+                  J <- rw_edge_flows(res, rw_prob(rose, t), t)
+            }else{
+                  # transport of material released per `source` (uniform per km^2 by default) that
+                  # is eventually deposited at the receptor: mass from a downwind solve with that
+                  # release, times the probability of deposition at the receptor
+                  release <- terra::rast(rose, nlyrs = 1)
+                  terra::values(release) <- q
+                  m <- suppressMessages(rw_stream(rose, release, t, lambda, method, tol, max_iter,
+                                                  "downwind"))
+                  m <- terra::values(m$residence)[, 1]
+                  m[!valid] <- 0
+                  J <- rw_edge_flows(m, rw_prob(rose, t), t, h = h)
+            }
+            fv <- rw_flux_vectors(J, rose)
+            fv[!valid, ] <- NA
+            fx <- terra::rast(rose, nlyrs = 2)
+            terra::values(fx) <- fv
+            names(fx) <- c("u", "v")
+            out$flux <- as(as(fx, "SpatRaster"), "wind_field")
+      }
+      structure(out, class = c("random_walk", "list"))
 }

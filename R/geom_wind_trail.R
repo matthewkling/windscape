@@ -21,7 +21,7 @@
 #'    stat, and `stat_wind_trail()` uses `geom_wind_trail()`.
 #' @param position Position adjustment; see [ggplot2::layer()].
 #' @param ... Other arguments passed to [ggplot2::layer()], such as fixed aesthetics like
-#'    `colour = "white"` or `linewidth = 0.8`.
+#'    `color = "white"` or `linewidth = 0.8`.
 #' @param arrow Arrowhead drawn at the downwind end of each trail, created by [grid::arrow()],
 #'    or `NULL` for none.
 #' @param seeds `stat_wind_trail()`: starting points for trails. `NULL` (the default) seeds
@@ -74,7 +74,7 @@
 #' # trails over wind speed, with length proportional to speed
 #' ggplot(katrina, aes(x, y)) +
 #'   geom_raster(aes(fill = speed)) +
-#'   stat_wind_trail(colour = "white") +
+#'   stat_wind_trail(color = "white") +
 #'   coord_quickmap()
 #'
 #' # streamlines: equal-length trails showing direction only
@@ -86,13 +86,13 @@
 #' sites <- cbind(c(-92, -86), c(24, 30))
 #' ggplot(katrina, aes(x, y)) +
 #'   geom_raster(aes(fill = speed)) +
-#'   stat_wind_trail(seeds = sites, hours = 6, steps = 50, colour = "white") +
+#'   stat_wind_trail(seeds = sites, hours = 6, steps = 50, color = "white") +
 #'   coord_quickmap()
 #'
 #' # trails from wind_trails()
 #' trails <- wind_trails(katrina, sites, hours = 12)
 #' ggplot(trails, aes(x, y)) +
-#'   geom_wind_trail(aes(colour = speed)) +
+#'   geom_wind_trail(aes(color = speed)) +
 #'   coord_quickmap()
 #' @name geom_wind_trail
 NULL

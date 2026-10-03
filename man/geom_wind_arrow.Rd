@@ -60,7 +60,7 @@ to inherit the plot's data.}
 \item{position}{Position adjustment; see \code{\link[ggplot2:layer]{ggplot2::layer()}}.}
 
 \item{...}{Other arguments passed to \code{\link[ggplot2:layer]{ggplot2::layer()}}, such as fixed aesthetics like
-\code{colour = "white"} or \code{linewidth = 1}.}
+\code{color = "white"} or \code{linewidth = 1}.}
 
 \item{res}{Approximate number of arrows along the longer side of the data's extent. Blocks of
 grid cells are sized to be approximately square in km, and the same blocks are used in
@@ -72,7 +72,7 @@ between arrows, or with \code{fixed_length = TRUE}, every arrow is.}
 
 \item{fixed_length}{Logical: give all arrows the same length, so that length shows only
 direction? Default \code{FALSE} (length proportional to speed). Use with a speed mapping such as
-\code{aes(colour = after_stat(speed))} or \code{aes(linewidth = after_stat(speed))} to encode speed
+\code{aes(color = after_stat(speed))} or \code{aes(linewidth = after_stat(speed))} to encode speed
 another way. Blocks with zero mean wind get no arrow.}
 
 \item{pivot}{Position of the arrow relative to its block center, as the fraction of its
@@ -132,13 +132,13 @@ ggplot(katrina, aes(x, y)) +
 
 # fixed-length arrows, with speed shown by color
 ggplot(katrina, aes(x, y)) +
-  geom_wind_arrow(aes(colour = after_stat(speed)), fixed_length = TRUE) +
-  scale_colour_viridis_c() +
+  geom_wind_arrow(aes(color = after_stat(speed)), fixed_length = TRUE) +
+  scale_color_viridis_c() +
   coord_quickmap()
 
 # arrows colored by direction
 ggplot(katrina, aes(x, y)) +
-  geom_wind_arrow(aes(colour = after_stat(bearing)), linewidth = 0.8) +
-  scale_colour_bearing() +
+  geom_wind_arrow(aes(color = after_stat(bearing)), linewidth = 0.8) +
+  scale_color_bearing() +
   coord_quickmap()
 }

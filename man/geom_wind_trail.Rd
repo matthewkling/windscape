@@ -59,7 +59,7 @@ stat, and \code{stat_wind_trail()} uses \code{geom_wind_trail()}.}
 \item{position}{Position adjustment; see \code{\link[ggplot2:layer]{ggplot2::layer()}}.}
 
 \item{...}{Other arguments passed to \code{\link[ggplot2:layer]{ggplot2::layer()}}, such as fixed aesthetics like
-\code{colour = "white"} or \code{linewidth = 0.8}.}
+\code{color = "white"} or \code{linewidth = 0.8}.}
 
 \item{arrow}{Arrowhead drawn at the downwind end of each trail, created by \code{\link[grid:arrow]{grid::arrow()}},
 or \code{NULL} for none.}
@@ -134,7 +134,7 @@ katrina <- windscape_example("wind_field")
 # trails over wind speed, with length proportional to speed
 ggplot(katrina, aes(x, y)) +
   geom_raster(aes(fill = speed)) +
-  stat_wind_trail(colour = "white") +
+  stat_wind_trail(color = "white") +
   coord_quickmap()
 
 # streamlines: equal-length trails showing direction only
@@ -146,12 +146,12 @@ ggplot(katrina, aes(x, y)) +
 sites <- cbind(c(-92, -86), c(24, 30))
 ggplot(katrina, aes(x, y)) +
   geom_raster(aes(fill = speed)) +
-  stat_wind_trail(seeds = sites, hours = 6, steps = 50, colour = "white") +
+  stat_wind_trail(seeds = sites, hours = 6, steps = 50, color = "white") +
   coord_quickmap()
 
 # trails from wind_trails()
 trails <- wind_trails(katrina, sites, hours = 12)
 ggplot(trails, aes(x, y)) +
-  geom_wind_trail(aes(colour = speed)) +
+  geom_wind_trail(aes(color = speed)) +
   coord_quickmap()
 }

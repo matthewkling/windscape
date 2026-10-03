@@ -24,10 +24,12 @@
 #' * `wind_field`: wind components `u` and `v`; `speed`, in the units of `u` and `v`; and
 #'   `bearing`, the direction the wind blows toward, in degrees clockwise from north.
 #' * `wind_series`: one row per grid cell and time step, with `step` (the time step's index),
-#'   `time` (parsed from layer names where possible, otherwise `NA`), `u`, and `v`.
+#'   `time` (parsed from layer names where possible, otherwise `NA`), and `u`, `v`, `speed`,
+#'   and `bearing` as for a `wind_field`.
 #' * `random_walk()` result, pulse mode: one row per grid cell and recorded iteration, with
 #'   `iteration`, `hours` (elapsed time), `airborne`, and `deposition`.
-#' * `random_walk()` result, stream mode: `residence` and `deposition`.
+#' * `random_walk()` result, stream mode: `residence`, `deposition`, and for upwind walks,
+#'   `origin` (the `flux` element is a `wind_field`; fortify it separately).
 #' @examples
 #' rose <- windscape_example("wind_rose")
 #' head(ggplot2::fortify(rose))
@@ -68,7 +70,9 @@ fortify.wind_series <- function(model, data, na.rm = TRUE, ...){
                         u = unlist(d[2 + seq_len(n)], use.names = FALSE),
                         v = unlist(d[2 + n + seq_len(n)], use.names = FALSE))
       out$time <- rep(layer_times(names(model)[seq_len(n)]), each = nrow(d))
-      out[, c("x", "y", "step", "time", "u", "v")]
+      out$speed <- sqrt(out$u^2 + out$v^2)
+      out$bearing <- (atan2(out$u, out$v) * 180 / pi) %% 360
+      out[, c("x", "y", "step", "time", "u", "v", "speed", "bearing")]
 }
 
 #' @rdname fortify.windscape
@@ -77,8 +81,8 @@ fortify.random_walk <- function(model, data, na.rm = TRUE, ...){
       first <- model[[1]]
       d <- lapply(model, function(r) terra::as.data.frame(as(r, "SpatRaster"), xy = TRUE, na.rm = FALSE))
       if(first@mode == "stream"){
-            out <- data.frame(x = d[[1]]$x, y = d[[1]]$y,
-                              residence = d$residence$residence, deposition = d$deposition$deposition)
+            out <- data.frame(x = d[[1]]$x, y = d[[1]]$y)
+            for(nm in intersect(c("residence", "deposition", "origin"), names(model))) out[[nm]] <- d[[nm]][[nm]]
       }else{
             layers <- names(first)
             iteration <- as.integer(sub("^iter", "", layers))

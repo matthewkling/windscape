@@ -57,7 +57,7 @@ is to inherit the plot's data.}
 \item{position}{Position adjustment; see \code{\link[ggplot2:layer]{ggplot2::layer()}}.}
 
 \item{...}{Other arguments passed to \code{\link[ggplot2:layer]{ggplot2::layer()}}, such as fixed aesthetics like
-\code{colour = "black"}.}
+\code{color = "black"}.}
 
 \item{res}{Approximate number of glyphs along the longer side of the data's extent. Blocks
 of grid cells are sized to be approximately square in km. The same blocks are used in

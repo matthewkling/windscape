@@ -8,14 +8,18 @@ random_walk(
   rose,
   init,
   mode = c("pulse", "stream"),
+  direction = c("downwind", "upwind"),
   half_life = Inf,
   timescale = 1,
   latitude_correction = TRUE,
+  density = FALSE,
   iter = 100,
   record = iter,
   method = c("auto", "solve", "iterate"),
   tol = 1e-08,
-  max_iter = 1e+05
+  max_iter = 1e+05,
+  flux = FALSE,
+  source = NULL
 )
 }
 \arguments{
@@ -24,13 +28,19 @@ random_walk(
 \item{init}{Where particles are released: either a two-column matrix of coordinates, which
 places a mass of 1 in each cell containing a coordinate, or a single-layer SpatRaster of
 non-negative mass values with the same geometry as \code{rose}. In stream mode, \code{init} can be
-read either as a release rate (mass per hour) or as a one-time release; see Value.}
+read either as a release rate (mass per hour) or as a one-time release; see Value. With
+\code{direction = "upwind"}, \code{init} instead gives the receptor locations (and weights) whose
+sources are traced.}
 
 \item{mode}{Release mode. \code{"pulse"} (the default) releases \code{init} once and tracks the
 drifting, spreading cloud through time. \code{"stream"} releases particles continuously and
 returns the steady state, where release is balanced by deposition and loss across domain
 edges; equivalently, this is the all-time total for a single release (see Value). It is
 computed directly rather than by simulating forward.}
+
+\item{direction}{\code{"downwind"} (the default) simulates where particles released at \code{init}
+go: their outbound windshed. \code{"upwind"} simulates where particles reaching \code{init} come
+from: its inbound windshed, or catchment. See Value and Details.}
 
 \item{half_life}{Half-life of airborne mass, in hours of transport time (assuming
 \code{trans = 1} and wind speeds in m/s; see \code{\link[=wind_rose]{wind_rose()}}). Particles are deposited at the
@@ -48,6 +58,15 @@ conductance to east and west edges without changing drift, which shortens the ti
 (pulse mode needs about 1.3 times as many iterations at 45 degrees, 1.9 at 60). Has no effect
 on projected rasters. See Details.}
 
+\item{density}{Logical: express results per km^2 rather than per grid cell? Default
+\code{FALSE}. On a longitude/latitude grid, cell area shrinks toward the poles, so per-cell
+values are biased toward lower latitudes; use \code{density = TRUE} for maps spanning a wide
+range of latitudes, or for comparisons across grid resolutions. Downwind, each cell's values
+are divided by its own area. Upwind, values are per particle released from each origin,
+so they are instead divided by the area of the receptor (each receptor's own, if several).
+\code{flux} is divided by each cell's area in either direction. Per-cell values (the default)
+are what sum to totals, e.g. in the pulse-mode mass balance.}
+
 \item{iter}{Pulse mode only: number of iterations (time steps) to simulate.}
 
 \item{record}{Pulse mode only: integer vector of iterations to return, between 0 (the initial
@@ -64,6 +83,16 @@ rigorous bound; for \code{half_life = Inf} it is extrapolated from the observed 
 
 \item{max_iter}{Stream mode with \code{method = "iterate"} only: maximum number of iterations,
 after which a warning is given.}
+
+\item{flux}{Stream mode only: logical: also return the net flux of material, the direction
+and rate at which it moves through each cell? Default \code{FALSE}. For upwind walks, requires
+a finite \code{half_life}. See Value.}
+
+\item{source}{Upwind stream mode only: where material is released, used for \code{origin} and
+\code{flux}: either a two-column matrix of coordinates (a unit release in each cell containing a
+coordinate) or a single-layer SpatRaster of non-negative release per grid cell, like
+\code{init}. Default \code{NULL} releases uniformly per km^2 (each cell in proportion to its area).
+To use a map of release per km^2, multiply it by \code{\link[terra:cellSize]{terra::cellSize()}}.}
 }
 \value{
 A named list of two \code{wind_walk} rasters: \code{airborne} and \code{deposition} in pulse mode,
@@ -100,6 +129,25 @@ is the total mass-hours spent airborne over each cell and \code{deposition} the 
 eventually deposited; for a unit release from one cell, \code{deposition} is the probability
 distribution of where a particle lands.
 
+\strong{Net flux.} With \code{flux = TRUE}, the list also contains \code{flux}, a \code{\link[=wind_field]{wind_field()}} whose \code{u}
+and \code{v} layers are the eastward and northward components of the net transport of material
+through each cell: the flow from the cell to each neighbor minus the flow back, times the
+distance to that neighbor, halved (each flow is shared between two cells). Units are mass
+times km per hour (if \code{init} is a release rate, \code{trans = 1}, and wind speeds are in m/s);
+direction and relative magnitude are usually what matter. Draw it with
+\code{\link[=geom_wind_arrow]{geom_wind_arrow()}}, or \code{\link[=stat_wind_trail]{stat_wind_trail()}} with \code{fixed_length = TRUE}. Unlike the gradient
+of \code{residence} or \code{deposition}, which describes the shape of the windshed, net flux shows the
+transport that produces it: across a plume's flanks, for example, material moves mostly
+downwind, not sideways down the gradient. Each cell's net outflow equals its release minus
+its deposition.
+
+For upwind walks, \code{flux} is the transport of the material that ends up at the receptor:
+material released per \code{source} (by default, uniformly, one unit per km^2 per hour) and
+eventually deposited at the receptor (weighted by \code{init}). It shows the routes by which the
+receptor's material arrives. Each cell's net outflow equals its release of such material (its
+release times its probability of eventual deposition at the receptor) minus the amount
+deposited in the cell, which is nonzero only at the receptor.
+
 \strong{Relationship between modes.} For the same \code{rose}, \code{init}, \code{half_life}, and
 \code{latitude_correction}, stream results are the totals that a pulse walk accumulates over all
 time, at any \code{timescale}. Stream \code{deposition} equals pulse \code{deposition} once the pulse has run
@@ -108,6 +156,28 @@ integrated over time (exactly, \code{(1 - lambda) * t} times its sum over iterat
 see Details). This holds because the walk is linear (particles move independently, so their
 contributions add) and time-invariant (the same \code{rose} applies at every time step), which is
 also why continuous and single releases give the same numbers.
+
+\strong{Upwind walks.} With \code{direction = "upwind"}, each cell's values describe particles released
+from that cell and their contribution to the receptor at \code{init} (weighted by its values, if a
+raster):
+\itemize{
+\item Stream \code{deposition}: the probability that a particle released from the cell is deposited at
+the receptor. This maps where the receptor's deposited material comes from.
+\item Stream \code{residence}: the time, in hours, that a unit release from the cell spends airborne
+over the receptor.
+\item Pulse \code{airborne} at iteration \code{k}: the probability that a particle released from the cell is
+airborne over the receptor \code{k} time steps later; and pulse \code{deposition}: the probability
+it has been deposited there by then.
+\item Stream \code{origin} (with a finite \code{half_life}): the probability that a particle deposited at
+the receptor was released from the cell. Where \code{deposition} asks "if a particle were
+released here, would it reach the receptor?", \code{origin} asks "of the particles reaching the
+receptor, what share came from here?" By Bayes' rule, \code{origin} is \code{deposition} times
+release (see \code{source}), normalized to sum to 1 over cells, or with \code{density = TRUE}, to
+integrate to 1 per km^2. With the default uniform release per km^2, \code{origin} with
+\code{density = TRUE} is proportional to \code{deposition}. Shares are among sources inside the
+domain: material from beyond its edges is not represented. For a receptor spanning several
+cells, \code{origin} covers particles landing anywhere in it.
+}
 }
 \description{
 Estimates the dispersal of particles across a windscape with a Markov random walk on the
@@ -148,6 +218,17 @@ in place each step before dispersal. The stream update rule is
 \verb{n* = (I - (1 - lambda) P')^-1 n0}; residence is \verb{(1 - lambda) * t * n*}. The two modes are
 linked exactly: stream-mode residence equals \code{(1 - lambda) * t} times the sum of the
 pulse-mode surfaces over all time steps, starting from step 0.
+}
+
+\subsection{Upwind walks}{
+
+Write the downwind stream solution as \verb{n* = G n0}, where entry \code{G[r, s]} is the airborne mass
+at cell \code{r} per unit released at cell \code{s}. A downwind walk from a source \code{s} gives column \code{s}
+of \code{G}: everywhere that source's particles go. An upwind walk to a receptor \code{r} gives row
+\code{r}: every source's contribution to that receptor. It is computed with the adjoint process,
+using the transpose of the downwind transition matrix (\code{P} in place of \verb{P'}), not by
+reversing the wind, so for any source \code{s} and receptor \code{r}, the upwind value at \code{s} equals
+the downwind value at \code{r}. The same holds for each pulse iteration.
 }
 
 \subsection{Domain edges}{
