@@ -8,11 +8,17 @@
 wind_rose(x, trans = 1, ...)
 }
 \arguments{
-\item{x}{Data set of class \code{wind_series}.}
+\item{x}{Data set of class \code{wind_series}, or a character vector of paths to files in
+\code{wind_series} layout, such as those returned by \code{\link[=ncar_download]{ncar_download()}}. Multiple files are
+processed one at a time and combined with \code{\link[=combine_roses]{combine_roses()}}, so a long record can be
+summarized without loading it all into memory at once. The result is identical to
+building a rose from all files combined with \code{\link[=read_wind_series]{read_wind_series()}}.}
 
 \item{trans}{Either a function, or a positive number indicating the power to raise windspeeds to; see details.}
 
-\item{...}{Additional arguments passed to \code{terra::app}, e.g. 'filename'.}
+\item{...}{Additional arguments passed to \code{terra::app}, e.g. 'filename'. When \code{x} is a
+vector of files, these are passed to \code{terra::app} for each file, and \code{filename} is not
+allowed; use \code{terra::writeRaster()} on the result instead.}
 }
 \value{
 A \code{wind_rose} object. This is an 8-layer raster stack, where each layer is wind conductance from

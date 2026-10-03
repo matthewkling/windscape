@@ -66,9 +66,15 @@ as_wind_rose <- function(x, trans, n_steps = NA_integer_){
 #' before building a \code{wind_series}, rotating u and v to true east and north if they are
 #' defined relative to the projected grid (as in some reanalysis products).
 #'
-#' @param x Data set of class `wind_series`.
+#' @param x Data set of class `wind_series`, or a character vector of paths to files in
+#'    `wind_series` layout, such as those returned by [ncar_download()]. Multiple files are
+#'    processed one at a time and combined with [combine_roses()], so a long record can be
+#'    summarized without loading it all into memory at once. The result is identical to
+#'    building a rose from all files combined with [read_wind_series()].
 #' @param trans Either a function, or a positive number indicating the power to raise windspeeds to; see details.
-#' @param ... Additional arguments passed to `terra::app`, e.g. 'filename'.
+#' @param ... Additional arguments passed to `terra::app`, e.g. 'filename'. When `x` is a
+#'    vector of files, these are passed to `terra::app` for each file, and `filename` is not
+#'    allowed; use `terra::writeRaster()` on the result instead.
 #' @return A \code{wind_rose} object. This is an 8-layer raster stack, where each layer is wind conductance from
 #'   the focal cell to one of its neighbors (clockwise starting in the SW).
 #'   If input windspeeds are in m/s and `trans = 1`, values are in (1 / hours)
@@ -76,7 +82,19 @@ as_wind_rose <- function(x, trans, n_steps = NA_integer_){
 #' @export
 wind_rose <- function(x, trans = 1, ...){
 
-      if(!inherits(x, "wind_series")) stop("`x` must be an object of class `wind_series`.")
+      if(is.character(x)){
+            if(length(x) == 1) return(wind_rose(read_wind_series(x), trans = trans, ...))
+            if("filename" %in% names(list(...)))
+                  stop("`filename` is not supported when `x` is a vector of files; ",
+                       "use terra::writeRaster() on the result.")
+            out <- NULL
+            for(f in x){
+                  r <- wind_rose(read_wind_series(f), trans = trans, ...)
+                  out <- if(is.null(out)) r else combine_roses(out, r)
+            }
+            return(out)
+      }
+      if(!inherits(x, "wind_series")) stop("`x` must be an object of class `wind_series`, or file paths.")
       check_grid(x)
 
       trn <- trans
@@ -97,4 +115,37 @@ wind_rose <- function(x, trans = 1, ...){
       x <- c(lat(x), rsn(x), x)
       r <- terra::app(x, fun = rose, trans = trn)
       as_wind_rose(r, trn, x@n_steps)
+}
+
+
+
+#' Combine wind roses built from different time periods
+#'
+#' Combines wind roses for the same grid, built from different sets of time steps (e.g. separate
+#' months or years), into a single rose representing all of those time steps. Because a wind rose
+#' is an average over time steps, the result is the mean of the input roses weighted by their
+#' numbers of time steps, and equals the rose that would be built from all the time steps at once.
+#'
+#' @param ... Two or more `wind_rose` objects, or a single list of them. They must share the same
+#'    grid and the same `trans` function, and each must have a known number of time steps
+#'    (`n_steps`), as roses built with [wind_rose()] do.
+#' @return A `wind_rose` whose `n_steps` is the total across the inputs.
+#' @seealso [wind_rose()], which uses this function to build roses from multiple files.
+#' @export
+combine_roses <- function(...){
+      x <- list(...)
+      if(length(x) == 1 && is.list(x[[1]]) && !inherits(x[[1]], "SpatRaster")) x <- x[[1]]
+      if(length(x) < 2) stop("at least two wind roses are needed")
+      if(!all(vapply(x, inherits, logical(1), "wind_rose"))) stop("all inputs must be `wind_rose` objects")
+      n <- vapply(x, function(r) as.numeric(r@n_steps), numeric(1))
+      if(anyNA(n)) stop("all roses must have a known number of time steps (`n_steps`)")
+      probe <- c(0, 0.5, 1, 2, 5, 10, 20, 50)
+      t1 <- x[[1]]@trans(probe)
+      for(r in x[-1]){
+            if(!terra::compareGeom(x[[1]], r, stopOnError = FALSE)) stop("roses are on different grids")
+            if(!isTRUE(all.equal(t1, r@trans(probe)))) stop("roses use different `trans` functions")
+      }
+      out <- x[[1]] * n[1]
+      for(i in seq_along(x)[-1]) out <- out + x[[i]] * n[i]
+      as_wind_rose(out / sum(n), trans = x[[1]]@trans, n_steps = sum(n))
 }

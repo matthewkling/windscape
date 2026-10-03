@@ -26,15 +26,13 @@ Imports:
 URL: https://matthewkling.github.io/windscape/
 Suggests: 
     knitr,
-    lubridate,
     ncdf4,
-    purrr,
     rmarkdown,
     sf,
-    stringr,
     testthat (>= 3.0.0),
     vegan,
-    tidyverse
+    tidyverse,
+    withr
 VignetteBuilder: knitr
 Depends: 
     gdistance,

@@ -56,3 +56,34 @@ wind_field <- function(x){
       if(any(c(xt$xmin < -180, xt$xmax > 360, xt$ymin < -90, xt$ymax > 90))) stop("wind field rasters must be in lon-lat coordinates")
       as(as(x, "SpatRaster"), "wind_field") # via SpatRaster, so subclasses (e.g. wind_series layers) work
 }
+
+
+#' Load a wind_series from one or more raster files on disk
+#'
+#' Reads files in `wind_series` layout (all u layers followed by all v layers), such as the
+#' monthly files saved by [ncar_download()], and combines them into a single `wind_series`.
+#' Data are not loaded into memory until needed.
+#'
+#' @param x Character vector of file paths. Each file must hold an equal number of u and v
+#'   layers, with u layers first, and all files must share the same grid. Time steps are combined
+#'   in the order the files are given.
+#' @return A `wind_series` object whose time steps are those of all the files combined: all
+#'   files' u layers, followed by all files' v layers.
+#' @seealso [ncar_download()]
+#' @export
+read_wind_series <- function(x){
+      if(!is.character(x) || length(x) == 0) stop("`x` must be a character vector of file paths")
+      missing <- !file.exists(x)
+      if(any(missing)) stop("file(s) not found: ", paste(x[missing], collapse = ", "))
+      r <- lapply(x, terra::rast)
+      for(i in seq_along(r)){
+            if(terra::nlyr(r[[i]]) %% 2 != 0) stop("file has an odd number of layers: ", x[i])
+            if(i > 1 && !terra::compareGeom(r[[1]], r[[i]], stopOnError = FALSE))
+                  stop("files are on different grids: ", x[1], " and ", x[i])
+      }
+      half <- function(z, which){
+            n <- terra::nlyr(z) / 2
+            z[[if(which == "u") seq_len(n) else n + seq_len(n)]]
+      }
+      wind_series(c(do.call(c, lapply(r, half, "u")), do.call(c, lapply(r, half, "v"))))
+}

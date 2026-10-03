@@ -17,10 +17,12 @@ test_that("fortify converts roses and fields to tidy data frames", {
 test_that("fortify converts a wind_series to long format with times", {
       ws <- windscape_example("wind_series")
       d <- ggplot2::fortify(ws)
-      expect_named(d, c("x", "y", "step", "time", "u", "v"))
+      expect_named(d, c("x", "y", "step", "time", "u", "v", "speed", "bearing"))
       expect_equal(nrow(d), terra::ncell(ws) * ws@n_steps)
       expect_equal(d$u[d$step == 3], terra::values(ws[[3]])[, 1])
       expect_equal(d$v[d$step == 3], terra::values(ws[[ws@n_steps + 3]])[, 1])
+      expect_equal(d$speed, sqrt(d$u^2 + d$v^2))
+      expect_equal(d$bearing, (atan2(d$u, d$v) * 180 / pi) %% 360)
       expect_s3_class(d$time, "POSIXct")
       expect_false(anyNA(d$time))
       expect_equal(format(d$time[d$step == 2][1], "%H"), "06")
