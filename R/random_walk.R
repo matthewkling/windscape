@@ -36,13 +36,15 @@
 #'    (pulse mode needs about 1.3 times as many iterations at 45 degrees, 1.9 at 60). Has no effect
 #'    on projected rasters. See Details.
 #' @param density Logical: express results per km^2 rather than per grid cell? Default
-#'    `FALSE`. On a longitude/latitude grid, cell area shrinks toward the poles, so per-cell
-#'    values are biased toward lower latitudes; use `density = TRUE` for maps spanning a wide
-#'    range of latitudes, or for comparisons across grid resolutions. Downwind, each cell's values
+#'    `TRUE`, matching [pairwise_random_walk()]. On a longitude/latitude grid, cell area shrinks
+#'    toward the poles, so per-cell values are biased toward lower latitudes; per-km^2 values
+#'    remove that bias and are comparable across grid resolutions. Downwind, each cell's values
 #'    are divided by its own area. Upwind, values are per particle released from each origin,
-#'    so they are instead divided by the area of the receptor (each receptor's own, if several).
-#'    `flux` is divided by each cell's area in either direction. Per-cell values (the default)
-#'    are what sum to totals, e.g. in the pulse-mode mass balance.
+#'    so they are instead divided by the area of the receptor (each receptor's own, if several);
+#'    with a single receptor this rescales the whole map by a constant. `flux` is divided by each
+#'    cell's area in either direction. Use `density = FALSE` for per-cell masses, which sum to
+#'    totals (e.g. in the pulse-mode mass balance); equivalently, multiply per-km^2 results by
+#'    [terra::cellSize()].
 #' @param iter Pulse mode only: number of iterations (time steps) to simulate.
 #' @param record Pulse mode only: integer vector of iterations to return, between 0 (the initial
 #'    state) and `iter`. Default is the final iteration only.
@@ -65,8 +67,8 @@
 #'    To use a map of release per km^2, multiply it by [terra::cellSize()].
 #'
 #' @return A named list of two `wind_walk` rasters: `airborne` and `deposition` in pulse mode,
-#'    or `residence` and `deposition` in stream mode. Masses are in the units of `init`, and
-#'    hours assume `trans = 1` and wind speeds in m/s. Cells that are NA in `rose` are NA in the
+#'    or `residence` and `deposition` in stream mode. Masses are in the units of `init`, per
+#'    km^2 by default or per grid cell with `density = FALSE` (see `density`), and hours assume `trans = 1` and wind speeds in m/s. Cells that are NA in `rose` are NA in the
 #'    output.
 #'
 #' **Pulse mode.** Each element has one layer per iteration in `record` (named `iter0`,
@@ -76,7 +78,7 @@
 #'   everywhere if `half_life = Inf`.
 #'
 #' At every iteration, airborne mass plus deposition plus mass lost across domain edges equals
-#' the released mass. Use [iter_length()] to convert iterations to hours.
+#' the released mass (summing per-cell values, i.e. with `density = FALSE`). Use [iter_length()] to convert iterations to hours.
 #'
 #' **Stream mode.** Each element is a single layer, and neither depends on `timescale`. The two
 #' differ in units by a factor of time:
@@ -92,7 +94,8 @@
 #' They are also the all-time totals for a single release of `init`, in which case `residence`
 #' is the total mass-hours spent airborne over each cell and `deposition` the total mass
 #' eventually deposited; for a unit release from one cell, `deposition` is the probability
-#' distribution of where a particle lands.
+#' distribution of where a particle lands (a probability density per km^2 by default, or a
+#' probability per cell with `density = FALSE`).
 #'
 #' **Net flux.** With `flux = TRUE`, the list also contains `flux`, a [wind_field()] whose `u`
 #' and `v` layers are the eastward and northward components of the net transport of material
@@ -219,7 +222,7 @@
 #' @export
 random_walk <- function(rose, init, mode = c("pulse", "stream"), direction = c("downwind", "upwind"),
                         half_life = Inf, timescale = 1, latitude_correction = TRUE,
-                        density = FALSE, iter = 100, record = iter,
+                        density = TRUE, iter = 100, record = iter,
                         method = c("auto", "solve", "iterate"), tol = 1e-8, max_iter = 1e5,
                         flux = FALSE, source = NULL){
 

@@ -9,7 +9,7 @@ test_that("each origin's row equals a stream walk from that origin", {
             m <- pairwise_random_walk(r, sites, half_life = 24, value = value, density = FALSE)
             md <- pairwise_random_walk(r, sites, half_life = 24, value = value)
             for(i in seq_along(cells)){
-                  w <- quietly(random_walk(r, point_raster(r, cells[i]), mode = "stream", half_life = 24))
+                  w <- quietly(random_walk(r, point_raster(r, cells[i]), mode = "stream", half_life = 24, density = FALSE))
                   expect_equal(m[i, ], vals(w[[value]])[cells], tolerance = 1e-10)
                   expect_equal(md[i, ], vals(w[[value]])[cells] / area, tolerance = 1e-10)
             }

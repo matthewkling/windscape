@@ -12,7 +12,7 @@ random_walk(
   half_life = Inf,
   timescale = 1,
   latitude_correction = TRUE,
-  density = FALSE,
+  density = TRUE,
   iter = 100,
   record = iter,
   method = c("auto", "solve", "iterate"),
@@ -59,13 +59,15 @@ conductance to east and west edges without changing drift, which shortens the ti
 on projected rasters. See Details.}
 
 \item{density}{Logical: express results per km^2 rather than per grid cell? Default
-\code{FALSE}. On a longitude/latitude grid, cell area shrinks toward the poles, so per-cell
-values are biased toward lower latitudes; use \code{density = TRUE} for maps spanning a wide
-range of latitudes, or for comparisons across grid resolutions. Downwind, each cell's values
+\code{TRUE}, matching \code{\link[=pairwise_random_walk]{pairwise_random_walk()}}. On a longitude/latitude grid, cell area shrinks
+toward the poles, so per-cell values are biased toward lower latitudes; per-km^2 values
+remove that bias and are comparable across grid resolutions. Downwind, each cell's values
 are divided by its own area. Upwind, values are per particle released from each origin,
-so they are instead divided by the area of the receptor (each receptor's own, if several).
-\code{flux} is divided by each cell's area in either direction. Per-cell values (the default)
-are what sum to totals, e.g. in the pulse-mode mass balance.}
+so they are instead divided by the area of the receptor (each receptor's own, if several);
+with a single receptor this rescales the whole map by a constant. \code{flux} is divided by each
+cell's area in either direction. Use \code{density = FALSE} for per-cell masses, which sum to
+totals (e.g. in the pulse-mode mass balance); equivalently, multiply per-km^2 results by
+\code{\link[terra:cellSize]{terra::cellSize()}}.}
 
 \item{iter}{Pulse mode only: number of iterations (time steps) to simulate.}
 
@@ -96,8 +98,8 @@ To use a map of release per km^2, multiply it by \code{\link[terra:cellSize]{ter
 }
 \value{
 A named list of two \code{wind_walk} rasters: \code{airborne} and \code{deposition} in pulse mode,
-or \code{residence} and \code{deposition} in stream mode. Masses are in the units of \code{init}, and
-hours assume \code{trans = 1} and wind speeds in m/s. Cells that are NA in \code{rose} are NA in the
+or \code{residence} and \code{deposition} in stream mode. Masses are in the units of \code{init}, per
+km^2 by default or per grid cell with \code{density = FALSE} (see \code{density}), and hours assume \code{trans = 1} and wind speeds in m/s. Cells that are NA in \code{rose} are NA in the
 output.
 
 \strong{Pulse mode.} Each element has one layer per iteration in \code{record} (named \code{iter0},
@@ -109,7 +111,7 @@ everywhere if \code{half_life = Inf}.
 }
 
 At every iteration, airborne mass plus deposition plus mass lost across domain edges equals
-the released mass. Use \code{\link[=iter_length]{iter_length()}} to convert iterations to hours.
+the released mass (summing per-cell values, i.e. with \code{density = FALSE}). Use \code{\link[=iter_length]{iter_length()}} to convert iterations to hours.
 
 \strong{Stream mode.} Each element is a single layer, and neither depends on \code{timescale}. The two
 differ in units by a factor of time:
@@ -127,7 +129,8 @@ steady-state airborne mass and \code{deposition} the steady-state deposition rat
 They are also the all-time totals for a single release of \code{init}, in which case \code{residence}
 is the total mass-hours spent airborne over each cell and \code{deposition} the total mass
 eventually deposited; for a unit release from one cell, \code{deposition} is the probability
-distribution of where a particle lands.
+distribution of where a particle lands (a probability density per km^2 by default, or a
+probability per cell with \code{density = FALSE}).
 
 \strong{Net flux.} With \code{flux = TRUE}, the list also contains \code{flux}, a \code{\link[=wind_field]{wind_field()}} whose \code{u}
 and \code{v} layers are the eastward and northward components of the net transport of material
