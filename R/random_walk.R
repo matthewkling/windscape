@@ -564,6 +564,14 @@ rw_edge_flows <- function(res, p, t, h = NULL){
 # Net flux vector at each cell, half the sum over neighbors of (net flow x displacement in km),
 # as (u, v) columns: eastward and northward components, in mass x km per hour.
 rw_flux_vectors <- function(J, rose){
+      D <- rw_cell_displacements(rose)
+      cbind(u = 0.5 * rowSums(J * D$dx), v = 0.5 * rowSums(J * D$dy))
+}
+
+# East and north displacements (km on longitude/latitude grids, map units otherwise) from each
+# cell to each of its eight neighbors: a list of two ncell x 8 matrices, `dx` and `dy`, with
+# rows in cell order and columns in ROSE_DIRS order.
+rw_cell_displacements <- function(rose){
       nr <- terra::nrow(rose)
       nc <- terra::ncol(rose)
       lats <- terra::yFromRow(rose, seq_len(nr))
@@ -573,9 +581,9 @@ rw_flux_vectors <- function(J, rose){
             if(lonlat) rw_neighbor_displacements(l, cell) else
                   cbind(dx = c(-1, -1, -1, 0, 1, 1, 1, 0) * cell, dy = c(-1, 0, 1, 1, 1, 0, -1, -1) * cell)
       })
-      dx <- t(vapply(D, function(d) d[, 1], numeric(8)))[rep(seq_len(nr), each = nc), ]
-      dy <- t(vapply(D, function(d) d[, 2], numeric(8)))[rep(seq_len(nr), each = nc), ]
-      cbind(u = 0.5 * rowSums(J * dx), v = 0.5 * rowSums(J * dy))
+      row <- rep(seq_len(nr), each = nc)
+      list(dx = t(vapply(D, function(d) d[, 1], numeric(8)))[row, , drop = FALSE],
+           dy = t(vapply(D, function(d) d[, 2], numeric(8)))[row, , drop = FALSE])
 }
 
 
