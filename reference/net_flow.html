@@ -68,9 +68,11 @@ used anywhere else a wind field is.</p>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>A <code>wind_field</code> whose <code>u</code> and <code>v</code> layers are the eastward and northward components of
-net flow, in km/h if the rose was built with <code>trans = 1</code> from wind speeds in m/s (divide
-by 3.6 for m/s). For other <code>trans</code>, units are those of the transformed speeds, times
-3.6. Cells that are NA in <code>rose</code> are NA in the result.</p>
+net flow, in m/s if the rose was built with <code>trans = 1</code> from wind speeds in m/s, like any
+other wind field, so that <code><a href="geom_wind_arrow.html">geom_wind_arrow()</a></code>, <code><a href="geom_wind_trail.html">geom_wind_trail()</a></code>, and <code><a href="wind_trails.html">wind_trails()</a></code>
+(including their <code>hours</code> arguments) treat it correctly. For other <code>trans</code>, units are those
+of the transformed speeds. The <code>net</code> statistic computed by <code><a href="https://ggplot2.tidyverse.org/reference/fortify.html" class="external-link">fortify()</a></code> for a wind rose is
+the same quantity in km/h. Cells that are NA in <code>rose</code> are NA in the result.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
@@ -86,7 +88,7 @@ adds equal conductance toward east and west neighbors, so it leaves drift unchan
 observation between the two neighbors whose bearings bracket its direction, and the vector
 sum of the two parts is shorter than the original wind unless it blows straight toward a
 neighbor: by up to about 8% for winds halfway between neighbors. With <code>trans = 1</code>, net flow
-is therefore typically a few percent less than the mean wind speed (in km/h), in nearly the
+is therefore typically a few percent less than the mean wind speed, in nearly the
 same direction; where winds from different directions largely cancel, the two can differ
 more in both speed and direction. With other values of <code>trans</code>, observations are weighted by
 transformed speed, so net flow emphasizes the winds that matter for conductance (e.g. strong

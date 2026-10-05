@@ -107,7 +107,7 @@
 <tr>
 <td align="left">Connectivity among sites</td>
 <td align="left">
-<code><a href="reference/pairwise_least_cost.html">pairwise_least_cost()</a></code>, <code><a href="reference/pairwise_random_walk.html">pairwise_random_walk()</a></code>, <code><a href="reference/vrcd.html">vrcd()</a></code>
+<code><a href="reference/pairwise_least_cost.html">pairwise_least_cost()</a></code>, <code><a href="reference/pairwise_random_walk.html">pairwise_random_walk()</a></code>, <code><a href="reference/check_cell_distance.html">check_cell_distance()</a></code>
 </td>
 </tr>
 <tr>
@@ -238,16 +238,16 @@
 <div class="section level2">
 <h2 id="estimate-connectivity-among-sites">Estimate connectivity among sites<a class="anchor" aria-label="anchor" href="#estimate-connectivity-among-sites"></a>
 </h2>
-<p>Many studies require pairwise connectivity estimates among a set of sites, such as sampled populations. <code><a href="reference/pairwise_least_cost.html">pairwise_least_cost()</a></code> and <code><a href="reference/pairwise_random_walk.html">pairwise_random_walk()</a></code> return matrices of wind connectivity between every pair of sites. Wind connectivity is directional, so these matrices are asymmetric: element <code>[i, j]</code> describes flow from site <code>i</code> to site <code>j</code>.</p>
+<p>Many studies require pairwise connectivity estimates among a set of sites, such as sampled populations. <code><a href="reference/pairwise_least_cost.html">pairwise_least_cost()</a></code> and <code><a href="reference/pairwise_random_walk.html">pairwise_random_walk()</a></code> return matrices of wind connectivity between every pair of sites. Wind connectivity is directional, so these matrices are asymmetric: element <code>[i, j]</code> describes flow from site <code>i</code> to site <code>j</code>. The least-cost model uses each site’s exact location, even for sites within the same grid cell, while the random walk model treats each site as the grid cell it falls in; <code><a href="reference/check_cell_distance.html">check_cell_distance()</a></code> reports how much that distorts distances among closely spaced sites.</p>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">sites</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">cbind</a></span><span class="op">(</span>lon <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">110</span>, <span class="op">-</span><span class="fl">105</span>, <span class="op">-</span><span class="fl">100</span>, <span class="op">-</span><span class="fl">95</span><span class="op">)</span>, lat <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">40</span>, <span class="fl">42</span>, <span class="fl">38</span>, <span class="fl">44</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="reference/pairwise_least_cost.html">pairwise_least_cost</a></span><span class="op">(</span><span class="va">graph</span>, <span class="va">sites</span><span class="op">)</span> <span class="op">|&gt;</span> <span class="fu"><a href="https://rspatial.github.io/terra/reference/math-generics.html" class="external-link">round</a></span><span class="op">(</span><span class="op">)</span> <span class="co"># travel time, in hours</span></span></code></pre></div>
 <div class="sourceCode" id="cb9"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" tabindex="-1"></a><span class="do">##      [,1] [,2] [,3] [,4]</span></span>
-<span id="cb9-2"><a href="#cb9-2" tabindex="-1"></a><span class="do">## [1,]    0  132  399  581</span></span>
-<span id="cb9-3"><a href="#cb9-3" tabindex="-1"></a><span class="do">## [2,]  794    0  269  452</span></span>
-<span id="cb9-4"><a href="#cb9-4" tabindex="-1"></a><span class="do">## [3,] 1076  359    0  308</span></span>
-<span id="cb9-5"><a href="#cb9-5" tabindex="-1"></a><span class="do">## [4,] 1196  538  495    0</span></span></code></pre></div>
+<span id="cb9-2"><a href="#cb9-2" tabindex="-1"></a><span class="do">## [1,]    0  121  379  568</span></span>
+<span id="cb9-3"><a href="#cb9-3" tabindex="-1"></a><span class="do">## [2,]  824    0  277  459</span></span>
+<span id="cb9-4"><a href="#cb9-4" tabindex="-1"></a><span class="do">## [3,] 1081  362    0  309</span></span>
+<span id="cb9-5"><a href="#cb9-5" tabindex="-1"></a><span class="do">## [4,] 1221  538  503    0</span></span></code></pre></div>
 <div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="reference/pairwise_random_walk.html">pairwise_random_walk</a></span><span class="op">(</span><span class="va">rose</span>, <span class="va">sites</span>, half_life <span class="op">=</span> <span class="fl">100</span><span class="op">)</span> <span class="op">|&gt;</span> <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">signif</a></span><span class="op">(</span><span class="fl">2</span><span class="op">)</span> <span class="co"># deposition density</span></span></code></pre></div>
 <div class="sourceCode" id="cb11"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" tabindex="-1"></a><span class="do">##         [,1]    [,2]    [,3]    [,4]</span></span>

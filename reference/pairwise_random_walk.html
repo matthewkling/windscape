@@ -113,8 +113,9 @@ origin is deposited in the destination's grid cell (per km^2 if <code>density = 
 spends airborne over the destination's cell (per km^2 if <code>density = TRUE</code>). Because wind
 is directional, the matrix is generally asymmetric. The diagonal is each site's
 self-connectivity: release that is deposited (or stays airborne) in its own cell, which
-can be large; see <code><a href="rw_self_retention.html">rw_self_retention()</a></code>. Sites in the same grid cell get identical rows and
-columns.</p>
+can be large; see <code><a href="rw_self_retention.html">rw_self_retention()</a></code>. Sites are treated as the centers of their grid
+cells, so sites in the same cell get identical rows and columns; see
+<code><a href="check_cell_distance.html">check_cell_distance()</a></code>.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>

@@ -206,8 +206,11 @@ to reduce connectivity across open water for terrestrial organisms
 ([`ncar_land()`](https://matthewkling.github.io/windscape/reference/ncar_land.md)
 downloads a matching land-water layer).
 [`downscale()`](https://matthewkling.github.io/windscape/reference/downscale.md)
-refines the grid, which matters when sites are only a few grid cells
-apart; we’ll use it in the pairwise connectivity section below.
+interpolates the wind rose onto a finer grid. It rarely changes
+least-cost results, but it does change random walk results, because a
+random walk’s spread depends on cell size; see
+[`?downscale`](https://matthewkling.github.io/windscape/reference/downscale.md)
+before using it.
 
 ## Connectivity models
 
@@ -391,62 +394,74 @@ Let’s generate ten random sites:
 sites <- cbind(lon = runif(10, -115, -95), lat = runif(10, 33, 47))
 ```
 
-Connectivity is calculated between the centers of the grid cells
-containing the sites, so when sites are only a few cells apart, the
-distances between cell centers can differ noticeably from the distances
-between the sites themselves.
-[`check_cell_distance()`](https://matthewkling.github.io/windscape/reference/check_cell_distance.md)
-reports these discrepancies:
-
-``` r
-
-check_cell_distance(rose, sites)
-```
-
-Most site pairs are fine, but a few have discrepancies of several
-percent.
-[`downscale()`](https://matthewkling.github.io/windscape/reference/downscale.md)
-refines the wind rose grid by interpolation, which reduces them, at the
-cost of slower computation:
-
-``` r
-
-rose_fine <- downscale(rose, 2)
-check_cell_distance(rose_fine, sites)
-```
-
-Now we can estimate connectivity among the sites. Least-cost travel
+The two models place sites on the wind grid differently.
+[`pairwise_least_cost()`](https://matthewkling.github.io/windscape/reference/pairwise_least_cost.md)
+uses each site’s actual location: it adds the sites to the wind graph
+and links each one to the centers of nearby grid cells, and to other
+sites close by, with exact travel times. It therefore handles sites that
+are close together, even within the same grid cell. Least-cost travel
 times, in hours:
 
 ``` r
 
-hours <- pairwise_least_cost(wind_graph(rose_fine), sites)
+hours <- pairwise_least_cost(wind_graph(rose), sites)
 round(hours[1:5, 1:5])
 #>      [,1] [,2] [,3] [,4] [,5]
-#> [1,]    0   89  406  475  725
-#> [2,]  315    0  381  386  816
-#> [3,] 1098  868    0  422  853
-#> [4,] 1328 1087  418    0 1151
-#> [5,]  906  936  169  589    0
+#> [1,]    0   96  401  480  700
+#> [2,]  342    0  389  386  789
+#> [3,] 1095  869    0  423  853
+#> [4,] 1334 1089  421    0 1145
+#> [5,]  886  918  181  599    0
 ```
 
-And random walk deposition, the density of particles released at each
-site that are deposited at each other site:
+A random walk moves particles from cell to cell, so
+[`pairwise_random_walk()`](https://matthewkling.github.io/windscape/reference/pairwise_random_walk.md)
+treats each site as the grid cell it falls in. For sites only a few
+cells apart, the distances and directions between cell centers can
+differ noticeably from those between the sites themselves, and sites in
+the same cell get identical results.
+[`check_cell_distance()`](https://matthewkling.github.io/windscape/reference/check_cell_distance.md)
+reports how much the grid distorts distances among a set of sites:
 
 ``` r
 
-deposition <- pairwise_random_walk(rose_fine, sites, half_life = 48)
+check_cell_distance(rose, sites)
+#> Total point pairs: 45
+#> Point pairs in the same grid cell: 0 (0%)
+#> Distribution of cell-point distance discrepancies:
+#>  0--1%: 21 (46.7%)
+#>  1--2.5%: 15 (33.3%)
+#>  2.5--5%: 8 (17.8%)
+#>  5--10%: 1 (2.22%)
+#>  10--25%: 0 (0%)
+#>  25--Inf%: 0 (0%)
+```
+
+None of these sites share a grid cell, and most distance discrepancies
+are under 2.5 percent, so this grid works for them. Where many pairs are
+affected, a finer grid, from finer wind data or from
+[`downscale()`](https://matthewkling.github.io/windscape/reference/downscale.md),
+separates nearby sites. But a random walk’s spread depends on cell size,
+so changing the resolution changes the model as well as the grid; see
+[`?downscale`](https://matthewkling.github.io/windscape/reference/downscale.md).
+
+Random walk deposition, the density of particles released at each site
+that are deposited at each other site:
+
+``` r
+
+deposition <- pairwise_random_walk(rose, sites, half_life = 48)
 signif(deposition[1:5, 1:5], 2)
 #>         [,1]    [,2]    [,3]    [,4]    [,5]
-#> [1,] 9.0e-05 1.3e-06 1.0e-08 4.7e-13 7.1e-16
-#> [2,] 1.7e-11 1.2e-04 1.1e-09 2.2e-12 3.9e-18
-#> [3,] 1.1e-27 5.0e-25 8.6e-05 3.7e-13 2.8e-24
-#> [4,] 6.0e-31 2.8e-28 1.2e-10 7.0e-05 4.9e-27
-#> [5,] 3.8e-26 1.1e-25 1.8e-06 2.4e-14 1.0e-04
+#> [1,] 4.2e-05 2.2e-06 4.0e-08 3.2e-10 2.3e-12
+#> [2,] 1.2e-08 5.5e-05 1.3e-08 1.1e-09 7.4e-14
+#> [3,] 1.0e-17 1.6e-16 4.2e-05 3.3e-10 1.4e-15
+#> [4,] 7.8e-20 1.3e-18 2.3e-09 3.4e-05 2.7e-18
+#> [5,] 8.9e-17 6.6e-17 1.7e-06 3.5e-11 4.8e-05
 ```
 
 The diagonal of the deposition matrix is each site’s self-retention: the
-share of its own release deposited in its own grid cell. It is usually
+density of its own release deposited in its own grid cell. It is usually
 much larger than the other values, but the tests below ignore diagonals.
 
 ### Testing hypotheses
@@ -490,8 +505,8 @@ asymmetry <- mantel_test(pairwise_ratios(hours), pairwise_ratios(gene_flow))
 sapply(list(flow = flow, isolation = isolation, asymmetry = asymmetry),
        function(x) round(c(stat = x$stat, p.value = x$p.value), 3))
 #>           flow isolation asymmetry
-#> stat    -0.088     0.046     0.155
-#> p.value  0.426     0.751     0.278
+#> stat    -0.103     0.045     0.154
+#> p.value  0.358     0.757     0.280
 ```
 
 As expected for random data, none of the relationships are significant.

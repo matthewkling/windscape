@@ -9,11 +9,11 @@
 - [`cell_distance()`](https://matthewkling.github.io/windscape/reference/cell_distance.md)
   : Pairwise distances between cell centroids
 - [`check_cell_distance()`](https://matthewkling.github.io/windscape/reference/check_cell_distance.md)
-  : Compare point distances to cell distances
+  : Check how grid cells distort distances among sites
 - [`combine_roses()`](https://matthewkling.github.io/windscape/reference/combine_roses.md)
   : Combine wind roses built from different time periods
 - [`downscale()`](https://matthewkling.github.io/windscape/reference/downscale.md)
-  : Downscale a wind rose raster data to higher spatial resolution
+  : Downscale a wind rose to higher spatial resolution
 - [`fortify(`*`<wind_rose>`*`)`](https://matthewkling.github.io/windscape/reference/fortify.windscape.md)
   [`fortify(`*`<wind_field>`*`)`](https://matthewkling.github.io/windscape/reference/fortify.windscape.md)
   [`fortify(`*`<wind_series>`*`)`](https://matthewkling.github.io/windscape/reference/fortify.windscape.md)
@@ -78,8 +78,6 @@
   : Color scales for wind direction
 - [`tesselate()`](https://matthewkling.github.io/windscape/reference/tesselate.md)
   : Extend a global raster with copies of itself
-- [`vrcd()`](https://matthewkling.github.io/windscape/reference/vrcd.md)
-  : Variable-resolution costDistance
 - [`weight_conductance()`](https://matthewkling.github.io/windscape/reference/weight_conductance.md)
   : Weight a windrose conductance raster
 - [`wind_field-class`](https://matthewkling.github.io/windscape/reference/wind_field-class.md)

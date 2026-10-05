@@ -5,7 +5,7 @@ graph, as sequences of grid cell centers. The result has the same
 structure as
 [`wind_trails()`](https://matthewkling.github.io/windscape/reference/wind_trails.md)
 output, so it can be drawn with
-[`geom_wind_path()`](https://matthewkling.github.io/windscape/reference/geom_wind_path.md).
+[`geom_wind_trail()`](https://matthewkling.github.io/windscape/reference/geom_wind_trail.md).
 
 ## Usage
 
@@ -51,7 +51,7 @@ destination along each path:
   and wind speeds are in m/s). Its final value on each path equals the
   pair's
   [`pairwise_least_cost()`](https://matthewkling.github.io/windscape/reference/pairwise_least_cost.md)
-  (with `adjust = FALSE`).
+  (with `snap = TRUE`).
 
 - `x`, `y`: longitude and latitude of the grid cell center.
 
@@ -96,6 +96,10 @@ head(paths)
 
 library(ggplot2)
 ggplot(paths, aes(x, y)) +
-  geom_wind_path(aes(color = hours)) +
+  geom_wind_trail(aes(color = hours)) +
   coord_quickmap()
+#> Error in wind_trail_layer(mapping, data, stat, GeomWindTrail, position,     seeds, res, fixed_length, length, hours, match.arg(direction),     steps, match.arg(wrap), arrow, na.rm, show.legend, inherit.aes,     ...): Problem while computing aesthetics.
+#> ℹ Error occurred in the 1st layer.
+#> Caused by error:
+#> ! object 'u' not found
 ```

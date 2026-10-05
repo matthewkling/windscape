@@ -44,7 +44,7 @@ remotes::install_github("matthewkling/windscape")
 | Get wind data | [`ncar_download()`](https://matthewkling.github.io/windscape/reference/ncar_download.md), [`ncar_land()`](https://matthewkling.github.io/windscape/reference/ncar_land.md), [`read_wind_series()`](https://matthewkling.github.io/windscape/reference/read_wind_series.md), [`windscape_example()`](https://matthewkling.github.io/windscape/reference/windscape_example.md) |
 | Summarize a wind regime | [`wind_rose()`](https://matthewkling.github.io/windscape/reference/wind_rose.md), [`combine_roses()`](https://matthewkling.github.io/windscape/reference/combine_roses.md), [`weight_conductance()`](https://matthewkling.github.io/windscape/reference/weight_conductance.md), [`downscale()`](https://matthewkling.github.io/windscape/reference/downscale.md) |
 | Map windsheds | [`least_cost_surface()`](https://matthewkling.github.io/windscape/reference/least_cost_surface.md), [`least_cost_paths()`](https://matthewkling.github.io/windscape/reference/least_cost_paths.md), [`random_walk()`](https://matthewkling.github.io/windscape/reference/random_walk.md), [`ws_summarize()`](https://matthewkling.github.io/windscape/reference/ws_summarize.md) |
-| Connectivity among sites | [`pairwise_least_cost()`](https://matthewkling.github.io/windscape/reference/pairwise_least_cost.md), [`pairwise_random_walk()`](https://matthewkling.github.io/windscape/reference/pairwise_random_walk.md), [`vrcd()`](https://matthewkling.github.io/windscape/reference/vrcd.md) |
+| Connectivity among sites | [`pairwise_least_cost()`](https://matthewkling.github.io/windscape/reference/pairwise_least_cost.md), [`pairwise_random_walk()`](https://matthewkling.github.io/windscape/reference/pairwise_random_walk.md), [`check_cell_distance()`](https://matthewkling.github.io/windscape/reference/check_cell_distance.md) |
 | Test hypotheses | [`pairwise_ratios()`](https://matthewkling.github.io/windscape/reference/pairwise_ratios.md), [`pairwise_means()`](https://matthewkling.github.io/windscape/reference/pairwise_means.md), [`mantel_test()`](https://matthewkling.github.io/windscape/reference/mantel_test.md) |
 | Trace airflow | [`wind_trails()`](https://matthewkling.github.io/windscape/reference/wind_trails.md) |
 | Visualize | [`geom_wind_rose()`](https://matthewkling.github.io/windscape/reference/geom_wind_rose.md), [`geom_wind_arrow()`](https://matthewkling.github.io/windscape/reference/geom_wind_arrow.md), [`geom_wind_trail()`](https://matthewkling.github.io/windscape/reference/geom_wind_trail.md), [`geom_wind_path()`](https://matthewkling.github.io/windscape/reference/geom_wind_path.md), [`scale_fill_bearing()`](https://matthewkling.github.io/windscape/reference/scale_fill_bearing.md) |
@@ -229,7 +229,12 @@ and
 [`pairwise_random_walk()`](https://matthewkling.github.io/windscape/reference/pairwise_random_walk.md)
 return matrices of wind connectivity between every pair of sites. Wind
 connectivity is directional, so these matrices are asymmetric: element
-`[i, j]` describes flow from site `i` to site `j`.
+`[i, j]` describes flow from site `i` to site `j`. The least-cost model
+uses each site’s exact location, even for sites within the same grid
+cell, while the random walk model treats each site as the grid cell it
+falls in;
+[`check_cell_distance()`](https://matthewkling.github.io/windscape/reference/check_cell_distance.md)
+reports how much that distorts distances among closely spaced sites.
 
 ``` r
 
@@ -240,10 +245,10 @@ pairwise_least_cost(graph, sites) |> round() # travel time, in hours
 
 ``` R
 ##      [,1] [,2] [,3] [,4]
-## [1,]    0  132  399  581
-## [2,]  794    0  269  452
-## [3,] 1076  359    0  308
-## [4,] 1196  538  495    0
+## [1,]    0  121  379  568
+## [2,]  824    0  277  459
+## [3,] 1081  362    0  309
+## [4,] 1221  538  503    0
 ```
 
 ``` r

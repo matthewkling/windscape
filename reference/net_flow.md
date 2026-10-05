@@ -30,10 +30,18 @@ net_flow(rose)
 ## Value
 
 A `wind_field` whose `u` and `v` layers are the eastward and northward
-components of net flow, in km/h if the rose was built with `trans = 1`
-from wind speeds in m/s (divide by 3.6 for m/s). For other `trans`,
-units are those of the transformed speeds, times 3.6. Cells that are NA
-in `rose` are NA in the result.
+components of net flow, in m/s if the rose was built with `trans = 1`
+from wind speeds in m/s, like any other wind field, so that
+[`geom_wind_arrow()`](https://matthewkling.github.io/windscape/reference/geom_wind_arrow.md),
+[`geom_wind_trail()`](https://matthewkling.github.io/windscape/reference/geom_wind_trail.md),
+and
+[`wind_trails()`](https://matthewkling.github.io/windscape/reference/wind_trails.md)
+(including their `hours` arguments) treat it correctly. For other
+`trans`, units are those of the transformed speeds. The `net` statistic
+computed by
+[`fortify()`](https://ggplot2.tidyverse.org/reference/fortify.html) for
+a wind rose is the same quantity in km/h. Cells that are NA in `rose`
+are NA in the result.
 
 ## Details
 
@@ -56,14 +64,14 @@ allocates each wind observation between the two neighbors whose bearings
 bracket its direction, and the vector sum of the two parts is shorter
 than the original wind unless it blows straight toward a neighbor: by up
 to about 8% for winds halfway between neighbors. With `trans = 1`, net
-flow is therefore typically a few percent less than the mean wind speed
-(in km/h), in nearly the same direction; where winds from different
-directions largely cancel, the two can differ more in both speed and
-direction. With other values of `trans`, observations are weighted by
-transformed speed, so net flow emphasizes the winds that matter for
-conductance (e.g. strong winds, for `trans > 1`). Where wind direction
-is variable, net flow can be small even when winds are strong; the total
-flow (the `speed` computed by
+flow is therefore typically a few percent less than the mean wind speed,
+in nearly the same direction; where winds from different directions
+largely cancel, the two can differ more in both speed and direction.
+With other values of `trans`, observations are weighted by transformed
+speed, so net flow emphasizes the winds that matter for conductance
+(e.g. strong winds, for `trans > 1`). Where wind direction is variable,
+net flow can be small even when winds are strong; the total flow (the
+`speed` computed by
 [`fortify()`](https://ggplot2.tidyverse.org/reference/fortify.html))
 describes overall wind strength regardless of direction.
 

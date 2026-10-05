@@ -81,7 +81,9 @@ directional, the matrix is generally asymmetric. The diagonal is each
 site's self-connectivity: release that is deposited (or stays airborne)
 in its own cell, which can be large; see
 [`rw_self_retention()`](https://matthewkling.github.io/windscape/reference/rw_self_retention.md).
-Sites in the same grid cell get identical rows and columns.
+Sites are treated as the centers of their grid cells, so sites in the
+same cell get identical rows and columns; see
+[`check_cell_distance()`](https://matthewkling.github.io/windscape/reference/check_cell_distance.md).
 
 ## Details
 
