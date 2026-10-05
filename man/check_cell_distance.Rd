@@ -2,27 +2,36 @@
 % Please edit documentation in R/distance.R
 \name{check_cell_distance}
 \alias{check_cell_distance}
-\title{Compare point distances to cell distances}
+\title{Check how grid cells distort distances among sites}
 \usage{
 check_cell_distance(x, ll, return = FALSE)
 }
 \arguments{
-\item{x}{SpatRaster (e.g. a \code{wind_rose})}
+\item{x}{A SpatRaster on the grid used for connectivity modeling, e.g. a \code{wind_rose}.}
 
-\item{ll}{two-column matrix of site coordinates}
+\item{ll}{A two-column matrix of site coordinates.}
 
-\item{return}{Logical: return the matrix of ratios? Default is FALSE, which only prints a report.}
+\item{return}{Logical: return the matrix of ratios? Default \code{FALSE}, which only prints the
+report.}
 }
 \value{
-If \code{return = TRUE}, a matrix of the ratios of cell distances to point distances
+Prints the number of site pairs, the number (and percentage) in the same grid cell,
+and the distribution of discrepancies between cell and point distances, as percentages of
+point distance. If \code{return = TRUE}, also returns a matrix of the ratios of cell distances to
+point distances (\code{NaN} for a site with itself, and 0 for distinct sites in the same cell).
 }
 \description{
-Check for discrepancies between pairwise distances between a set of points, versus pairwise distances between the
-centers of the raster grid cells that the points fall within. There will always be some differences due to the
-continuous versus discrete nature of the data types, but if discrepancies are large as a percentage of the distances,
-then they will contribute substantial noise that could invalidate wind connectivity estimates. This function reports
-how many site pairs are in the same grid cell (an infinite difference that makes wind calculations impossible) as
-well as information about the distribution of discrepancies as percentages of distance. The more site pairs there
-are with nontrivial discrepancies, the less reliable a wind connectivity model will be for these sites. Problems
-identified in this check can be solved using the \link{downscale} or \link{vrcd} functions.
+Compares pairwise distances among sites with distances between the centers of the grid cells
+the sites fall in, and prints a report. Connectivity models that work from cell to cell treat
+each site as the center of its cell: the random walk functions (\code{\link[=random_walk]{random_walk()}},
+\code{\link[=pairwise_random_walk]{pairwise_random_walk()}}), and the least-cost functions when sites are snapped to cell centers
+(\code{\link[=least_cost_surface]{least_cost_surface()}}, \code{\link[=least_cost_paths]{least_cost_paths()}}, and \code{pairwise_least_cost(snap = TRUE)}). For
+these, sites separated by only a few cells have distorted distances and directions, and sites in
+the same cell can't be distinguished at all. \code{\link[=pairwise_least_cost]{pairwise_least_cost()}} with its default
+\code{snap = FALSE} places sites at their actual locations, so this check does not apply to it.
+}
+\details{
+Where many site pairs are affected, options are to use wind data on a finer grid, or to
+\code{\link[=downscale]{downscale()}} the wind rose (see its documentation for how downscaling changes random walk
+results).
 }

@@ -159,8 +159,9 @@ ggplot(net_flow(rose), aes(x, y)) +
 Two optional steps can adjust a wind rose before modeling. `weight_conductance()` scales
 conductance by a raster of weights between 0 and 1, for example to reduce connectivity across
 open water for terrestrial organisms (`ncar_land()` downloads a matching land-water layer).
-`downscale()` refines the grid, which matters when sites are only a few grid cells apart; we'll
-use it in the pairwise connectivity section below.
+`downscale()` interpolates the wind rose onto a finer grid. It rarely changes least-cost results,
+but it does change random walk results, because a random walk's spread depends on cell size; see
+`?downscale` before using it.
 
 
 ## Connectivity models
@@ -311,38 +312,40 @@ Let's generate ten random sites:
 sites <- cbind(lon = runif(10, -115, -95), lat = runif(10, 33, 47))
 ```
 
-Connectivity is calculated between the centers of the grid cells containing the sites, so when
-sites are only a few cells apart, the distances between cell centers can differ noticeably from
-the distances between the sites themselves. `check_cell_distance()` reports these discrepancies:
-
-```{r check}
-check_cell_distance(rose, sites)
-```
-
-Most site pairs are fine, but a few have discrepancies of several percent. `downscale()` refines
-the wind rose grid by interpolation, which reduces them, at the cost of slower computation:
-
-```{r downscale}
-rose_fine <- downscale(rose, 2)
-check_cell_distance(rose_fine, sites)
-```
-
-Now we can estimate connectivity among the sites. Least-cost travel times, in hours:
+The two models place sites on the wind grid differently. `pairwise_least_cost()` uses each
+site's actual location: it adds the sites to the wind graph and links each one to the centers of
+nearby grid cells, and to other sites close by, with exact travel times. It therefore handles
+sites that are close together, even within the same grid cell. Least-cost travel times, in hours:
 
 ```{r pairwise-lc}
-hours <- pairwise_least_cost(wind_graph(rose_fine), sites)
+hours <- pairwise_least_cost(wind_graph(rose), sites)
 round(hours[1:5, 1:5])
 ```
 
-And random walk deposition, the density of particles released at each site that are deposited at
+A random walk moves particles from cell to cell, so `pairwise_random_walk()` treats each site as
+the grid cell it falls in. For sites only a few cells apart, the distances and directions between
+cell centers can differ noticeably from those between the sites themselves, and sites in the same
+cell get identical results. `check_cell_distance()` reports how much the grid distorts distances
+among a set of sites:
+
+```{r check, message = TRUE}
+check_cell_distance(rose, sites)
+```
+
+None of these sites share a grid cell, and most distance discrepancies are under 2.5 percent,
+so this grid works for them. Where many pairs are affected, a finer grid, from finer wind data or
+from `downscale()`, separates nearby sites. But a random walk's spread depends on cell size, so
+changing the resolution changes the model as well as the grid; see `?downscale`.
+
+Random walk deposition, the density of particles released at each site that are deposited at
 each other site:
 
 ```{r pairwise-rw}
-deposition <- pairwise_random_walk(rose_fine, sites, half_life = 48)
+deposition <- pairwise_random_walk(rose, sites, half_life = 48)
 signif(deposition[1:5, 1:5], 2)
 ```
 
-The diagonal of the deposition matrix is each site's self-retention: the share of its own
+The diagonal of the deposition matrix is each site's self-retention: the density of its own
 release deposited in its own grid cell. It is usually much larger than the other values, but
 the tests below ignore diagonals.
 

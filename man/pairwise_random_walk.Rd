@@ -50,8 +50,9 @@ origin is deposited in the destination's grid cell (per km^2 if \code{density = 
 spends airborne over the destination's cell (per km^2 if \code{density = TRUE}). Because wind
 is directional, the matrix is generally asymmetric. The diagonal is each site's
 self-connectivity: release that is deposited (or stays airborne) in its own cell, which
-can be large; see \code{\link[=rw_self_retention]{rw_self_retention()}}. Sites in the same grid cell get identical rows and
-columns.
+can be large; see \code{\link[=rw_self_retention]{rw_self_retention()}}. Sites are treated as the centers of their grid
+cells, so sites in the same cell get identical rows and columns; see
+\code{\link[=check_cell_distance]{check_cell_distance()}}.
 }
 \description{
 For every pair of sites, computes how strongly particles released at one site reach the other

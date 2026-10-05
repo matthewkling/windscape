@@ -11,9 +11,11 @@ net_flow(rose)
 }
 \value{
 A \code{wind_field} whose \code{u} and \code{v} layers are the eastward and northward components of
-net flow, in km/h if the rose was built with \code{trans = 1} from wind speeds in m/s (divide
-by 3.6 for m/s). For other \code{trans}, units are those of the transformed speeds, times
-3.6. Cells that are NA in \code{rose} are NA in the result.
+net flow, in m/s if the rose was built with \code{trans = 1} from wind speeds in m/s, like any
+other wind field, so that \code{\link[=geom_wind_arrow]{geom_wind_arrow()}}, \code{\link[=geom_wind_trail]{geom_wind_trail()}}, and \code{\link[=wind_trails]{wind_trails()}}
+(including their \code{hours} arguments) treat it correctly. For other \code{trans}, units are those
+of the transformed speeds. The \code{net} statistic computed by \code{fortify()} for a wind rose is
+the same quantity in km/h. Cells that are NA in \code{rose} are NA in the result.
 }
 \description{
 Summarizes each grid cell of a wind rose as a single vector: the net flow, or the vector sum
@@ -38,7 +40,7 @@ Net flow is not the same as the mean wind vector. \code{\link[=wind_rose]{wind_r
 observation between the two neighbors whose bearings bracket its direction, and the vector
 sum of the two parts is shorter than the original wind unless it blows straight toward a
 neighbor: by up to about 8\% for winds halfway between neighbors. With \code{trans = 1}, net flow
-is therefore typically a few percent less than the mean wind speed (in km/h), in nearly the
+is therefore typically a few percent less than the mean wind speed, in nearly the
 same direction; where winds from different directions largely cancel, the two can differ
 more in both speed and direction. With other values of \code{trans}, observations are weighted by
 transformed speed, so net flow emphasizes the winds that matter for conductance (e.g. strong

@@ -32,8 +32,9 @@
 #'    spends airborne over the destination's cell (per km^2 if `density = TRUE`). Because wind
 #'    is directional, the matrix is generally asymmetric. The diagonal is each site's
 #'    self-connectivity: release that is deposited (or stays airborne) in its own cell, which
-#'    can be large; see [rw_self_retention()]. Sites in the same grid cell get identical rows and
-#'    columns.
+#'    can be large; see [rw_self_retention()]. Sites are treated as the centers of their grid
+#'    cells, so sites in the same cell get identical rows and columns; see
+#'    [check_cell_distance()].
 #'
 #' @details
 #' Each origin's row is the destination values of a stream-mode random walk released from that

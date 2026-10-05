@@ -26,7 +26,7 @@ each path:
 \item \code{step}: vertex number along the path, starting at 0 at the origin.
 \item \code{hours}: cumulative travel cost from the origin, in hours (if \code{trans = 1} in
 \code{\link[=wind_rose]{wind_rose()}} and wind speeds are in m/s). Its final value on each path equals the
-pair's \code{\link[=pairwise_least_cost]{pairwise_least_cost()}} (with \code{adjust = FALSE}).
+pair's \code{\link[=pairwise_least_cost]{pairwise_least_cost()}} (with \code{snap = TRUE}).
 \item \code{x}, \code{y}: longitude and latitude of the grid cell center.
 }
 
@@ -37,7 +37,7 @@ grid cell are omitted, since their path has no length.
 \description{
 Traces the least-cost (fastest) paths between sites through a wind graph, as sequences of
 grid cell centers. The result has the same structure as \code{\link[=wind_trails]{wind_trails()}} output, so it can be
-drawn with \code{\link[=geom_wind_path]{geom_wind_path()}}.
+drawn with \code{\link[=geom_wind_trail]{geom_wind_trail()}}.
 }
 \details{
 Paths are computed with \code{\link[gdistance:shortestPath]{gdistance::shortestPath()}}. They follow the graph's direction:
@@ -61,6 +61,6 @@ head(paths)
 
 library(ggplot2)
 ggplot(paths, aes(x, y)) +
-  geom_wind_path(aes(color = hours)) +
+  geom_wind_trail(aes(color = hours)) +
   coord_quickmap()
 }

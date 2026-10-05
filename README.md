@@ -48,7 +48,7 @@ remotes::install_github("matthewkling/windscape")
 | Get wind data | `ncar_download()`, `ncar_land()`, `read_wind_series()`, `windscape_example()` |
 | Summarize a wind regime | `wind_rose()`, `combine_roses()`, `weight_conductance()`, `downscale()` |
 | Map windsheds | `least_cost_surface()`, `least_cost_paths()`, `random_walk()`, `ws_summarize()` |
-| Connectivity among sites | `pairwise_least_cost()`, `pairwise_random_walk()`, `vrcd()` |
+| Connectivity among sites | `pairwise_least_cost()`, `pairwise_random_walk()`, `check_cell_distance()` |
 | Test hypotheses | `pairwise_ratios()`, `pairwise_means()`, `mantel_test()` |
 | Trace airflow | `wind_trails()` |
 | Visualize | `geom_wind_rose()`, `geom_wind_arrow()`, `geom_wind_trail()`, `geom_wind_path()`, `scale_fill_bearing()` |
@@ -214,7 +214,10 @@ sites, such as sampled populations. `pairwise_least_cost()` and
 `pairwise_random_walk()` return matrices of wind connectivity between
 every pair of sites. Wind connectivity is directional, so these matrices
 are asymmetric: element `[i, j]` describes flow from site `i` to site
-`j`.
+`j`. The least-cost model uses each site’s exact location, even for
+sites within the same grid cell, while the random walk model treats each
+site as the grid cell it falls in; `check_cell_distance()` reports how
+much that distorts distances among closely spaced sites.
 
 ``` r
 sites <- cbind(lon = c(-110, -105, -100, -95), lat = c(40, 42, 38, 44))
@@ -223,10 +226,10 @@ pairwise_least_cost(graph, sites) |> round() # travel time, in hours
 ```
 
     ##      [,1] [,2] [,3] [,4]
-    ## [1,]    0  132  399  581
-    ## [2,]  794    0  269  452
-    ## [3,] 1076  359    0  308
-    ## [4,] 1196  538  495    0
+    ## [1,]    0  121  379  568
+    ## [2,]  824    0  277  459
+    ## [3,] 1081  362    0  309
+    ## [4,] 1221  538  503    0
 
 ``` r
 pairwise_random_walk(rose, sites, half_life = 100) |> signif(2) # deposition density

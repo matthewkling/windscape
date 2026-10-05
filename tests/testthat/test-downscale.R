@@ -14,9 +14,9 @@ test_that("downscaling preserves travel time across the domain", {
       r <- uv_rose(nr = 3, nc = 6, u = 5, v = 0)
       d <- downscale(r, 3, method = "near")
       xy <- terra::xyFromCell(r, terra::cellFromRowCol(r, 2, c(1, 6)))
-      t_coarse <- pairwise_least_cost(wind_graph(r), xy, adjust = FALSE)[1, 2]
+      t_coarse <- pairwise_least_cost(wind_graph(r), xy, snap = TRUE)[1, 2]
       xy_fine <- terra::xyFromCell(d, terra::cellFromXY(d, xy))
-      t_fine <- pairwise_least_cost(wind_graph(d), xy_fine, adjust = FALSE)[1, 2]
+      t_fine <- pairwise_least_cost(wind_graph(d), xy_fine, snap = TRUE)[1, 2]
       # same physical distance between the two fine cells as between coarse cell centers
       expect_equal(t_fine, t_coarse, tolerance = 1e-3)
 })

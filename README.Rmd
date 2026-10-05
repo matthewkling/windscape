@@ -40,7 +40,7 @@ remotes::install_github("matthewkling/windscape")
 | Get wind data | `ncar_download()`, `ncar_land()`, `read_wind_series()`, `windscape_example()` |
 | Summarize a wind regime | `wind_rose()`, `combine_roses()`, `weight_conductance()`, `downscale()` |
 | Map windsheds | `least_cost_surface()`, `least_cost_paths()`, `random_walk()`, `ws_summarize()` |
-| Connectivity among sites | `pairwise_least_cost()`, `pairwise_random_walk()`, `vrcd()` |
+| Connectivity among sites | `pairwise_least_cost()`, `pairwise_random_walk()`, `check_cell_distance()` |
 | Test hypotheses | `pairwise_ratios()`, `pairwise_means()`, `mantel_test()` |
 | Trace airflow | `wind_trails()` |
 | Visualize | `geom_wind_rose()`, `geom_wind_arrow()`, `geom_wind_trail()`, `geom_wind_path()`, `scale_fill_bearing()` |
@@ -162,7 +162,7 @@ For comparing windsheds among many sites, `ws_summarize()` computes a windshed's
 
 ## Estimate connectivity among sites
 
-Many studies require pairwise connectivity estimates among a set of sites, such as sampled populations. `pairwise_least_cost()` and `pairwise_random_walk()` return matrices of wind connectivity between every pair of sites. Wind connectivity is directional, so these matrices are asymmetric: element `[i, j]` describes flow from site `i` to site `j`.
+Many studies require pairwise connectivity estimates among a set of sites, such as sampled populations. `pairwise_least_cost()` and `pairwise_random_walk()` return matrices of wind connectivity between every pair of sites. Wind connectivity is directional, so these matrices are asymmetric: element `[i, j]` describes flow from site `i` to site `j`. The least-cost model uses each site's exact location, even for sites within the same grid cell, while the random walk model treats each site as the grid cell it falls in; `check_cell_distance()` reports how much that distorts distances among closely spaced sites.
 
 ```{r pairwise}
 sites <- cbind(lon = c(-110, -105, -100, -95), lat = c(40, 42, 38, 44))
@@ -173,4 +173,3 @@ pairwise_random_walk(rose, sites, half_life = 100) |> signif(2) # deposition den
 ```
 
 These matrices can be compared with ecological data, such as genetic differentiation or gene flow, to test whether wind shapes ecological patterns. `pairwise_means()` and `pairwise_ratios()` derive matrices for testing hypotheses about the strength and the directionality of wind connectivity, and `mantel_test()` tests their relationships with other pairwise data. The package includes `birch`, a landscape genetic data set for silver birch, for trying these out.
-

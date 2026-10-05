@@ -15,7 +15,7 @@ test_that("wind_graph returns a downwind or upwind wind_graph", {
 test_that("downwind travel time along a uniform westerly is exact", {
       r <- uv_rose(nr = 3, nc = 6, u = 5, v = 0)
       xy <- centers(r, 2, c(1, 6))
-      d <- pairwise_least_cost(wind_graph(r), xy, adjust = FALSE)
+      d <- pairwise_least_cost(wind_graph(r), xy, snap = TRUE)
       dE <- geosphere::distGeo(c(0, xy[1, 2]), c(1, xy[1, 2])) # m per hop
       expect_equal(d[1, 2], 5 * dE / (5 * 3600), tolerance = 1e-8) # hours, 5 hops at 5 m/s
       expect_equal(d[2, 1], Inf)                                    # no westward wind
@@ -25,8 +25,8 @@ test_that("downwind travel time along a uniform westerly is exact", {
 test_that("upwind graph is the transpose of the downwind graph", {
       r <- noisy_rose()
       xy <- terra::xyFromCell(r, c(5, 40, 77, 160))
-      down <- pairwise_least_cost(wind_graph(r), xy, adjust = FALSE)
-      up <- pairwise_least_cost(wind_graph(r, direction = "upwind"), xy, adjust = FALSE)
+      down <- pairwise_least_cost(wind_graph(r), xy, snap = TRUE)
+      up <- pairwise_least_cost(wind_graph(r, direction = "upwind"), xy, snap = TRUE)
       expect_equal(up, t(down), tolerance = 1e-10, ignore_attr = TRUE)
 })
 
@@ -34,16 +34,8 @@ test_that("rate = TRUE returns inverse cost distances", {
       r <- noisy_rose()
       xy <- terra::xyFromCell(r, c(5, 40, 77))
       g <- wind_graph(r)
-      expect_equal(pairwise_least_cost(g, xy, adjust = FALSE, rate = TRUE),
-                   1 / pairwise_least_cost(g, xy, adjust = FALSE))
-})
-
-test_that("adjust = FALSE and TRUE agree for sites at cell centers", {
-      r <- noisy_rose()
-      xy <- terra::xyFromCell(r, c(5, 40, 77))
-      g <- wind_graph(r)
-      expect_equal(pairwise_least_cost(g, xy, adjust = TRUE),
-                   pairwise_least_cost(g, xy, adjust = FALSE), tolerance = 1e-8)
+      expect_equal(pairwise_least_cost(g, xy, snap = TRUE, rate = TRUE),
+                   1 / pairwise_least_cost(g, xy, snap = TRUE))
 })
 
 test_that("least_cost_surface agrees with pairwise_least_cost", {
@@ -53,7 +45,7 @@ test_that("least_cost_surface agrees with pairwise_least_cost", {
       s <- least_cost_surface(g, xy[1, , drop = FALSE])
       expect_s4_class(s, "SpatRaster")
       expect_equal(names(s), "hours")
-      d <- pairwise_least_cost(g, xy, adjust = FALSE)
+      d <- pairwise_least_cost(g, xy, snap = TRUE)
       expect_equal(terra::extract(s, xy)[, 1], d[1, ], tolerance = 1e-8)
       sr <- least_cost_surface(g, xy[1, , drop = FALSE], rate = TRUE)
       expect_equal(names(sr), "rate")
@@ -63,8 +55,8 @@ test_that("least_cost_surface agrees with pairwise_least_cost", {
 test_that("wrap connects the eastern and western edges", {
       r <- uv_rose(nr = 3, nc = 4, u = 5, v = 0)
       xy <- centers(r, 2, c(4, 1))
-      open <- pairwise_least_cost(wind_graph(r), xy, adjust = FALSE)
-      wrapped <- pairwise_least_cost(wind_graph(r, wrap = TRUE), xy, adjust = FALSE)
+      open <- pairwise_least_cost(wind_graph(r), xy, snap = TRUE)
+      wrapped <- pairwise_least_cost(wind_graph(r, wrap = TRUE), xy, snap = TRUE)
       dE <- geosphere::distGeo(c(0, xy[1, 2]), c(1, xy[1, 2]))
       expect_equal(open[1, 2], Inf)
       expect_equal(wrapped[1, 2], dE / (5 * 3600), tolerance = 1e-8) # one hop across the suture
@@ -141,11 +133,11 @@ test_that("input handling: data frames, SpatVectors, same-cell pairs, validation
       expect_error(least_cost_paths(g, from, to, pairs = "some"))
 })
 
-test_that("paths draw with geom_wind_path", {
+test_that("paths draw with geom_wind_trail", {
       r <- noisy_rose()
       g <- wind_graph(r)
       p <- least_cost_paths(g, terra::xyFromCell(r, 5), terra::xyFromCell(r, c(40, 160)))
-      plt <- ggplot2::ggplot(p, ggplot2::aes(x, y)) + geom_wind_path(ggplot2::aes(color = hours))
+      plt <- ggplot2::ggplot(p, ggplot2::aes(x, y)) + geom_wind_trail(ggplot2::aes(color = hours))
       ld <- ggplot2::layer_data(plt)
       expect_equal(length(unique(ld$group)), 2)
       expect_s3_class(ggplot2::ggplotGrob(plt), "gtable")
