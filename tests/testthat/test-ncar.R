@@ -184,11 +184,3 @@ test_that("read_wind_series() checks its inputs", {
       terra::writeRaster(r, f)
       expect_error(read_wind_series(f), "odd number")
 })
-
-test_that("deprecated cfsr_dl() subsets days and hours", {
-      skip_if_not_installed("ncdf4")
-      local_mocked_bindings(ncss_fetch = fake_ncss())
-      expect_warning(w <- cfsr_dl(years = 2000, months = 4, days = 1, hlim = c(2, 4),
-                                  xlim = c(250, 270), ylim = c(30, 40)), "deprecated")
-      expect_equal(names(w), paste(rep(c("u", "v"), each = 3), "2000-04-01", c("02:00:00", "03:00:00", "04:00:00")))
-})

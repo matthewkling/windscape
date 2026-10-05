@@ -133,11 +133,11 @@ test_that("input handling: data frames, SpatVectors, same-cell pairs, validation
       expect_error(least_cost_paths(g, from, to, pairs = "some"))
 })
 
-test_that("paths draw with geom_wind_trail", {
+test_that("paths draw with geom_wind_path", {
       r <- noisy_rose()
       g <- wind_graph(r)
       p <- least_cost_paths(g, terra::xyFromCell(r, 5), terra::xyFromCell(r, c(40, 160)))
-      plt <- ggplot2::ggplot(p, ggplot2::aes(x, y)) + geom_wind_trail(ggplot2::aes(color = hours))
+      plt <- ggplot2::ggplot(p, ggplot2::aes(x, y)) + geom_wind_path(ggplot2::aes(color = hours))
       ld <- ggplot2::layer_data(plt)
       expect_equal(length(unique(ld$group)), 2)
       expect_s3_class(ggplot2::ggplotGrob(plt), "gtable")

@@ -228,7 +228,11 @@ lc_displacement <- function(a, b, lonlat){
       if(!lonlat) return(b - a)
       d <- geosphere::distGeo(a, b) / 1000
       brg <- geosphere::bearingRhumb(a, b) * pi / 180
-      brg[d == 0] <- 0 # bearing is undefined for coincident points
+      # bearing is undefined for coincident points; treat points within 1 mm as coincident, since
+      # coordinates rebuilt from a grid's extent can differ from the originals by round-off
+      zero <- !is.na(d) & d < 1e-6
+      d[zero] <- 0
+      brg[zero] <- 0
       cbind(d * sin(brg), d * cos(brg))
 }
 

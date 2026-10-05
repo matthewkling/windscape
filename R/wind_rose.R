@@ -72,6 +72,11 @@ as_wind_rose <- function(x, trans, n_steps = NA_integer_){
 #'    summarized without loading it all into memory at once. The result is identical to
 #'    building a rose from all files combined with [read_wind_series()].
 #' @param trans Either a function, or a positive number indicating the power to raise windspeeds to; see details.
+#' @param months,hours,start,end Optional criteria for selecting time steps to include, as in
+#'    [subset_series()]: months (1-12), hours of the day (0-23, UTC), and a date or time range.
+#'    When `x` is a vector of files, they are applied to each file, and files with no selected
+#'    time steps are skipped, so a seasonal or time-of-day rose can be built from a long record
+#'    downloaded in full.
 #' @param ... Additional arguments passed to `terra::app`, e.g. 'filename'. When `x` is a
 #'    vector of files, these are passed to `terra::app` for each file, and `filename` is not
 #'    allowed; use `terra::writeRaster()` on the result instead.
@@ -80,21 +85,31 @@ as_wind_rose <- function(x, trans, n_steps = NA_integer_){
 #'   If input windspeeds are in m/s and `trans = 1`, values are in (1 / hours)
 #' @aliases windrose_rasters
 #' @export
-wind_rose <- function(x, trans = 1, ...){
+wind_rose <- function(x, trans = 1, months = NULL, hours = NULL, start = NULL, end = NULL, ...){
 
+      select <- !is.null(months) || !is.null(hours) || !is.null(start) || !is.null(end)
       if(is.character(x)){
-            if(length(x) == 1) return(wind_rose(read_wind_series(x), trans = trans, ...))
+            if(length(x) == 1) return(wind_rose(read_wind_series(x), trans = trans, months = months,
+                                                hours = hours, start = start, end = end, ...))
             if("filename" %in% names(list(...)))
                   stop("`filename` is not supported when `x` is a vector of files; ",
                        "use terra::writeRaster() on the result.")
             out <- NULL
             for(f in x){
-                  r <- wind_rose(read_wind_series(f), trans = trans, ...)
+                  ws <- read_wind_series(f)
+                  if(select){
+                        keep <- keep_steps(ws, months, hours, start, end)
+                        if(!any(keep)) next # nothing selected from this file
+                        ws <- subset_series(ws, steps = keep)
+                  }
+                  r <- wind_rose(ws, trans = trans, ...)
                   out <- if(is.null(out)) r else combine_roses(out, r)
             }
+            if(is.null(out)) stop("no time steps in any file meet the selection criteria")
             return(out)
       }
       if(!inherits(x, "wind_series")) stop("`x` must be an object of class `wind_series`, or file paths.")
+      if(select) x <- subset_series(x, months = months, hours = hours, start = start, end = end)
       check_grid(x)
 
       trn <- trans

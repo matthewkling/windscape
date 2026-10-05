@@ -87,3 +87,133 @@ read_wind_series <- function(x){
       }
       wind_series(c(do.call(c, lapply(r, half, "u")), do.call(c, lapply(r, half, "v"))))
 }
+
+
+#' Get the time of each step in a wind_series
+#'
+#' Returns the time of each step of a `wind_series`, parsed from its layer names (like
+#' `"u 2000-01-01 06:00:00"`, as written by [ncar_download()]) or, if the names hold no times,
+#' from the times set with `terra::time()`.
+#'
+#' @param x A `wind_series`.
+#' @return A POSIXct vector (UTC), with one element per time step.
+#' @seealso [subset_series()] to select time steps.
+#' @examples
+#' series <- windscape_example("wind_series")
+#' head(wind_times(series))
+#' @export
+wind_times <- function(x){
+      if(!inherits(x, "wind_series")) stop("`x` must be a `wind_series`")
+      u <- seq_len(x@n_steps)
+      t <- layer_times(names(x)[u])
+      if(all(is.na(t))){
+            tt <- terra::time(x)[u]
+            if(!all(is.na(tt))) t <- as.POSIXct(tt, tz = "UTC")
+      }
+      if(all(is.na(t))) stop("no times found: layer names should be like \"u 2000-01-01 06:00:00\", ",
+                             "or times should be set with terra::time()")
+      if(anyNA(t)) warning("times could not be determined for ", sum(is.na(t)), " time step(s)")
+      t
+}
+
+
+#' Select time steps from a wind_series
+#'
+#' Selects time steps from a `wind_series` by month, hour of day, date range, or index, keeping
+#' the u and v layers of each step together. Use it to build wind roses for the times that
+#' matter for dispersal, such as a flowering season or the hours when propagules are released.
+#'
+#' Criteria are combined: a time step is kept only if it meets all of them. Times are in UTC.
+#' For hours of the day in local solar time, note that local time is about UTC plus longitude /
+#' 15 hours (e.g. UTC - 7 hours at 105 degrees west), so `hours` for a large region selects
+#' different local times in different places.
+#'
+#' @param x A `wind_series`, with times in its layer names (see [wind_times()]) if selecting by
+#'    `months`, `hours`, `start`, or `end`.
+#' @param months Integer vector of months (1-12) to keep.
+#' @param hours Integer vector of hours of the day (0-23, UTC) to keep.
+#' @param start,end Keep time steps from `start` to `end`, inclusive. Each can be a `Date`, a
+#'    POSIXct time, or a character string like `"2000-06-01"` or `"2000-06-01 12:00:00"`
+#'    (interpreted as UTC). A date without a time includes that whole day, so
+#'    `end = "2000-06-30"` keeps all of June 30.
+#' @param steps Time steps to keep, as integer indices or a logical vector with one element per
+#'    time step, for selections the other arguments don't cover. Can be combined with them, e.g.
+#'    `steps = speed > 10`, given a vector `speed`.
+#' @return A `wind_series` containing the selected time steps, in their original order.
+#' @seealso [wind_times()]
+#' @examples
+#' series <- windscape_example("wind_series")
+#'
+#' # summer only
+#' summer <- subset_series(series, months = 6:8)
+#' range(wind_times(summer))
+#'
+#' # afternoons in the first half of the year
+#' subset_series(series, hours = 18:23, end = "2000-06-30")
+#' @export
+subset_series <- function(x, months = NULL, hours = NULL, start = NULL, end = NULL, steps = NULL){
+      if(!inherits(x, "wind_series")) stop("`x` must be a `wind_series`")
+      keep <- keep_steps(x, months, hours, start, end, steps)
+      idx <- which(keep)
+      if(length(idx) == 0) stop("no time steps meet the selection criteria")
+      n <- x@n_steps
+      wind_series(terra::subset(as(x, "SpatRaster"), c(idx, n + idx)))
+}
+
+# Logical vector: which time steps of a wind_series meet the selection criteria
+keep_steps <- function(x, months = NULL, hours = NULL, start = NULL, end = NULL, steps = NULL){
+      n <- x@n_steps
+      keep <- rep(TRUE, n)
+
+      if(!is.null(steps)){
+            if(is.logical(steps)){
+                  if(length(steps) != n) stop("a logical `steps` must have one element per time step (", n, ")")
+                  keep <- keep & !is.na(steps) & steps
+            }else{
+                  if(!is.numeric(steps) || any(steps %% 1 != 0) || any(steps < 1 | steps > n))
+                        stop("`steps` must be logical, or integers between 1 and ", n)
+                  keep <- keep & seq_len(n) %in% steps
+            }
+      }
+
+      if(!is.null(months) || !is.null(hours) || !is.null(start) || !is.null(end)){
+            t <- wind_times(x)
+            if(!is.null(months)){
+                  if(any(!months %in% 1:12)) stop("`months` must be integers between 1 and 12")
+                  keep <- keep & as.integer(format(t, "%m", tz = "UTC")) %in% months
+            }
+            if(!is.null(hours)){
+                  if(any(!hours %in% 0:23)) stop("`hours` must be integers between 0 and 23")
+                  keep <- keep & as.integer(format(t, "%H", tz = "UTC")) %in% hours
+            }
+            if(!is.null(start)) keep <- keep & t >= as_utc_time(start, "start")
+            if(!is.null(end)){
+                  e <- as_utc_time(end, "end")
+                  keep <- keep & if(attr(e, "whole_day")) t < e + 86400 else t <= e
+            }
+            keep <- keep & !is.na(t)
+      }
+      keep
+}
+
+# Convert a Date, POSIXct, or character time to POSIXct (UTC), recording whether it was a date
+# without a time of day
+as_utc_time <- function(z, arg){
+      if(length(z) != 1 || is.na(z)) stop("`", arg, "` must be a single date or time")
+      whole_day <- FALSE
+      if(inherits(z, "POSIXt")){
+            out <- as.POSIXct(z, tz = "UTC")
+      }else if(inherits(z, "Date")){
+            out <- as.POSIXct(format(z), tz = "UTC")
+            whole_day <- TRUE
+      }else if(is.character(z)){
+            whole_day <- grepl("^\\s*\\d{4}-\\d{2}-\\d{2}\\s*$", z)
+            out <- as.POSIXct(z, tz = "UTC", tryFormats = c("%Y-%m-%d %H:%M:%OS", "%Y-%m-%d %H:%M",
+                                                           "%Y-%m-%d"), optional = TRUE)
+      }else{
+            stop("`", arg, "` must be a Date, POSIXct, or character string")
+      }
+      if(is.na(out)) stop("`", arg, "` could not be read as a date or time: ", z)
+      attr(out, "whole_day") <- whole_day
+      out
+}

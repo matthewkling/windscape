@@ -5,7 +5,15 @@
 \alias{windrose_rasters}
 \title{Summarize a time series of wind fields into a wind rose}
 \usage{
-wind_rose(x, trans = 1, ...)
+wind_rose(
+  x,
+  trans = 1,
+  months = NULL,
+  hours = NULL,
+  start = NULL,
+  end = NULL,
+  ...
+)
 }
 \arguments{
 \item{x}{Data set of class \code{wind_series}, or a character vector of paths to files in
@@ -15,6 +23,12 @@ summarized without loading it all into memory at once. The result is identical t
 building a rose from all files combined with \code{\link[=read_wind_series]{read_wind_series()}}.}
 
 \item{trans}{Either a function, or a positive number indicating the power to raise windspeeds to; see details.}
+
+\item{months, hours, start, end}{Optional criteria for selecting time steps to include, as in
+\code{\link[=subset_series]{subset_series()}}: months (1-12), hours of the day (0-23, UTC), and a date or time range.
+When \code{x} is a vector of files, they are applied to each file, and files with no selected
+time steps are skipped, so a seasonal or time-of-day rose can be built from a long record
+downloaded in full.}
 
 \item{...}{Additional arguments passed to \code{terra::app}, e.g. 'filename'. When \code{x} is a
 vector of files, these are passed to \code{terra::app} for each file, and \code{filename} is not
