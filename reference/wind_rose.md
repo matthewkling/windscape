@@ -1,61 +1,49 @@
-# Summarize a time series of wind fields into a wind rose
+# Build or load a wind rose
 
-This function converts a `wind_field_ts` into a `wind_rose` object
-summarizing the distribution of wind speed and direction observations in
-each grid cell. The result is a set of eight raster layers giving the
-average wind conductance toward each of a cell's 'queen' neighbors.
+A wind rose summarizes a time series of wind fields as the average wind
+conductance from each grid cell toward each of its eight neighbors.
+Given a `wind_series`, `wind_rose()` builds one; given a raster or file
+holding a saved wind rose, it loads it.
 
 ## Usage
 
 ``` r
-wind_rose(
-  x,
-  trans = 1,
-  months = NULL,
-  hours = NULL,
-  start = NULL,
-  end = NULL,
-  ...
-)
+wind_rose(x, trans = 1, n_steps = NA_integer_, ...)
 ```
 
 ## Arguments
 
 - x:
 
-  Data set of class `wind_series`, or a character vector of paths to
-  files in `wind_series` layout, such as those returned by
-  [`ncar_download()`](https://matthewkling.github.io/windscape/reference/ncar_download.md).
-  Multiple files are processed one at a time and combined with
-  [`combine_roses()`](https://matthewkling.github.io/windscape/reference/combine_roses.md),
-  so a long record can be summarized without loading it all into memory
-  at once. The result is identical to building a rose from all files
-  combined with
-  [`read_wind_series()`](https://matthewkling.github.io/windscape/reference/read_wind_series.md).
+  A `wind_series`, to build a wind rose from; or a saved wind rose to
+  load, as an 8-layer `SpatRaster` or the path to a raster file (e.g.
+  one written with
+  [`terra::writeRaster()`](https://rspatial.github.io/terra/reference/writeRaster.html)).
+  A saved rose's layers must hold conductance toward the southwest,
+  west, northwest, north, northeast, east, southeast, and south
+  neighbors, in that order.
 
 - trans:
 
   Either a function, or a positive number indicating the power to raise
-  windspeeds to; see details.
+  wind speeds to; see details. When loading a saved rose, give the
+  `trans` it was built with, which is recorded with the rose (e.g. for
+  [`combine_roses()`](https://matthewkling.github.io/windscape/reference/combine_roses.md)).
 
-- months, hours, start, end:
+- n_steps:
 
-  Optional criteria for selecting time steps to include, as in
-  [`subset_series()`](https://matthewkling.github.io/windscape/reference/subset_series.md):
-  months (1-12), hours of the day (0-23, UTC), and a date or time range.
-  When `x` is a vector of files, they are applied to each file, and
-  files with no selected time steps are skipped, so a seasonal or
-  time-of-day rose can be built from a long record downloaded in full.
+  When loading a saved rose, the number of time steps it summarizes,
+  needed to combine it with other roses using
+  [`combine_roses()`](https://matthewkling.github.io/windscape/reference/combine_roses.md).
+  Ignored when building a rose, which records its number of time steps
+  automatically.
 
 - ...:
 
-  Additional arguments passed to
-  [`terra::app`](https://rspatial.github.io/terra/reference/app.html),
-  e.g. 'filename'. When `x` is a vector of files, these are passed to
-  [`terra::app`](https://rspatial.github.io/terra/reference/app.html)
-  for each file, and `filename` is not allowed; use
-  [`terra::writeRaster()`](https://rspatial.github.io/terra/reference/writeRaster.html)
-  on the result instead.
+  When building a rose, additional arguments passed to
+  [`terra::app()`](https://rspatial.github.io/terra/reference/app.html),
+  such as `cores`. A `filename` (with optional `overwrite`) writes the
+  result to a file.
 
 ## Value
 
@@ -65,6 +53,18 @@ is wind conductance from the focal cell to one of its neighbors
 `trans = 1`, values are in (1 / hours)
 
 ## Details
+
+For each time step, the wind in each cell is divided between the two
+neighbors whose directions bracket the wind direction, in proportion to
+how closely the wind points toward each, and its transformed speed (see
+`trans`) is converted to conductance toward each neighbor; conductance
+is then averaged over all time steps. Long series are processed in
+chunks of time steps, so a series spanning many files (see
+[`wind_series()`](https://matthewkling.github.io/windscape/reference/wind_series.md))
+can be summarized without loading it all into memory; the result is
+identical to processing it at once. To build a rose from selected time
+steps, such as a season or time of day, select them first with
+[`subset_series()`](https://matthewkling.github.io/windscape/reference/subset_series.md).
 
 The `trans` parameter defines the transformation function used to
 convert wind speed into conductance. If a numeric value is supplied, the
@@ -86,3 +86,20 @@ supported. If source data are projected, reproject them to
 longitude/latitude before building a `wind_series`, rotating u and v to
 true east and north if they are defined relative to the projected grid
 (as in some reanalysis products).
+
+## See also
+
+[`combine_roses()`](https://matthewkling.github.io/windscape/reference/combine_roses.md)
+to combine roses built from different time periods.
+
+## Examples
+
+``` r
+series <- windscape_example("wind_series")
+rose <- wind_rose(series)
+
+# save and reload
+f <- tempfile(fileext = ".tif")
+terra::writeRaster(rose, f)
+rose2 <- wind_rose(f, trans = 1, n_steps = rose@n_steps)
+```

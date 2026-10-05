@@ -30,4 +30,4 @@ A `wind_rose` whose `n_steps` is the total across the inputs.
 ## See also
 
 [`wind_rose()`](https://matthewkling.github.io/windscape/reference/wind_rose.md),
-which uses this function to build roses from multiple files.
+which uses this function to build roses from long series in chunks.

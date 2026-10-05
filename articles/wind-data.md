@@ -104,13 +104,13 @@ check your settings.
 
 [`ncar_download()`](https://matthewkling.github.io/windscape/reference/ncar_download.md)
 returns the paths of the monthly files.
-[`read_wind_series()`](https://matthewkling.github.io/windscape/reference/read_wind_series.md)
-loads them into a single `wind_series`, without reading the data into
+[`wind_series()`](https://matthewkling.github.io/windscape/reference/wind_series.md)
+combines them into a single `wind_series`, without reading the data into
 memory until needed:
 
 ``` r
 
-series <- read_wind_series(files)
+series <- wind_series(files)
 ```
 
 [`ncar_land()`](https://matthewkling.github.io/windscape/reference/ncar_land.md)
@@ -170,10 +170,11 @@ hours, so for this region, afternoon is roughly 20:00 to 01:00 UTC; for
 a large region, a given UTC hour falls at different local times in
 different places.
 
+Pass the selected series to
 [`wind_rose()`](https://matthewkling.github.io/windscape/reference/wind_rose.md)
-accepts the same `months`, `hours`, `start`, and `end` arguments, so a
-rose can be built from selected time steps directly, including from
-downloaded files (see below). When the selection is known in advance,
+to build a rose from those time steps; this works for long records of
+downloaded files too (see below). When the selection is known in
+advance,
 [`ncar_download()`](https://matthewkling.github.io/windscape/reference/ncar_download.md)’s
 `months` argument also avoids downloading data you won’t use.
 
@@ -221,7 +222,7 @@ drawing trails that follow the airflow over a map of wind speed:
 
 ``` r
 
-field <- wind_field(subset_series(series, steps = 1))
+field <- wind_field(series, step = 1)
 
 ggplot(field, aes(x, y)) +
       geom_raster(aes(fill = speed)) +
@@ -260,6 +261,24 @@ draws, and
 [`fortify()`](https://ggplot2.tidyverse.org/reference/fortify.html)
 converts a wind field to a data frame with each cell’s `u`, `v`,
 `speed`, and `bearing`, for custom plots.
+
+To summarize a whole series as a single field,
+[`mean()`](https://rspatial.github.io/terra/reference/summarize-generics.html)
+returns its time-mean wind: the net drift of the air over the series,
+which is short where winds blow from many directions, even if they are
+strong. It can be plotted the same way:
+
+``` r
+
+ggplot(mean(series), aes(x, y)) +
+      geom_raster(aes(fill = speed)) +
+      borders +
+      geom_wind_trail(color = "white", hours = 24) +
+      scale_fill_viridis_c(name = "mean wind\n(m/s)") +
+      us + theme_void()
+```
+
+![](wind-data_files/figure-html/mean-wind-1.png)
 
 ## Wind roses
 
@@ -369,19 +388,22 @@ many years of data.
 
 ### Long records
 
-For long records,
+A `wind_series` built from downloaded files keeps its data on disk, and
 [`wind_rose()`](https://matthewkling.github.io/windscape/reference/wind_rose.md)
-accepts the paths of downloaded files directly. It builds a rose from
-each file in turn and combines them, so the whole record never needs to
-be in memory at once. The result is identical to building the rose from
-all the time steps together:
+processes long series in chunks of time steps, so the whole record never
+needs to be in memory at once. The result is identical to processing all
+the time steps together. Selecting time steps with
+[`subset_series()`](https://matthewkling.github.io/windscape/reference/subset_series.md)
+also leaves the data on disk, so seasonal or time-of-day roses can be
+built from long records the same way:
 
 ``` r
 
-rose <- wind_rose(files, trans = 1)
+series <- wind_series(files)
+rose <- wind_rose(series, trans = 1)
 
 # afternoons during the growing season, across the whole record
-rose_gs <- wind_rose(files, months = 4:9, hours = c(20:23, 0))
+rose_gs <- wind_rose(subset_series(series, months = 4:9, hours = c(20:23, 0)))
 ```
 
 [`combine_roses()`](https://matthewkling.github.io/windscape/reference/combine_roses.md)
@@ -393,15 +415,15 @@ steps.
 
 A wind rose is a `SpatRaster` and can be saved with
 [`terra::writeRaster()`](https://rspatial.github.io/terra/reference/writeRaster.html).
-When reading it back with
-[`read_wind_rose()`](https://matthewkling.github.io/windscape/reference/read_wind_rose.md),
-supply the same `trans` it was built with, and the number of time steps
-if you might combine it with other roses later:
+Given a saved rose instead of a wind series,
+[`wind_rose()`](https://matthewkling.github.io/windscape/reference/wind_rose.md)
+loads it; supply the same `trans` it was built with, and the number of
+time steps if you might combine it with other roses later:
 
 ``` r
 
 terra::writeRaster(rose, "rose.tif")
-rose <- read_wind_rose("rose.tif", trans = 1, n_steps = 29220)
+rose <- wind_rose("rose.tif", trans = 1, n_steps = 29220)
 ```
 
 ### Mapping wind roses

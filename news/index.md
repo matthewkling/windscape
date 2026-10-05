@@ -31,10 +31,7 @@
 
 - `particle_flow()`: east-west displacement now accounts for latitude,
   and `ignore_speed = TRUE` no longer applies `scale` twice.
-- [`as_wind_rose()`](https://matthewkling.github.io/windscape/reference/as_wind_rose.md)
-  and
-  [`read_wind_rose()`](https://matthewkling.github.io/windscape/reference/read_wind_rose.md)
-  now work with numeric `trans`.
+- `as_wind_rose()` and `read_wind_rose()` now work with numeric `trans`.
 - `least_cost_distance(adjust = TRUE)` no longer returns `NaN` on the
   diagonal.
 - windscape no longer masks

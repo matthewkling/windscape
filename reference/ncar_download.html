@@ -139,8 +139,8 @@ invisibly if all files were already cached).</p>
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
     <p>Each output file holds one month of data in <code>wind_series</code> layout: all u layers followed by
 all v layers, named like <code>"u 2005-08-28 23:00:00"</code> (UTC), in m/s, oriented to true east and
-north, on a longitude/latitude grid. Load the files with <code><a href="read_wind_series.html">read_wind_series()</a></code>, or pass them
-straight to <code><a href="wind_rose.html">wind_rose()</a></code>, which processes them one month at a time.</p>
+north, on a longitude/latitude grid. Combine the files into one series with <code><a href="wind_series.html">wind_series()</a></code>,
+which keeps the data on disk, and summarize it with <code><a href="wind_rose.html">wind_rose()</a></code>.</p>
 <p>Downloads are cached: a month whose file already exists in <code>dir</code> is not downloaded again
 unless <code>overwrite = TRUE</code>, so an interrupted download can be resumed by rerunning the same
 call. Large requests (many years, or a large region) can take a long time and use
@@ -149,7 +149,7 @@ substantial disk space; thinning hourly data with <code>time_stride</code> reduc
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
-    <div class="dont-index"><p><code><a href="read_wind_series.html">read_wind_series()</a></code> to load the files; <code><a href="wind_rose.html">wind_rose()</a></code> to summarize them;
+    <div class="dont-index"><p><code><a href="wind_series.html">wind_series()</a></code> to load the files; <code><a href="wind_rose.html">wind_rose()</a></code> to summarize them;
 <code><a href="ncar_land.html">ncar_land()</a></code> to download a matching land-water layer.</p></div>
     </div>
 
@@ -160,7 +160,7 @@ substantial disk space; thinning hourly data with <code>time_stride</code> reduc
 <span class="r-in"><span><span class="va">files</span> <span class="op">&lt;-</span> <span class="fu">ncar_download</span><span class="op">(</span><span class="st">"era5"</span>, xlim <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">125</span>, <span class="op">-</span><span class="fl">115</span><span class="op">)</span>, ylim <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">42</span>, <span class="fl">49</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>                       years <span class="op">=</span> <span class="fl">2020</span>, months <span class="op">=</span> <span class="fl">6</span><span class="op">:</span><span class="fl">8</span>, time_stride <span class="op">=</span> <span class="fl">3</span>,</span></span>
 <span class="r-in"><span>                       dir <span class="op">=</span> <span class="st">"~/wind_data"</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">ws</span> <span class="op">&lt;-</span> <span class="fu"><a href="read_wind_series.html">read_wind_series</a></span><span class="op">(</span><span class="va">files</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">ws</span> <span class="op">&lt;-</span> <span class="fu"><a href="wind_series.html">wind_series</a></span><span class="op">(</span><span class="va">files</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">rose</span> <span class="op">&lt;-</span> <span class="fu"><a href="wind_rose.html">wind_rose</a></span><span class="op">(</span><span class="va">files</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span> <span class="co"># }</span></span></span>
 </code></pre></div>

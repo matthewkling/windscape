@@ -44,14 +44,14 @@ The basic unit of wind data is a **wind field**: the wind across a grid
 at a single moment, stored as two raster layers giving the eastward
 (`u`) and northward (`v`) components of the wind vector in each cell.
 [`wind_field()`](https://matthewkling.github.io/windscape/reference/wind_field.md)
-creates one from a two-layer `SpatRaster`. Here’s one from the example
-data, for midnight UTC on January 1, 2000:
+creates one from a two-layer `SpatRaster`, or from one time step of a
+wind time series. Here’s the first time step of the example data, for
+midnight UTC on January 1, 2000:
 
 ``` r
 
 series <- windscape_example("wind_series")
-n <- series@n_steps
-field <- wind_field(series[[c(1, n + 1)]]) # the first u layer and the first v layer
+field <- wind_field(series, step = 1)
 
 ggplot(field, aes(x, y)) +
       geom_raster(aes(fill = speed)) +
@@ -87,7 +87,7 @@ series
 #> resolution  : 0.3157895, 0.3174603  (x, y)
 #> extent      : -120.1579, -89.84211, 29.84127, 50.15873  (xmin, xmax, ymin, ymax)
 #> coord. ref. : lon/lat WGS 84 (EPSG:4326)
-#> source      : wind_usa.tif
+#> sources     : wind_usa.tif
 #> names       : u 2000-01-01, u 200~00:00, u 200~00:00, u 200~00:00, u 2000-01-15, u 200~00:00, ...
 #> min values  :         -0.4,        -0.4,        -0.6,        -0.6,         -0.4,        -0.5, ...
 #> max values  :          0.7,           1,         0.9,           1,          0.7,         1.1, ...
@@ -108,14 +108,14 @@ downloads hourly wind data from NCAR’s Geoscience Data Exchange, with no
 account needed: ERA5 (1940 to present), CFSR (1979-2010), and CFSv2
 (2011 to present). Data are clipped to a bounding box on the server and
 saved as one cached file per month, which
-[`read_wind_series()`](https://matthewkling.github.io/windscape/reference/read_wind_series.md)
-loads as a `wind_series`:
+[`wind_series()`](https://matthewkling.github.io/windscape/reference/wind_series.md)
+combines into one series:
 
 ``` r
 
 files <- ncar_download("era5", xlim = c(-120, -90), ylim = c(30, 50),
                        years = 2011:2020, time_stride = 3, dir = "~/wind_data")
-series <- read_wind_series(files)
+series <- wind_series(files)
 ```
 
 Wind data from other sources can be used too. Load it as a `SpatRaster`

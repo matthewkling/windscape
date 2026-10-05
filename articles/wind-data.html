@@ -192,11 +192,11 @@ downloads the new ones. The default is a temporary directory.</li>
 above is about 1 GB before compression, so start with a single month to
 check your settings.</p>
 <p><code><a href="../reference/ncar_download.html">ncar_download()</a></code> returns the paths of the monthly files.
-<code><a href="../reference/read_wind_series.html">read_wind_series()</a></code> loads them into a single
+<code><a href="../reference/wind_series.html">wind_series()</a></code> combines them into a single
 <code>wind_series</code>, without reading the data into memory until
 needed:</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">series</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/read_wind_series.html">read_wind_series</a></span><span class="op">(</span><span class="va">files</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="va">series</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/wind_series.html">wind_series</a></span><span class="op">(</span><span class="va">files</span><span class="op">)</span></span></code></pre></div>
 <p><code><a href="../reference/ncar_land.html">ncar_land()</a></code> downloads a land-water layer on the same
 grid as the wind data, for use with <code><a href="../reference/weight_conductance.html">weight_conductance()</a></code>
 (see below):</p>
@@ -247,10 +247,9 @@ hours on the 1st and 15th of each month in 2000:</p>
 hours, so for this region, afternoon is roughly 20:00 to 01:00 UTC; for
 a large region, a given UTC hour falls at different local times in
 different places.</p>
-<p><code><a href="../reference/wind_rose.html">wind_rose()</a></code> accepts the same <code>months</code>,
-<code>hours</code>, <code>start</code>, and <code>end</code> arguments,
-so a rose can be built from selected time steps directly, including from
-downloaded files (see below). When the selection is known in advance,
+<p>Pass the selected series to <code><a href="../reference/wind_rose.html">wind_rose()</a></code> to build a rose
+from those time steps; this works for long records of downloaded files
+too (see below). When the selection is known in advance,
 <code><a href="../reference/ncar_download.html">ncar_download()</a></code>’s <code>months</code> argument also avoids
 downloading data you won’t use.</p>
 </div>
@@ -287,7 +286,7 @@ accepts wind fields directly. Here is the first time step of the example
 series, with <code><a href="../reference/geom_wind_trail.html">geom_wind_trail()</a></code> drawing trails that follow
 the airflow over a map of wind speed:</p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">field</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/wind_field.html">wind_field</a></span><span class="op">(</span><span class="fu"><a href="../reference/subset_series.html">subset_series</a></span><span class="op">(</span><span class="va">series</span>, steps <span class="op">=</span> <span class="fl">1</span><span class="op">)</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="va">field</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/wind_field.html">wind_field</a></span><span class="op">(</span><span class="va">series</span>, step <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">field</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">y</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
 <span>      <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_tile.html" class="external-link">geom_raster</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>fill <span class="op">=</span> <span class="va">speed</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
@@ -314,6 +313,18 @@ which <code><a href="../reference/geom_wind_path.html">geom_wind_path()</a></cod
 converts a wind field to a data frame with each cell’s <code>u</code>,
 <code>v</code>, <code>speed</code>, and <code>bearing</code>, for custom
 plots.</p>
+<p>To summarize a whole series as a single field, <code><a href="https://rspatial.github.io/terra/reference/summarize-generics.html" class="external-link">mean()</a></code>
+returns its time-mean wind: the net drift of the air over the series,
+which is short where winds blow from many directions, even if they are
+strong. It can be plotted the same way:</p>
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/summarize-generics.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">series</span><span class="op">)</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">y</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>      <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_tile.html" class="external-link">geom_raster</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>fill <span class="op">=</span> <span class="va">speed</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>      <span class="va">borders</span> <span class="op">+</span></span>
+<span>      <span class="fu"><a href="../reference/geom_wind_trail.html">geom_wind_trail</a></span><span class="op">(</span>color <span class="op">=</span> <span class="st">"white"</span>, hours <span class="op">=</span> <span class="fl">24</span><span class="op">)</span> <span class="op">+</span></span>
+<span>      <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_viridis.html" class="external-link">scale_fill_viridis_c</a></span><span class="op">(</span>name <span class="op">=</span> <span class="st">"mean wind\n(m/s)"</span><span class="op">)</span> <span class="op">+</span></span>
+<span>      <span class="va">us</span> <span class="op">+</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_void</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
+<p><img src="wind-data_files/figure-html/mean-wind-1.png" class="r-plt" alt="" width="100%"></p>
 </div>
 <div class="section level2">
 <h2 id="wind-roses">Wind roses<a class="anchor" aria-label="anchor" href="#wind-roses"></a>
@@ -325,7 +336,7 @@ direction, in proportion to how closely the wind points toward each, and
 then averages over all time steps. The result is the mean conductance of
 wind from each cell toward each of its eight neighbors: the rate at
 which wind moves material from the cell to that neighbor.</p>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">rose</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/wind_rose.html">wind_rose</a></span><span class="op">(</span><span class="va">series</span><span class="op">)</span></span>
 <span><span class="va">rose</span></span>
 <span><span class="co">#&gt; class       : SpatRaster</span></span>
@@ -364,7 +375,7 @@ directions than average winds. Here are wind roses built with each
 choice, mapped with <code><a href="../reference/geom_wind_rose.html">geom_wind_rose()</a></code>, which draws a glyph
 for each block of cells with rays pointing toward the eight neighbors,
 colored by the direction of net flow:</p>
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">roses</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="st">"1"</span> <span class="op">=</span> <span class="va">rose</span>,</span>
 <span>              <span class="st">"3"</span> <span class="op">=</span> <span class="fu"><a href="../reference/wind_rose.html">wind_rose</a></span><span class="op">(</span><span class="va">series</span>, trans <span class="op">=</span> <span class="fl">3</span><span class="op">)</span>,</span>
 <span>              <span class="st">"threshold at 6 m/s"</span> <span class="op">=</span> <span class="fu"><a href="../reference/wind_rose.html">wind_rose</a></span><span class="op">(</span><span class="va">series</span>, trans <span class="op">=</span> <span class="kw">function</span><span class="op">(</span><span class="va">x</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/base/ifelse.html" class="external-link">ifelse</a></span><span class="op">(</span><span class="va">x</span> <span class="op">&gt;</span> <span class="fl">6</span>, <span class="va">x</span>, <span class="fl">0</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
@@ -392,7 +403,7 @@ directional in much of the region.</p>
 </h3>
 <p>Building wind roses from subsets of a wind series shows how the wind
 regime changes through the year:</p>
-<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">d</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">rbind</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/fortify.html" class="external-link">fortify</a></span><span class="op">(</span><span class="fu"><a href="../reference/wind_rose.html">wind_rose</a></span><span class="op">(</span><span class="va">winter</span><span class="op">)</span><span class="op">)</span>, season <span class="op">=</span> <span class="st">"winter (Dec-Feb)"</span><span class="op">)</span>,</span>
 <span>           <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/fortify.html" class="external-link">fortify</a></span><span class="op">(</span><span class="fu"><a href="../reference/wind_rose.html">wind_rose</a></span><span class="op">(</span><span class="va">summer</span><span class="op">)</span><span class="op">)</span>, season <span class="op">=</span> <span class="st">"summer (Jun-Aug)"</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="va">d</span><span class="op">$</span><span class="va">season</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">factor</a></span><span class="op">(</span><span class="va">d</span><span class="op">$</span><span class="va">season</span>, levels <span class="op">=</span> <span class="fu"><a href="https://rspatial.github.io/terra/reference/unique.html" class="external-link">unique</a></span><span class="op">(</span><span class="va">d</span><span class="op">$</span><span class="va">season</span><span class="op">)</span><span class="op">)</span></span>
@@ -412,16 +423,19 @@ many years of data.</p>
 <div class="section level3">
 <h3 id="long-records">Long records<a class="anchor" aria-label="anchor" href="#long-records"></a>
 </h3>
-<p>For long records, <code><a href="../reference/wind_rose.html">wind_rose()</a></code> accepts the paths of
-downloaded files directly. It builds a rose from each file in turn and
-combines them, so the whole record never needs to be in memory at once.
-The result is identical to building the rose from all the time steps
-together:</p>
-<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">rose</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/wind_rose.html">wind_rose</a></span><span class="op">(</span><span class="va">files</span>, trans <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span>
+<p>A <code>wind_series</code> built from downloaded files keeps its data
+on disk, and <code><a href="../reference/wind_rose.html">wind_rose()</a></code> processes long series in chunks of
+time steps, so the whole record never needs to be in memory at once. The
+result is identical to processing all the time steps together. Selecting
+time steps with <code><a href="../reference/subset_series.html">subset_series()</a></code> also leaves the data on
+disk, so seasonal or time-of-day roses can be built from long records
+the same way:</p>
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">series</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/wind_series.html">wind_series</a></span><span class="op">(</span><span class="va">files</span><span class="op">)</span></span>
+<span><span class="va">rose</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/wind_rose.html">wind_rose</a></span><span class="op">(</span><span class="va">series</span>, trans <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># afternoons during the growing season, across the whole record</span></span>
-<span><span class="va">rose_gs</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/wind_rose.html">wind_rose</a></span><span class="op">(</span><span class="va">files</span>, months <span class="op">=</span> <span class="fl">4</span><span class="op">:</span><span class="fl">9</span>, hours <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">20</span><span class="op">:</span><span class="fl">23</span>, <span class="fl">0</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<span><span class="va">rose_gs</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/wind_rose.html">wind_rose</a></span><span class="op">(</span><span class="fu"><a href="../reference/subset_series.html">subset_series</a></span><span class="op">(</span><span class="va">series</span>, months <span class="op">=</span> <span class="fl">4</span><span class="op">:</span><span class="fl">9</span>, hours <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">20</span><span class="op">:</span><span class="fl">23</span>, <span class="fl">0</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <p><code><a href="../reference/combine_roses.html">combine_roses()</a></code> does the same for roses built
 separately, for example to add a new year of data to an existing rose.
 It weights each rose by its number of time steps.</p>
@@ -430,13 +444,13 @@ It weights each rose by its number of time steps.</p>
 <h3 id="saving-and-loading">Saving and loading<a class="anchor" aria-label="anchor" href="#saving-and-loading"></a>
 </h3>
 <p>A wind rose is a <code>SpatRaster</code> and can be saved with
-<code><a href="https://rspatial.github.io/terra/reference/writeRaster.html" class="external-link">terra::writeRaster()</a></code>. When reading it back with
-<code><a href="../reference/read_wind_rose.html">read_wind_rose()</a></code>, supply the same <code>trans</code> it was
-built with, and the number of time steps if you might combine it with
-other roses later:</p>
-<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+<code><a href="https://rspatial.github.io/terra/reference/writeRaster.html" class="external-link">terra::writeRaster()</a></code>. Given a saved rose instead of a wind
+series, <code><a href="../reference/wind_rose.html">wind_rose()</a></code> loads it; supply the same
+<code>trans</code> it was built with, and the number of time steps if
+you might combine it with other roses later:</p>
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">terra</span><span class="fu">::</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/writeRaster.html" class="external-link">writeRaster</a></span><span class="op">(</span><span class="va">rose</span>, <span class="st">"rose.tif"</span><span class="op">)</span></span>
-<span><span class="va">rose</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/read_wind_rose.html">read_wind_rose</a></span><span class="op">(</span><span class="st">"rose.tif"</span>, trans <span class="op">=</span> <span class="fl">1</span>, n_steps <span class="op">=</span> <span class="fl">29220</span><span class="op">)</span></span></code></pre></div>
+<span><span class="va">rose</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/wind_rose.html">wind_rose</a></span><span class="op">(</span><span class="st">"rose.tif"</span>, trans <span class="op">=</span> <span class="fl">1</span>, n_steps <span class="op">=</span> <span class="fl">29220</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="mapping-wind-roses">Mapping wind roses<a class="anchor" aria-label="anchor" href="#mapping-wind-roses"></a>
@@ -445,7 +459,7 @@ other roses later:</p>
 <code><a href="../reference/net_flow.html">net_flow()</a></code> reduces a rose to a single vector per cell, the
 net direction and rate of flow, returned as a wind field that can be
 drawn like any other:</p>
-<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="fu"><a href="../reference/net_flow.html">net_flow</a></span><span class="op">(</span><span class="va">rose</span><span class="op">)</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">y</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
 <span>      <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_tile.html" class="external-link">geom_raster</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>fill <span class="op">=</span> <span class="va">speed</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
 <span>      <span class="va">borders</span> <span class="op">+</span></span>
@@ -472,7 +486,7 @@ of weights, reducing connectivity through some cells. For example, for
 terrestrial organisms that can’t establish over water, weighting by the
 land fraction from <code><a href="../reference/ncar_land.html">ncar_land()</a></code> reduces connectivity across
 lakes and oceans (though propagules can still cross them):</p>
-<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">land</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/ncar_land.html">ncar_land</a></span><span class="op">(</span><span class="st">"era5"</span>, xlim <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">120</span>, <span class="op">-</span><span class="fl">90</span><span class="op">)</span>, ylim <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">30</span>, <span class="fl">50</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="va">rose_land</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/weight_conductance.html">weight_conductance</a></span><span class="op">(</span><span class="va">rose</span>, <span class="va">land</span><span class="op">)</span></span></code></pre></div>
 <p><code><a href="../reference/downscale.html">downscale()</a></code> refines the grid of a wind rose by

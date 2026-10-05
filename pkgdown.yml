@@ -4,7 +4,7 @@ pkgdown_sha: ~
 articles:
   articles/wind-data: wind-data.html
   windscape: windscape.html
-last_built: 2026-10-05T16:44Z
+last_built: 2026-10-05T18:29Z
 urls:
   reference: https://matthewkling.github.io/windscape/reference
   article: https://matthewkling.github.io/windscape/articles
