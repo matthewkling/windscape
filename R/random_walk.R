@@ -60,6 +60,8 @@
 #' @param flux Stream mode only: logical: also return the net flux of material, the direction
 #'    and rate at which it moves through each cell? Default `FALSE`. For upwind walks, requires
 #'    a finite `half_life`. See Value.
+#' @param progress Pulse mode only: logical: show a progress bar while iterating? Default
+#'    `FALSE`.
 #' @param source Upwind stream mode only: where material is released, used for `origin` and
 #'    `flux`: either a two-column matrix of coordinates (a unit release in each cell containing a
 #'    coordinate) or a single-layer SpatRaster of non-negative release per grid cell, like
@@ -224,7 +226,7 @@ random_walk <- function(rose, init, mode = c("pulse", "stream"), direction = c("
                         half_life = Inf, timescale = 1, latitude_correction = TRUE,
                         density = TRUE, iter = 100, record = iter,
                         method = c("auto", "solve", "iterate"), tol = 1e-8, max_iter = 1e5,
-                        flux = FALSE, source = NULL){
+                        flux = FALSE, source = NULL, progress = FALSE){
 
       mode <- match.arg(mode)
       direction <- match.arg(direction)
@@ -256,7 +258,7 @@ random_walk <- function(rose, init, mode = c("pulse", "stream"), direction = c("
             d <- n * 0
             if(0 %in% rec) air[,,1] <- n
             p <- terra::as.array(p)
-            pb <- txtProgressBar(min = 0, max = i, initial = 0, style = 3)
+            if(progress) pb <- txtProgressBar(min = 0, max = i, initial = 0, style = 3)
             for(j in 1:i){
                   d <- d + lambda * n # airborne mass deposits in place, before dispersing
                   n <- (1 - lambda) * disperse(n, p)
@@ -265,9 +267,9 @@ random_walk <- function(rose, init, mode = c("pulse", "stream"), direction = c("
                         air[,,k] <- n
                         dep[,,k] <- d
                   }
-                  setTxtProgressBar(pb, j+1)
+                  if(progress) setTxtProgressBar(pb, j)
             }
-            close(pb)
+            if(progress) close(pb)
             list(air = air, dep = dep)
       }
 
@@ -312,7 +314,7 @@ random_walk <- function(rose, init, mode = c("pulse", "stream"), direction = c("
       n <- rw_init(rose, init)
 
       out <- if(direction == "downwind") diffuse(n, p, iter, record, lambda) else
-            diffuse_upwind(n, p, iter, record, lambda)
+            diffuse_upwind(n, p, iter, record, lambda, progress)
       walk <- function(a){
             x <- rast(n, nlyrs = length(record), vals = a)
             names(x) <- paste0("iter", record)
@@ -589,7 +591,7 @@ rw_cell_displacements <- function(rose){
 
 # Upwind (adjoint) pulse: n <- (1 - lambda) P n, with lambda * n deposited each step, recording
 # the iterations in `rec`. Returns arrays matching diffuse() in random_walk().
-diffuse_upwind <- function(n, p, i, rec = i, lambda = 0){
+diffuse_upwind <- function(n, p, i, rec = i, lambda = 0, progress = FALSE){
       rec <- sort(rec)
       nr <- terra::nrow(n)
       nc <- terra::ncol(n)
@@ -600,6 +602,7 @@ diffuse_upwind <- function(n, p, i, rec = i, lambda = 0){
       air <- dep <- array(0, c(nr, nc, length(rec)))
       as_grid <- function(z) matrix(z, nr, nc, byrow = TRUE)
       if(0 %in% rec) air[, , 1] <- as_grid(v)
+      if(progress) pb <- txtProgressBar(min = 0, max = i, initial = 0, style = 3)
       for(j in seq_len(i)){
             d <- d + lambda * v
             v <- (1 - lambda) * as.vector(P %*% v)
@@ -608,7 +611,9 @@ diffuse_upwind <- function(n, p, i, rec = i, lambda = 0){
                   air[, , k] <- as_grid(v)
                   dep[, , k] <- as_grid(d)
             }
+            if(progress) setTxtProgressBar(pb, j)
       }
+      if(progress) close(pb)
       list(air = air, dep = dep)
 }
 

@@ -768,3 +768,16 @@ test_that("origin and source scope and validation", {
                                                 half_life = 24)))
       expect_named(d, c("x", "y", "residence", "deposition", "origin"))
 })
+
+test_that("pulse mode shows a progress bar only when asked", {
+      r <- noisy_rose()
+      init <- cbind(-93, 36)
+      for(direction in c("downwind", "upwind")){
+            quiet <- capture.output(w <- suppressMessages(
+                  random_walk(r, init, iter = 5, direction = direction)))
+            expect_length(quiet, 0)
+            bar <- capture.output(w <- suppressMessages(
+                  random_walk(r, init, iter = 5, direction = direction, progress = TRUE)))
+            expect_true(any(grepl("100%", bar)))
+      }
+})

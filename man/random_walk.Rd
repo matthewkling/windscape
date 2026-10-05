@@ -19,7 +19,8 @@ random_walk(
   tol = 1e-08,
   max_iter = 1e+05,
   flux = FALSE,
-  source = NULL
+  source = NULL,
+  progress = FALSE
 )
 }
 \arguments{
@@ -95,6 +96,9 @@ a finite \code{half_life}. See Value.}
 coordinate) or a single-layer SpatRaster of non-negative release per grid cell, like
 \code{init}. Default \code{NULL} releases uniformly per km^2 (each cell in proportion to its area).
 To use a map of release per km^2, multiply it by \code{\link[terra:cellSize]{terra::cellSize()}}.}
+
+\item{progress}{Pulse mode only: logical: show a progress bar while iterating? Default
+\code{FALSE}.}
 }
 \value{
 A named list of two \code{wind_walk} rasters: \code{airborne} and \code{deposition} in pulse mode,

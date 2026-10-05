@@ -27,6 +27,7 @@ Imports:
 URL: https://matthewkling.github.io/windscape/
 Suggests: 
     knitr,
+    maps,
     ncdf4,
     rmarkdown,
     sf,
