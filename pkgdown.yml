@@ -2,8 +2,9 @@ pandoc: 3.8.3
 pkgdown: 2.2.1
 pkgdown_sha: ~
 articles:
+  articles/wind-data: wind-data.html
   windscape: windscape.html
-last_built: 2026-10-05T02:11Z
+last_built: 2026-10-05T16:44Z
 urls:
   reference: https://matthewkling.github.io/windscape/reference
   article: https://matthewkling.github.io/windscape/articles

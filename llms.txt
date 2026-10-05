@@ -1,13 +1,14 @@
 # windscape
 
-Because wind is a major dispersal vector for particles ranging from
-pollen, seeds, and spores to insects, pathogens, and pollutants, wind
-regimes shape many geographic patterns in ecology. But the variation in
-wind strength and direction over space and time makes it challenging to
-study wind’s role in landscape connectivity. The **windscape** package
-provides a toolset for modeling the effects of time-integrated wind
-regimes in spatial ecology, landscape genetics, and related fields. Use
-it to:
+’
+
+Because wind disperses particles ranging from pollen, seeds, and spores
+to insects, pathogens, and pollutants, wind patterns shape many aspects
+of spatial ecology. But the variation in wind strength and direction
+over space and time makes it challenging to study wind’s role in
+landscape connectivity. The **windscape** package provides a toolset for
+modeling the effects of time-integrated wind regimes in spatial ecology,
+landscape genetics, and related fields. Use it to:
 
 - **download** and summarize wind data in the form of raster time series
 - **model windsheds** representing a site’s upwind catchment and
@@ -347,6 +348,8 @@ out.
 - [`rose()`](https://matthewkling.github.io/windscape/reference/rose.md)
   : Calculate 8-neighbor edge loadings from a time series of u and v
   windspeeds
+- [`rw_exit_prob()`](https://matthewkling.github.io/windscape/reference/rw_exit_prob.md)
+  : Probability of exiting a random walk's domain
 - [`rw_max_step()`](https://matthewkling.github.io/windscape/reference/rw_max_step.md)
   : Maximum iteration duration for a random walk
 - [`rw_self_retention()`](https://matthewkling.github.io/windscape/reference/rw_self_retention.md)
@@ -355,6 +358,8 @@ out.
   [`scale_colour_bearing()`](https://matthewkling.github.io/windscape/reference/scale_fill_bearing.md)
   [`scale_color_bearing()`](https://matthewkling.github.io/windscape/reference/scale_fill_bearing.md)
   : Color scales for wind direction
+- [`subset_series()`](https://matthewkling.github.io/windscape/reference/subset_series.md)
+  : Select time steps from a wind_series
 - [`tesselate()`](https://matthewkling.github.io/windscape/reference/tesselate.md)
   : Extend a global raster with copies of itself
 - [`weight_conductance()`](https://matthewkling.github.io/windscape/reference/weight_conductance.md)
@@ -375,6 +380,8 @@ out.
   : An S4 object class representing a wind field time series
 - [`wind_series()`](https://matthewkling.github.io/windscape/reference/wind_series.md)
   : Generate a wind field time series data set from a set of rasters.
+- [`wind_times()`](https://matthewkling.github.io/windscape/reference/wind_times.md)
+  : Get the time of each step in a wind_series
 - [`wind_trails()`](https://matthewkling.github.io/windscape/reference/wind_trails.md)
   : Trace particle trails through a wind field
 - [`windscape_example()`](https://matthewkling.github.io/windscape/reference/windscape_example.md)
@@ -386,5 +393,7 @@ out.
 
 ### All vignettes
 
+- [Wind
+  data](https://matthewkling.github.io/windscape/articles/wind-data.md):
 - [Getting started with
   windscape](https://matthewkling.github.io/windscape/articles/windscape.md):

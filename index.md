@@ -1,13 +1,14 @@
 # windscape
 
-Because wind is a major dispersal vector for particles ranging from
-pollen, seeds, and spores to insects, pathogens, and pollutants, wind
-regimes shape many geographic patterns in ecology. But the variation in
-wind strength and direction over space and time makes it challenging to
-study wind’s role in landscape connectivity. The **windscape** package
-provides a toolset for modeling the effects of time-integrated wind
-regimes in spatial ecology, landscape genetics, and related fields. Use
-it to:
+’
+
+Because wind disperses particles ranging from pollen, seeds, and spores
+to insects, pathogens, and pollutants, wind patterns shape many aspects
+of spatial ecology. But the variation in wind strength and direction
+over space and time makes it challenging to study wind’s role in
+landscape connectivity. The **windscape** package provides a toolset for
+modeling the effects of time-integrated wind regimes in spatial ecology,
+landscape genetics, and related fields. Use it to:
 
 - **download** and summarize wind data in the form of raster time series
 - **model windsheds** representing a site’s upwind catchment and

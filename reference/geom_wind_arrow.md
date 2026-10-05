@@ -67,7 +67,11 @@ stat_wind_arrow(
 
   A data frame, or a `wind_field`, which is converted with
   [`fortify()`](https://ggplot2.tidyverse.org/reference/fortify.html).
-  Default is to inherit the plot's data.
+  Default is to inherit the plot's data. The data must have one wind
+  vector per grid cell in each panel and group, so to plot a
+  `wind_series`, select a time step with
+  [`subset_series()`](https://matthewkling.github.io/windscape/reference/subset_series.md)
+  or facet by `time`.
 
 - stat, geom:
 

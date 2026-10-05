@@ -68,6 +68,8 @@
 - [`rose()`](https://matthewkling.github.io/windscape/reference/rose.md)
   : Calculate 8-neighbor edge loadings from a time series of u and v
   windspeeds
+- [`rw_exit_prob()`](https://matthewkling.github.io/windscape/reference/rw_exit_prob.md)
+  : Probability of exiting a random walk's domain
 - [`rw_max_step()`](https://matthewkling.github.io/windscape/reference/rw_max_step.md)
   : Maximum iteration duration for a random walk
 - [`rw_self_retention()`](https://matthewkling.github.io/windscape/reference/rw_self_retention.md)
@@ -76,6 +78,8 @@
   [`scale_colour_bearing()`](https://matthewkling.github.io/windscape/reference/scale_fill_bearing.md)
   [`scale_color_bearing()`](https://matthewkling.github.io/windscape/reference/scale_fill_bearing.md)
   : Color scales for wind direction
+- [`subset_series()`](https://matthewkling.github.io/windscape/reference/subset_series.md)
+  : Select time steps from a wind_series
 - [`tesselate()`](https://matthewkling.github.io/windscape/reference/tesselate.md)
   : Extend a global raster with copies of itself
 - [`weight_conductance()`](https://matthewkling.github.io/windscape/reference/weight_conductance.md)
@@ -96,6 +100,8 @@
   : An S4 object class representing a wind field time series
 - [`wind_series()`](https://matthewkling.github.io/windscape/reference/wind_series.md)
   : Generate a wind field time series data set from a set of rasters.
+- [`wind_times()`](https://matthewkling.github.io/windscape/reference/wind_times.md)
+  : Get the time of each step in a wind_series
 - [`wind_trails()`](https://matthewkling.github.io/windscape/reference/wind_trails.md)
   : Trace particle trails through a wind field
 - [`windscape_example()`](https://matthewkling.github.io/windscape/reference/windscape_example.md)

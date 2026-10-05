@@ -77,7 +77,11 @@ stat_wind_trail(
   [`fortify()`](https://ggplot2.tidyverse.org/reference/fortify.html),
   or a data frame like its
   [`fortify()`](https://ggplot2.tidyverse.org/reference/fortify.html)
-  output. Default is to inherit the plot's data.
+  output. Default is to inherit the plot's data. The data must have one
+  wind vector per grid cell in each panel and group, so to plot a
+  `wind_series`, select a time step with
+  [`subset_series()`](https://matthewkling.github.io/windscape/reference/subset_series.md)
+  or facet by `time`.
 
 - stat, geom:
 

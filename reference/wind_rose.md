@@ -8,7 +8,15 @@ average wind conductance toward each of a cell's 'queen' neighbors.
 ## Usage
 
 ``` r
-wind_rose(x, trans = 1, ...)
+wind_rose(
+  x,
+  trans = 1,
+  months = NULL,
+  hours = NULL,
+  start = NULL,
+  end = NULL,
+  ...
+)
 ```
 
 ## Arguments
@@ -29,6 +37,15 @@ wind_rose(x, trans = 1, ...)
 
   Either a function, or a positive number indicating the power to raise
   windspeeds to; see details.
+
+- months, hours, start, end:
+
+  Optional criteria for selecting time steps to include, as in
+  [`subset_series()`](https://matthewkling.github.io/windscape/reference/subset_series.md):
+  months (1-12), hours of the day (0-23, UTC), and a date or time range.
+  When `x` is a vector of files, they are applied to each file, and
+  files with no selected time steps are skipped, so a seasonal or
+  time-of-day rose can be built from a long record downloaded in full.
 
 - ...:
 
