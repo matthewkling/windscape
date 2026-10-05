@@ -73,7 +73,7 @@ least_cost_surface <- function(graph, sites, rate = FALSE){
 #'
 #' Traces the least-cost (fastest) paths between sites through a wind graph, as sequences of
 #' grid cell centers. The result has the same structure as [wind_trails()] output, so it can be
-#' drawn with [geom_wind_trail()].
+#' drawn with [geom_wind_path()].
 #'
 #' @param graph A `wind_graph`, created with [wind_graph()].
 #' @param from,to Origin and destination sites: two-column matrices (or data frames) of
@@ -119,7 +119,7 @@ least_cost_surface <- function(graph, sites, rate = FALSE){
 #'
 #' library(ggplot2)
 #' ggplot(paths, aes(x, y)) +
-#'   geom_wind_trail(aes(color = hours)) +
+#'   geom_wind_path(aes(color = hours)) +
 #'   coord_quickmap()
 #' @export
 least_cost_paths <- function(graph, from, to, pairs = c("all", "nearest", "matched")){

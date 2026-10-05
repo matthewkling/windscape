@@ -37,7 +37,7 @@ grid cell are omitted, since their path has no length.
 \description{
 Traces the least-cost (fastest) paths between sites through a wind graph, as sequences of
 grid cell centers. The result has the same structure as \code{\link[=wind_trails]{wind_trails()}} output, so it can be
-drawn with \code{\link[=geom_wind_trail]{geom_wind_trail()}}.
+drawn with \code{\link[=geom_wind_path]{geom_wind_path()}}.
 }
 \details{
 Paths are computed with \code{\link[gdistance:shortestPath]{gdistance::shortestPath()}}. They follow the graph's direction:
@@ -61,6 +61,6 @@ head(paths)
 
 library(ggplot2)
 ggplot(paths, aes(x, y)) +
-  geom_wind_trail(aes(color = hours)) +
+  geom_wind_path(aes(color = hours)) +
   coord_quickmap()
 }

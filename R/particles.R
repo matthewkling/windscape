@@ -50,7 +50,7 @@
 #'
 #' library(ggplot2)
 #' ggplot(tr, aes(x, y)) +
-#'   geom_wind_trail(aes(color = speed)) +
+#'   geom_wind_path(aes(color = speed)) +
 #'   coord_quickmap()
 #' @export
 wind_trails <- function(x, seeds, hours = NULL, distance = NULL, steps = 100,

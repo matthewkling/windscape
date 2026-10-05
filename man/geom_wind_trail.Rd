@@ -10,9 +10,17 @@
 geom_wind_trail(
   mapping = NULL,
   data = NULL,
-  stat = "identity",
+  stat = StatWindTrail,
   position = "identity",
   ...,
+  seeds = NULL,
+  res = 20,
+  fixed_length = FALSE,
+  length = 1.5,
+  hours = NULL,
+  direction = c("both", "downwind", "upwind"),
+  steps = 20,
+  wrap = c("neither", "horizontal", "vertical", "both"),
   arrow = grid::arrow(length = grid::unit(0.1, "cm"), type = "closed"),
   na.rm = FALSE,
   show.legend = NA,
@@ -41,72 +49,67 @@ stat_wind_trail(
 }
 \arguments{
 \item{mapping}{Aesthetic mappings created by \code{\link[ggplot2:aes]{ggplot2::aes()}}. \code{x} and \code{y} (coordinates, in
-degrees longitude and latitude) must be mapped, usually in the plot's main call.
-\cr For \code{geom_wind_trail()} (drawing existing trails), \code{group} and \code{t} are mapped
-automatically to the columns \code{trail} and \code{step} of \code{\link[=wind_trails]{wind_trails()}} output: \code{group}
-identifies each trail, and \code{t} orders the points along it, from upwind to downwind. Map
-them in this layer if your columns are named differently.
-\cr For \code{stat_wind_trail()} (computing trails), the wind components \code{u} and \code{v} are mapped
-automatically to columns of the same names, as produced by \code{fortify()} on a \code{wind_field}
-(see \link{fortify.windscape}).}
+degrees longitude and latitude) must be mapped, usually in the plot's main call. The wind
+components \code{u} and \code{v} are mapped automatically to columns of the same names, as produced
+by \code{fortify()} on a \code{wind_field} (see \link{fortify.windscape}).}
 
-\item{data}{A data frame, or for \code{stat_wind_trail()}, a \code{wind_field}, which is converted with
-\code{fortify()}. Default is to inherit the plot's data.}
+\item{data}{A \code{wind_field}, which is converted with \code{fortify()}, or a data frame like its
+\code{fortify()} output. Default is to inherit the plot's data.}
 
-\item{stat, geom}{Use to override the default pairings: \code{geom_wind_trail()} uses the identity
-stat, and \code{stat_wind_trail()} uses \code{geom_wind_trail()}.}
+\item{stat, geom}{Use to override the default pairing of stat and geom.}
 
 \item{position}{Position adjustment; see \code{\link[ggplot2:layer]{ggplot2::layer()}}.}
 
 \item{...}{Other arguments passed to \code{\link[ggplot2:layer]{ggplot2::layer()}}, such as fixed aesthetics like
 \code{color = "white"} or \code{linewidth = 0.8}.}
 
-\item{arrow}{Arrowhead drawn at the downwind end of each trail, created by \code{\link[grid:arrow]{grid::arrow()}},
-or \code{NULL} for none.}
-
-\item{na.rm, show.legend, inherit.aes}{See \code{\link[ggplot2:layer]{ggplot2::layer()}}.}
-
-\item{seeds}{\code{stat_wind_trail()}: starting points for trails. \code{NULL} (the default) seeds
+\item{seeds}{Starting points for trails. \code{NULL} (the default) seeds
 one trail at the center of each block of grid cells (see \code{res}). Alternatively, a
 two-column matrix of longitude and latitude, e.g. to trace trails from study sites; the
 same seeds are used in every panel.}
 
-\item{res}{\code{stat_wind_trail()}: approximate number of seeds along the longer side of the
+\item{res}{Approximate number of seeds along the longer side of the
 data's extent, when \code{seeds = NULL}. Seeds are placed at the centers of blocks of grid cells
 that are approximately square in km. Also sets the spacing used by \code{length}. Default 20.}
 
-\item{fixed_length}{\code{stat_wind_trail()}: logical: give all trails the same length, so they
+\item{fixed_length}{Logical: give all trails the same length, so they
 show only direction (streamlines)? Default \code{FALSE}: trails span the same transport time,
 so their length is proportional to wind speed, as for \code{\link[=geom_wind_arrow]{geom_wind_arrow()}}. In fields with
 very uneven speeds, \code{TRUE} shows flow structure more evenly, since trails in calm areas
 don't shrink.}
 
-\item{length}{\code{stat_wind_trail()}: length of each trail, as a multiple of the spacing between
+\item{length}{Length of each trail, as a multiple of the spacing between
 seeds set by \code{res}. With \code{fixed_length = FALSE}, this is the length of a trail at the 90th
 percentile of wind speed, unless \code{hours} is given. Default 1.5.}
 
-\item{hours}{\code{stat_wind_trail()}, with \code{fixed_length = FALSE}: transport time in hours
+\item{hours}{With \code{fixed_length = FALSE}, transport time in hours
 spanned by each trail, in place of \code{length}, so that trails show actual transport
 distance (assuming wind speeds in m/s). Default \code{NULL}.}
 
-\item{direction}{\code{stat_wind_trail()}: trace trails \code{"both"} ways from each seed (the
+\item{direction}{Trace trails \code{"both"} ways from each seed (the
 default), only \code{"downwind"}, or only \code{"upwind"}.}
 
-\item{steps}{\code{stat_wind_trail()}: number of integration steps per trail; more gives smoother
+\item{steps}{Number of integration steps per trail; more gives smoother
 trails. Default 20.}
 
-\item{wrap}{\code{stat_wind_trail()}: wrap trails across the field's edges; see \code{\link[=wind_trails]{wind_trails()}}.
+\item{wrap}{Wrap trails across the field's edges; see \code{\link[=wind_trails]{wind_trails()}}.
 Default \code{"neither"}.}
+
+\item{arrow}{Arrowhead drawn at the downwind end of each trail, created by \code{\link[grid:arrow]{grid::arrow()}},
+or \code{NULL} for none.}
+
+\item{na.rm, show.legend, inherit.aes}{See \code{\link[ggplot2:layer]{ggplot2::layer()}}.}
 }
 \value{
 A ggplot2 layer.
 }
 \description{
-\code{geom_wind_trail()} draws particle trails: paths through a wind field, with an arrowhead at
-the downwind end. \code{stat_wind_trail()} computes trails from a wind field with \code{\link[=wind_trails]{wind_trails()}},
-seeding them on a regular grid (or at points you supply) and tracing them upwind and
-downwind; trails traced through a single wind field are streamlines. To draw trails from
-\code{\link[=wind_trails]{wind_trails()}} output, use \code{geom_wind_trail()} with its default identity stat.
+Draw trails that follow the airflow through a wind field, each with an arrowhead at its
+downwind end. Trails are computed from the field with \code{\link[=wind_trails]{wind_trails()}}, seeded on a regular
+grid (or at points you supply) and traced upwind and downwind; trails traced through a single
+wind field are streamlines. \code{geom_wind_trail()} and \code{stat_wind_trail()} make the same layer,
+differing only in which argument, \code{stat} or \code{geom}, can be changed. To draw trails you already
+have, such as \code{\link[=wind_trails]{wind_trails()}} or \code{\link[=least_cost_paths]{least_cost_paths()}} output, use \code{\link[=geom_wind_path]{geom_wind_path()}}.
 }
 \details{
 Trails are traced with \code{\link[=wind_trails]{wind_trails()}}, using bilinear interpolation of the wind field, and
@@ -116,7 +119,7 @@ longitude/latitude coordinates with correct directions and lengths in km; use
 \code{\link[ggplot2:coord_quickmap]{ggplot2::coord_quickmap()}} or \code{\link[ggplot2:coord_sf]{ggplot2::coord_sf()}} with a longitude/latitude CRS. Seeds and
 trail lengths are set once for the whole layer, so faceted panels are comparable.
 }
-\section{Computed variables (\code{stat_wind_trail()})}{
+\section{Computed variables}{
 
 \itemize{
 \item \code{speed}: wind speed at each point along the trail, in the units of \code{u} and \code{v}.
@@ -134,24 +137,24 @@ katrina <- windscape_example("wind_field")
 # trails over wind speed, with length proportional to speed
 ggplot(katrina, aes(x, y)) +
   geom_raster(aes(fill = speed)) +
-  stat_wind_trail(color = "white") +
+  geom_wind_trail(color = "white") +
   coord_quickmap()
 
 # streamlines: equal-length trails showing direction only
 ggplot(katrina, aes(x, y)) +
-  stat_wind_trail(fixed_length = TRUE) +
+  geom_wind_trail(fixed_length = TRUE) +
   coord_quickmap()
 
 # 6 hours of transport from two sites
 sites <- cbind(c(-92, -86), c(24, 30))
 ggplot(katrina, aes(x, y)) +
   geom_raster(aes(fill = speed)) +
-  stat_wind_trail(seeds = sites, hours = 6, steps = 50, color = "white") +
+  geom_wind_trail(seeds = sites, hours = 6, steps = 50, color = "white") +
   coord_quickmap()
 
-# trails from wind_trails()
-trails <- wind_trails(katrina, sites, hours = 12)
-ggplot(trails, aes(x, y)) +
-  geom_wind_trail(aes(color = speed)) +
+# color trails by a computed variable: transport time from the seed
+ggplot(katrina, aes(x, y)) +
+  geom_wind_trail(aes(color = after_stat(hours)), seeds = sites, hours = 6, steps = 50) +
+  scale_color_gradient2() +
   coord_quickmap()
 }

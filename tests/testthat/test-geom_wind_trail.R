@@ -72,11 +72,11 @@ test_that("facets share seeds and trails", {
       expect_equal(ld[ld$PANEL == 1, c("x", "y")], ld[ld$PANEL == 2, c("x", "y")], ignore_attr = TRUE)
 })
 
-test_that("geom_wind_trail draws wind_trails output, ordering points by step", {
+test_that("geom_wind_path draws wind_trails output, ordering points by step", {
       f <- windscape_example("wind_field")
       tr <- wind_trails(f, cbind(c(-92, -86), c(24, 30)), hours = 6, steps = 20)
       shuffled <- tr[sample(nrow(tr)), ]
-      p <- ggplot2::ggplot(shuffled, ggplot2::aes(x, y)) + geom_wind_trail()
+      p <- ggplot2::ggplot(shuffled, ggplot2::aes(x, y)) + geom_wind_path()
       ld <- ggplot2::layer_data(p)
       expect_equal(length(unique(ld$group)), 2)
       expect_true(all(vapply(split(ld$t, ld$group), function(t) !is.unsorted(t), logical(1))))
@@ -111,4 +111,14 @@ test_that("seeds can be supplied; wrap is passed through", {
       w <- ggplot2::layer_data(trail_plot(field_from(5, 0), seeds = cbind(-90.5, 35), hours = 20,
                                           direction = "downwind", wrap = "horizontal"))
       expect_gt(length(unique(w$group)), 1)
+})
+
+test_that("geom_wind_trail computes trails from a wind field, like stat_wind_trail", {
+      f <- windscape_example("wind_field")
+      base <- ggplot2::ggplot(f, ggplot2::aes(x, y))
+      g <- ggplot2::layer_data(base + geom_wind_trail(res = 8))
+      s <- ggplot2::layer_data(base + stat_wind_trail(res = 8))
+      expect_gt(length(unique(g$group)), 10)
+      expect_equal(g[c("x", "y", "group", "t", "speed")], s[c("x", "y", "group", "t", "speed")])
+      expect_error(ggplot2::layer_data(base + geom_wind_trail(res = 0)), "res")
 })

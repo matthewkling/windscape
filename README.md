@@ -51,7 +51,7 @@ remotes::install_github("matthewkling/windscape")
 | Connectivity among sites | `pairwise_least_cost()`, `pairwise_random_walk()`, `vrcd()` |
 | Test hypotheses | `pairwise_ratios()`, `pairwise_means()`, `mantel_test()` |
 | Trace airflow | `wind_trails()` |
-| Visualize | `geom_wind_rose()`, `geom_wind_arrow()`, `geom_wind_trail()`, `scale_fill_bearing()` |
+| Visualize | `geom_wind_rose()`, `geom_wind_arrow()`, `geom_wind_trail()`, `geom_wind_path()`, `scale_fill_bearing()` |
 
 ## Get wind data
 
@@ -161,7 +161,7 @@ paths <- least_cost_paths(graph, site, destinations)
 ggplot(as.data.frame(hours, xy = TRUE), aes(x, y)) +
       geom_raster(aes(fill = pmax(hours, 10))) + # floor at 10 hours for the log scale
       geom_path(data = states, aes(long, lat, group = group), color = "black", linewidth = 0.2) +
-      geom_wind_trail(data = paths, alpha = .5, color = "white") +
+      geom_wind_path(data = paths, alpha = .5, color = "white") +
       annotate("point", site[1], site[2], color = "black", size = 3) +
       scale_fill_gradientn(name = "hours", trans = "log10", values = c(0, .5, .7, .85, 1),
                            colors = c("cyan", "dodgerblue", "purple", "red", "orange")) +
