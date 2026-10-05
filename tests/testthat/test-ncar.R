@@ -1,4 +1,4 @@
-# ncar_download(), read_wind_series(), ncar_land(), combine_roses() --------------------------
+# ncar_download(), wind_series(), ncar_land(), combine_roses() --------------------------
 # Downloads are tested against a fake server (helper-ncar.R); no network access is needed.
 
 # value of a raster layer at a lon/lat point
@@ -36,7 +36,7 @@ test_that("ERA5 download produces a monthly wind_series with correct values and 
       expect_true(all(file.exists(f)))
       expect_match(basename(f[1]), "^era5_10m_200501_")
 
-      ws <- read_wind_series(f)
+      ws <- wind_series(f)
       expect_s4_class(ws, "wind_series")
       expect_equal(ws@n_steps, 16)
       expect_equal(as.vector(terra::ext(ws)), c(xmin = -121, xmax = -99, ymin = 29, ymax = 41))
@@ -54,7 +54,7 @@ test_that("boxes crossing the prime meridian and the antimeridian are assembled"
       dir <- withr::local_tempdir()
       t <- as.POSIXct("2005-01-01 03:00:00", tz = "UTC")
 
-      ws <- read_wind_series(ncar_download("era5", xlim = c(-10, 10), ylim = c(40, 50), years = 2005,
+      ws <- wind_series(ncar_download("era5", xlim = c(-10, 10), ylim = c(40, 50), years = 2005,
                                            months = 1, dir = dir, quiet = TRUE))
       expect_length(log$urls, 4) # two pieces x two variables
       expect_equal(as.vector(terra::ext(ws))[1:2], c(xmin = -11, xmax = 11))
@@ -62,7 +62,7 @@ test_that("boxes crossing the prime meridian and the antimeridian are assembled"
       for(lon in c(-8, 0, 8))
             expect_equal(at(ws[["u 2005-01-01 03:00:00"]], lon, 44), truth_u(lon %% 360, 44, t), tolerance = 0.006)
 
-      ws <- read_wind_series(ncar_download("era5", xlim = c(170, 200), ylim = c(40, 50), years = 2005,
+      ws <- wind_series(ncar_download("era5", xlim = c(170, 200), ylim = c(40, 50), years = 2005,
                                            months = 1, dir = dir, quiet = TRUE))
       expect_equal(as.vector(terra::ext(ws))[1:2], c(xmin = 169, xmax = 201))
       expect_equal(at(ws[["v 2005-01-01 03:00:00"]], 190, 44), truth_v(190, 44, t), tolerance = 0.006)
@@ -76,7 +76,7 @@ test_that("CFSR and CFSv2 downloads read their layout, levels, and time units", 
       f <- ncar_download("cfsr", xlim = c(250, 270), ylim = c(30, 40), years = 2000, months = 4,
                          dir = dir, quiet = TRUE)
       expect_match(log$urls[1], "files/g/d093001/2000/wnd10m.gdas.200004.grb2")
-      ws <- read_wind_series(f)
+      ws <- wind_series(f)
       expect_equal(names(ws)[1], "u 2000-04-01 01:00:00") # CFSR files start at hour 1
       expect_equal(as.vector(terra::ext(ws))[1:2], c(xmin = 249, xmax = 271))
       t <- as.POSIXct("2000-04-01 08:00:00", tz = "UTC")
@@ -97,7 +97,7 @@ test_that("time_stride thins time steps on the server", {
                          time_stride = 3, dir = withr::local_tempdir(), quiet = TRUE)
       expect_match(log$urls[1], "timeStride=3")
       expect_match(basename(f), "_t3\\.tif$")
-      ws <- read_wind_series(f)
+      ws <- wind_series(f)
       expect_equal(ws@n_steps, 3)
       expect_equal(names(ws)[1:3], paste("u 2005-01-01", c("00:00:00", "03:00:00", "06:00:00")))
 })
@@ -155,32 +155,33 @@ test_that("ERA5 land layer is a land fraction on the wind grid", {
       expect_error(ncar_land("cfsv2", xlim = c(0, 10), ylim = c(0, 10)), "not yet available")
 })
 
-test_that("wind_rose() on files matches a rose built from all time steps at once", {
+test_that("a rose from downloaded files matches one built in chunks, and combines", {
       skip_if_not_installed("ncdf4")
       local_mocked_bindings(ncss_fetch = fake_ncss())
       f <- ncar_download("era5", xlim = c(-120, -100), ylim = c(30, 40), years = 2005, months = 1:3,
                          dir = withr::local_tempdir(), quiet = TRUE)
-      chunked <- wind_rose(f, trans = 2)
-      whole <- wind_rose(read_wind_series(f), trans = 2)
+      whole <- wind_rose(wind_series(f), trans = 2)
+      chunked <- withr::with_options(list(windscape.chunk_values = 1),
+                                     wind_rose(wind_series(f), trans = 2))
       expect_s4_class(chunked, "wind_rose")
       expect_equal(chunked@n_steps, 24)
       expect_equal(terra::values(chunked), terra::values(whole), tolerance = 1e-6)
       expect_equal(chunked@trans(3), 9)
-      expect_error(wind_rose(f, filename = tempfile(fileext = ".tif")), "filename")
+      expect_error(wind_rose(f), "use wind_series\\(\\) first")
 
-      r1 <- wind_rose(read_wind_series(f[1]), trans = 1)
-      r2 <- wind_rose(read_wind_series(f[2]), trans = 2)
+      r1 <- wind_rose(wind_series(f[1]), trans = 1)
+      r2 <- wind_rose(wind_series(f[2]), trans = 2)
       expect_error(combine_roses(r1, r2), "different `trans`")
-      expect_equal(terra::values(combine_roses(list(r1, wind_rose(read_wind_series(f[2]), trans = 1)))),
-                   terra::values(wind_rose(read_wind_series(f[1:2]), trans = 1)), tolerance = 1e-6)
+      expect_equal(terra::values(combine_roses(list(r1, wind_rose(wind_series(f[2]), trans = 1)))),
+                   terra::values(wind_rose(wind_series(f[1:2]), trans = 1)), tolerance = 1e-6)
       r1@n_steps <- NA_real_
       expect_error(combine_roses(r1, r1), "n_steps")
 })
 
-test_that("read_wind_series() checks its inputs", {
-      expect_error(read_wind_series("no/such/file.tif"), "not found")
+test_that("wind_series() checks its inputs", {
+      expect_error(wind_series("no/such/file.tif"), "not found")
       r <- terra::rast(nrows = 4, ncols = 4, xmin = 0, xmax = 4, ymin = 0, ymax = 4, nlyrs = 3, vals = 1)
       f <- withr::local_tempfile(fileext = ".tif")
       terra::writeRaster(r, f)
-      expect_error(read_wind_series(f), "odd number")
+      expect_error(wind_series(f), "even number")
 })

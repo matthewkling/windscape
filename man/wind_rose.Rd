@@ -3,49 +3,48 @@
 \name{wind_rose}
 \alias{wind_rose}
 \alias{windrose_rasters}
-\title{Summarize a time series of wind fields into a wind rose}
+\title{Build or load a wind rose}
 \usage{
-wind_rose(
-  x,
-  trans = 1,
-  months = NULL,
-  hours = NULL,
-  start = NULL,
-  end = NULL,
-  ...
-)
+wind_rose(x, trans = 1, n_steps = NA_integer_, ...)
 }
 \arguments{
-\item{x}{Data set of class \code{wind_series}, or a character vector of paths to files in
-\code{wind_series} layout, such as those returned by \code{\link[=ncar_download]{ncar_download()}}. Multiple files are
-processed one at a time and combined with \code{\link[=combine_roses]{combine_roses()}}, so a long record can be
-summarized without loading it all into memory at once. The result is identical to
-building a rose from all files combined with \code{\link[=read_wind_series]{read_wind_series()}}.}
+\item{x}{A \code{wind_series}, to build a wind rose from; or a saved wind rose to load, as an
+8-layer \code{SpatRaster} or the path to a raster file (e.g. one written with
+\code{terra::writeRaster()}). A saved rose's layers must hold conductance toward the
+southwest, west, northwest, north, northeast, east, southeast, and south neighbors, in
+that order.}
 
-\item{trans}{Either a function, or a positive number indicating the power to raise windspeeds to; see details.}
+\item{trans}{Either a function, or a positive number indicating the power to raise wind
+speeds to; see details. When loading a saved rose, give the \code{trans} it was built with,
+which is recorded with the rose (e.g. for \code{\link[=combine_roses]{combine_roses()}}).}
 
-\item{months, hours, start, end}{Optional criteria for selecting time steps to include, as in
-\code{\link[=subset_series]{subset_series()}}: months (1-12), hours of the day (0-23, UTC), and a date or time range.
-When \code{x} is a vector of files, they are applied to each file, and files with no selected
-time steps are skipped, so a seasonal or time-of-day rose can be built from a long record
-downloaded in full.}
+\item{n_steps}{When loading a saved rose, the number of time steps it summarizes, needed to
+combine it with other roses using \code{\link[=combine_roses]{combine_roses()}}. Ignored when building a rose, which
+records its number of time steps automatically.}
 
-\item{...}{Additional arguments passed to \code{terra::app}, e.g. 'filename'. When \code{x} is a
-vector of files, these are passed to \code{terra::app} for each file, and \code{filename} is not
-allowed; use \code{terra::writeRaster()} on the result instead.}
+\item{...}{When building a rose, additional arguments passed to \code{terra::app()}, such as
+\code{cores}. A \code{filename} (with optional \code{overwrite}) writes the result to a file.}
 }
 \value{
-A \code{wind_rose} object. This is an 8-layer raster stack, where each layer is wind conductance from
-the focal cell to one of its neighbors (clockwise starting in the SW).
+A \code{wind_rose} object. This is an 8-layer raster stack, where each layer is wind
+conductance from the focal cell to one of its neighbors (clockwise starting in the SW).
 If input windspeeds are in m/s and \code{trans = 1}, values are in (1 / hours)
 }
 \description{
-This function converts a \code{wind_field_ts} into a \code{wind_rose} object
-summarizing the distribution of wind speed and direction observations in each grid
-cell. The result is a set of eight raster layers giving the average wind conductance
-toward each of a cell's 'queen' neighbors.
+A wind rose summarizes a time series of wind fields as the average wind conductance from each
+grid cell toward each of its eight neighbors. Given a \code{wind_series}, \code{wind_rose()} builds one;
+given a raster or file holding a saved wind rose, it loads it.
 }
 \details{
+For each time step, the wind in each cell is divided between the two neighbors whose
+directions bracket the wind direction, in proportion to how closely the wind points toward
+each, and its transformed speed (see \code{trans}) is converted to conductance toward each
+neighbor; conductance is then averaged over all time steps. Long series are processed in
+chunks of time steps, so a series spanning many files (see \code{\link[=wind_series]{wind_series()}}) can be summarized
+without loading it all into memory; the result is identical to processing it at once. To
+build a rose from selected time steps, such as a season or time of day, select them first
+with \code{\link[=subset_series]{subset_series()}}.
+
 The \code{trans} parameter defines the transformation function used to convert wind speed
 into conductance. If a numeric value is supplied, the function speed^trans is used.
 A value of trans = 0 will ignore speed, assigning weights based on direction only;
@@ -62,4 +61,16 @@ so conductance accounts for the narrowing of cells toward the poles. Projected g
 currently supported. If source data are projected, reproject them to longitude/latitude
 before building a \code{wind_series}, rotating u and v to true east and north if they are
 defined relative to the projected grid (as in some reanalysis products).
+}
+\examples{
+series <- windscape_example("wind_series")
+rose <- wind_rose(series)
+
+# save and reload
+f <- tempfile(fileext = ".tif")
+terra::writeRaster(rose, f)
+rose2 <- wind_rose(f, trans = 1, n_steps = rose@n_steps)
+}
+\seealso{
+\code{\link[=combine_roses]{combine_roses()}} to combine roses built from different time periods.
 }

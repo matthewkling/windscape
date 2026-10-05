@@ -2,17 +2,30 @@
 % Please edit documentation in R/wind_field.R
 \name{wind_field}
 \alias{wind_field}
-\title{Generate a wind field data set from a pair of rasters.}
+\title{Create a wind_field}
 \usage{
-wind_field(x)
+wind_field(x, step = NULL)
 }
 \arguments{
-\item{x}{A \code{SpatRaster} with two layers representing u and v wind components;
-note that these must be in lat-long coordinates.}
+\item{x}{A \code{SpatRaster} with two layers holding the u and v wind components, the path to a
+raster file with those two layers, or a \code{wind_series}. Data must be on a
+longitude/latitude grid, with components in m/s, oriented to true east and north.}
+
+\item{step}{For a \code{wind_series} with more than one time step, the time step to use, as an
+integer index (see \code{\link[=wind_times]{wind_times()}} for the time of each step).}
 }
 \value{
 A \code{wind_field} object, which is a particular form of \code{SpatRaster}.
 }
 \description{
-Generate a wind field data set from a pair of rasters.
+Creates a \code{wind_field}, the wind across a grid at a single moment, from a two-layer raster
+or file, or from one time step of a \code{wind_series}. To summarize a whole series as a single
+field, use \link[=mean,wind_series-method]{mean()} or \code{\link[=net_flow]{net_flow()}}.
+}
+\examples{
+series <- windscape_example("wind_series")
+field <- wind_field(series, step = 1)
+}
+\seealso{
+\link[=mean,wind_series-method]{mean()} for the time-mean wind of a series.
 }

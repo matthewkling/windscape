@@ -6,27 +6,9 @@ setClass("wind_rose",
                    n_steps = "numeric"))
 
 
-#' Load a wind_rose from a raster file on disk
-#'
-#' @param x Path to a raster file containing wind rose data
-#' @param trans Transformation to convert speed into conductance. Either a single number, or
-#'    a function. See documentation for \link{wind_rose}.
-#' @param n_steps An integer giving the number of time steps represented in \code{x}.
-#' @return A `wind_rose` object.
-#' @export
-read_wind_rose <- function(x, trans = 1, n_steps = NA_integer_){
-      as_wind_rose(rast(x), trans = trans, n_steps = n_steps)
-}
-
-#' Create a wind_rose object from a set of raster layers
-#'
-#' @param x SpatRaster with 8 layers representing flows in each semi-cardinal direction,
-#'    clockwise beginning in southwest.
-#' @param trans Transformation to convert speed into conductance. Either a single number, or
-#'    a function. See documentation for \link{wind_rose}.
-#' @param n_steps An integer giving the number of time steps represented in \code{x}.
-#' @return A `wind_rose` object.
-#' @export
+# Create a wind_rose object from an 8-layer SpatRaster of conductances toward each neighbor,
+# clockwise beginning in the southwest. `trans` (a number or function) and `n_steps` are stored
+# as metadata. Internal: users create roses with wind_rose().
 as_wind_rose <- function(x, trans, n_steps = NA_integer_){
       if(!inherits(x, "SpatRaster")) stop("x must be a SpatRaster")
       if(nlyr(x) != 8) stop("x must have 8 layers")
@@ -42,12 +24,20 @@ as_wind_rose <- function(x, trans, n_steps = NA_integer_){
 }
 
 
-#' Summarize a time series of wind fields into a wind rose
+#' Build or load a wind rose
 #'
-#' This function converts a \code{wind_field_ts} into a \code{wind_rose} object
-#' summarizing the distribution of wind speed and direction observations in each grid
-#' cell. The result is a set of eight raster layers giving the average wind conductance
-#' toward each of a cell's 'queen' neighbors.
+#' A wind rose summarizes a time series of wind fields as the average wind conductance from each
+#' grid cell toward each of its eight neighbors. Given a `wind_series`, `wind_rose()` builds one;
+#' given a raster or file holding a saved wind rose, it loads it.
+#'
+#' For each time step, the wind in each cell is divided between the two neighbors whose
+#' directions bracket the wind direction, in proportion to how closely the wind points toward
+#' each, and its transformed speed (see `trans`) is converted to conductance toward each
+#' neighbor; conductance is then averaged over all time steps. Long series are processed in
+#' chunks of time steps, so a series spanning many files (see [wind_series()]) can be summarized
+#' without loading it all into memory; the result is identical to processing it at once. To
+#' build a rose from selected time steps, such as a season or time of day, select them first
+#' with [subset_series()].
 #'
 #' The `trans` parameter defines the transformation function used to convert wind speed
 #' into conductance. If a numeric value is supplied, the function speed^trans is used.
@@ -66,70 +56,99 @@ as_wind_rose <- function(x, trans, n_steps = NA_integer_){
 #' before building a \code{wind_series}, rotating u and v to true east and north if they are
 #' defined relative to the projected grid (as in some reanalysis products).
 #'
-#' @param x Data set of class `wind_series`, or a character vector of paths to files in
-#'    `wind_series` layout, such as those returned by [ncar_download()]. Multiple files are
-#'    processed one at a time and combined with [combine_roses()], so a long record can be
-#'    summarized without loading it all into memory at once. The result is identical to
-#'    building a rose from all files combined with [read_wind_series()].
-#' @param trans Either a function, or a positive number indicating the power to raise windspeeds to; see details.
-#' @param months,hours,start,end Optional criteria for selecting time steps to include, as in
-#'    [subset_series()]: months (1-12), hours of the day (0-23, UTC), and a date or time range.
-#'    When `x` is a vector of files, they are applied to each file, and files with no selected
-#'    time steps are skipped, so a seasonal or time-of-day rose can be built from a long record
-#'    downloaded in full.
-#' @param ... Additional arguments passed to `terra::app`, e.g. 'filename'. When `x` is a
-#'    vector of files, these are passed to `terra::app` for each file, and `filename` is not
-#'    allowed; use `terra::writeRaster()` on the result instead.
-#' @return A \code{wind_rose} object. This is an 8-layer raster stack, where each layer is wind conductance from
-#'   the focal cell to one of its neighbors (clockwise starting in the SW).
+#' @param x A `wind_series`, to build a wind rose from; or a saved wind rose to load, as an
+#'    8-layer `SpatRaster` or the path to a raster file (e.g. one written with
+#'    `terra::writeRaster()`). A saved rose's layers must hold conductance toward the
+#'    southwest, west, northwest, north, northeast, east, southeast, and south neighbors, in
+#'    that order.
+#' @param trans Either a function, or a positive number indicating the power to raise wind
+#'    speeds to; see details. When loading a saved rose, give the `trans` it was built with,
+#'    which is recorded with the rose (e.g. for [combine_roses()]).
+#' @param n_steps When loading a saved rose, the number of time steps it summarizes, needed to
+#'    combine it with other roses using [combine_roses()]. Ignored when building a rose, which
+#'    records its number of time steps automatically.
+#' @param ... When building a rose, additional arguments passed to `terra::app()`, such as
+#'    `cores`. A `filename` (with optional `overwrite`) writes the result to a file.
+#' @return A \code{wind_rose} object. This is an 8-layer raster stack, where each layer is wind
+#'   conductance from the focal cell to one of its neighbors (clockwise starting in the SW).
 #'   If input windspeeds are in m/s and `trans = 1`, values are in (1 / hours)
+#' @seealso [combine_roses()] to combine roses built from different time periods.
+#' @examples
+#' series <- windscape_example("wind_series")
+#' rose <- wind_rose(series)
+#'
+#' # save and reload
+#' f <- tempfile(fileext = ".tif")
+#' terra::writeRaster(rose, f)
+#' rose2 <- wind_rose(f, trans = 1, n_steps = rose@n_steps)
 #' @aliases windrose_rasters
 #' @export
-wind_rose <- function(x, trans = 1, months = NULL, hours = NULL, start = NULL, end = NULL, ...){
+wind_rose <- function(x, trans = 1, n_steps = NA_integer_, ...){
 
-      select <- !is.null(months) || !is.null(hours) || !is.null(start) || !is.null(end)
-      if(is.character(x)){
-            if(length(x) == 1) return(wind_rose(read_wind_series(x), trans = trans, months = months,
-                                                hours = hours, start = start, end = end, ...))
-            if("filename" %in% names(list(...)))
-                  stop("`filename` is not supported when `x` is a vector of files; ",
-                       "use terra::writeRaster() on the result.")
-            out <- NULL
-            for(f in x){
-                  ws <- read_wind_series(f)
-                  if(select){
-                        keep <- keep_steps(ws, months, hours, start, end)
-                        if(!any(keep)) next # nothing selected from this file
-                        ws <- subset_series(ws, steps = keep)
-                  }
-                  r <- wind_rose(ws, trans = trans, ...)
-                  out <- if(is.null(out)) r else combine_roses(out, r)
+      # load a saved rose
+      if(inherits(x, "wind_rose")) return(x)
+      if(!inherits(x, "wind_series")){
+            if(is.character(x)){
+                  if(length(x) != 1) stop("`x` must be a single file path to load a saved wind rose; ",
+                                          "to build a rose from files of wind data, use wind_series() first")
+                  if(!file.exists(x)) stop("file not found: ", x)
+                  x <- terra::rast(x)
             }
-            if(is.null(out)) stop("no time steps in any file meet the selection criteria")
-            return(out)
+            if(!inherits(x, "SpatRaster"))
+                  stop("`x` must be a wind_series, or a saved wind rose (an 8-layer SpatRaster or file path)")
+            if(any(grepl("^[uv]( |$)", names(x))))
+                  stop("`x` looks like wind data (layer names begin with u or v), not a saved wind rose; ",
+                       "use wind_series() first")
+            if(terra::nlyr(x) != 8) stop("a saved wind rose must have 8 layers; `x` has ", terra::nlyr(x))
+            return(as_wind_rose(x, trans = trans, n_steps = n_steps))
       }
-      if(!inherits(x, "wind_series")) stop("`x` must be an object of class `wind_series`, or file paths.")
-      if(select) x <- subset_series(x, months = months, hours = hours, start = start, end = end)
-      check_grid(x)
 
+      # build a rose from a wind_series
+      check_series(x)
+      check_grid(x)
       trn <- trans
       if(is.numeric(trans)) trn <- function(x) x^trans
 
+      dots <- list(...)
+      filename <- dots$filename
+      overwrite <- isTRUE(dots$overwrite)
+      dots$filename <- dots$overwrite <- NULL
+
+      # chunks of time steps, each holding at most about `budget` values
+      n <- x@n_steps
+      budget <- getOption("windscape.chunk_values", 5e7)
+      per_chunk <- max(1, floor(budget / (2 * terra::ncell(x))))
+      chunks <- split(seq_len(n), ceiling(seq_len(n) / per_chunk))
+
+      out <- NULL
+      for(steps in chunks){
+            xs <- if(length(chunks) == 1) x else subset_series(x, steps = steps)
+            r <- do.call(rose_chunk, c(list(xs, trn), dots))
+            out <- if(is.null(out)) r else combine_roses(out, r)
+      }
+      if(!is.null(filename)){
+            out <- as_wind_rose(terra::writeRaster(out, filename, overwrite = overwrite),
+                                trans = trn, n_steps = n)
+      }
+      out
+}
+
+# Build a rose from one chunk of a wind_series
+rose_chunk <- function(x, trn, ...){
       rsn <- function(x){
             r <- x[[1]]
             r[] <- mean(res(r[[1]]))
             r
       }
-
       lat <- function(x){
             l <- x[[1]]
             l[] <- terra::crds(l)[,2]
             l
       }
-
+      n <- x@n_steps
       x <- c(lat(x), rsn(x), x)
-      r <- terra::app(x, fun = rose, trans = trn)
-      as_wind_rose(r, trn, x@n_steps)
+      r <- terra::app(x, fun = rose, trans = trn, ...)
+      as_wind_rose(r, trn, n)
 }
 
 
@@ -145,7 +164,7 @@ wind_rose <- function(x, trans = 1, months = NULL, hours = NULL, start = NULL, e
 #'    grid and the same `trans` function, and each must have a known number of time steps
 #'    (`n_steps`), as roses built with [wind_rose()] do.
 #' @return A `wind_rose` whose `n_steps` is the total across the inputs.
-#' @seealso [wind_rose()], which uses this function to build roses from multiple files.
+#' @seealso [wind_rose()], which uses this function to build roses from long series in chunks.
 #' @export
 combine_roses <- function(...){
       x <- list(...)

@@ -44,5 +44,6 @@
 downscale <- function(x, fact, method = "bilinear"){
       if(!inherits(x, "wind_rose")) stop("x must be a wind_rose object")
       if(length(fact) != 1) stop("fact must be a single integer")
-      disagg(x, fact, method = method) * fact
+      out <- terra::disagg(as(x, "SpatRaster"), fact, method = method) * fact
+      as_wind_rose(out, trans = x@trans, n_steps = x@n_steps)
 }

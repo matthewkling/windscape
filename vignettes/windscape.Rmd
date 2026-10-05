@@ -51,13 +51,13 @@ states <- map_data("state")
 
 The basic unit of wind data is a **wind field**: the wind across a grid at a single moment,
 stored as two raster layers giving the eastward (`u`) and northward (`v`) components of the wind
-vector in each cell. `wind_field()` creates one from a two-layer `SpatRaster`. Here's one from the
-example data, for midnight UTC on January 1, 2000:
+vector in each cell. `wind_field()` creates one from a two-layer `SpatRaster`, or from one time
+step of a wind time series. Here's the first time step of the example data, for midnight UTC on
+January 1, 2000:
 
 ```{r field}
 series <- windscape_example("wind_series")
-n <- series@n_steps
-field <- wind_field(series[[c(1, n + 1)]]) # the first u layer and the first v layer
+field <- wind_field(series, step = 1)
 
 ggplot(field, aes(x, y)) +
       geom_raster(aes(fill = speed)) +
@@ -76,7 +76,7 @@ connectivity models are built from many of them.
 
 A `wind_series` is a sequence of wind fields stored as a single `SpatRaster`: all the u layers,
 followed by all the v layers, in the same time order. The example series covers the western and
-central US at about 0.3 degree resolution, with `r n` time steps from the year 2000 (every 6 hours
+central US at about 0.3 degree resolution, with `r series@n_steps` time steps from the year 2000 (every 6 hours
 on the 1st and 15th of each month):
 
 ```{r series}
@@ -94,12 +94,12 @@ or sporulation period.
 `ncar_download()` downloads hourly wind data from NCAR's Geoscience Data Exchange, with no account
 needed: ERA5 (1940 to present), CFSR (1979-2010), and CFSv2 (2011 to present). Data are clipped
 to a bounding box on the server and saved as one cached file per month, which
-`read_wind_series()` loads as a `wind_series`:
+`wind_series()` combines into one series:
 
 ```{r download, eval = FALSE}
 files <- ncar_download("era5", xlim = c(-120, -90), ylim = c(30, 50),
                        years = 2011:2020, time_stride = 3, dir = "~/wind_data")
-series <- read_wind_series(files)
+series <- wind_series(files)
 ```
 
 Wind data from other sources can be used too. Load it as a `SpatRaster` on a longitude/latitude

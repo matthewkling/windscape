@@ -58,3 +58,49 @@ test_that("numeric trans is stored as a working power function", {
       expect_equal(r@trans(3), 9)
       expect_equal(as_wind_rose(methods::as(noisy_rose(), "SpatRaster"), trans = sqrt)@trans(9), 3)
 })
+
+test_that("wind_rose builds in chunks with the same result as all at once", {
+      series <- windscape_example("wind_series")
+      whole <- wind_rose(series, trans = 2)
+      chunked <- withr::with_options(list(windscape.chunk_values = 2 * terra::ncell(series) * 7),
+                                     wind_rose(series, trans = 2)) # 7 steps per chunk
+      expect_equal(chunked@n_steps, whole@n_steps)
+      expect_equal(terra::values(chunked), terra::values(whole), tolerance = 1e-10)
+      expect_equal(chunked@trans(3), 9)
+})
+
+test_that("wind_rose loads saved roses from rasters and files", {
+      r <- wind_rose(windscape_example("wind_series"), trans = 2)
+      f <- withr::local_tempfile(fileext = ".tif")
+      terra::writeRaster(r, f)
+      loaded <- wind_rose(f, trans = 2, n_steps = r@n_steps)
+      expect_s4_class(loaded, "wind_rose")
+      expect_equal(names(loaded), c("SW", "W", "NW", "N", "NE", "E", "SE", "S"))
+      expect_equal(terra::values(loaded), terra::values(r), tolerance = 1e-6)
+      expect_equal(loaded@n_steps, r@n_steps)
+      expect_equal(loaded@trans(3), 9)
+      expect_s4_class(combine_roses(r, loaded), "wind_rose")
+
+      plain <- terra::rast(f)
+      names(plain) <- paste0("lyr", 1:8)
+      expect_equal(terra::values(wind_rose(plain)), terra::values(loaded), ignore_attr = TRUE)
+      expect_identical(wind_rose(r), r)
+})
+
+test_that("wind_rose writes to a file when given a filename", {
+      f <- withr::local_tempfile(fileext = ".tif")
+      r <- wind_rose(windscape_example("wind_series"), filename = f)
+      expect_true(file.exists(f))
+      expect_s4_class(r, "wind_rose")
+      expect_equal(terra::values(wind_rose(f)), terra::values(r), tolerance = 1e-6)
+})
+
+test_that("wind_rose rejects inputs that aren't series or roses", {
+      series <- windscape_example("wind_series")
+      four <- as(subset_series(series, steps = 1:4), "SpatRaster") # 8 layers, but wind data
+      expect_error(wind_rose(four), "use wind_series\\(\\) first")
+      expect_error(wind_rose(as(series, "SpatRaster")[[1:6]]), "must have 8 layers|use wind_series")
+      expect_error(wind_rose(c("a.tif", "b.tif")), "single file path")
+      expect_error(wind_rose("no/such/file.tif"), "not found")
+      expect_error(wind_rose(1:8), "must be a wind_series")
+})

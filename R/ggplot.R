@@ -63,6 +63,7 @@ fortify.wind_field <- function(model, data, na.rm = TRUE, ...){
 #' @rdname fortify.windscape
 #' @export
 fortify.wind_series <- function(model, data, na.rm = TRUE, ...){
+      check_series(model)
       n <- model@n_steps
       d <- terra::as.data.frame(as(model, "SpatRaster"), xy = TRUE, na.rm = na.rm)
       out <- data.frame(x = rep(d$x, n), y = rep(d$y, n),

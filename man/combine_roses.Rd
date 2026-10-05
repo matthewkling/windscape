@@ -21,5 +21,5 @@ is an average over time steps, the result is the mean of the input roses weighte
 numbers of time steps, and equals the rose that would be built from all the time steps at once.
 }
 \seealso{
-\code{\link[=wind_rose]{wind_rose()}}, which uses this function to build roses from multiple files.
+\code{\link[=wind_rose]{wind_rose()}}, which uses this function to build roses from long series in chunks.
 }

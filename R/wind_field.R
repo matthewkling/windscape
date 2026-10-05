@@ -4,34 +4,76 @@ setClass("wind_series",
          contains = "SpatRaster",
          slots = c(n_steps = "numeric"))
 
-#' Generate a wind field time series data set from a set of rasters.
+#' Create a wind_series
 #'
-#' @param x Multi-layer \code{SpatRaster} with layers containing u and v wind components, or
-#'    an object like a file path that can be converted to a \code{SpatRaster}. Data must be
-#'    on a longitude/latitude grid with square cells (equal x and y resolution in degrees),
-#'    with u and v components oriented to true east and north; see \link{wind_rose}.
-#' @param order Either \code{"uuvv"}, the default, indicating `x` has all u components
-#'    followed by all v components, or \code{"uvuv"}, indicating the u and v components
-#'    of `x` are alternating.
-#' @return A `wind_series` object, which is a particular form of \code{SpatRaster}.
+#' Creates a `wind_series`, a time series of wind fields, from a raster, a list of rasters, or
+#' one or more raster files, such as the monthly files saved by [ncar_download()]. Multiple
+#' inputs are combined into one series, in the order given, without reading the data into
+#' memory until needed.
+#'
+#' @param x A multi-layer `SpatRaster` with layers containing u and v wind components; a list of
+#'    them; or a character vector of paths to raster files. Each input must contain an equal
+#'    number of u and v layers, arranged as given by `order`, and all inputs must share the same
+#'    grid. Data must be on a longitude/latitude grid with square cells (equal x and y resolution
+#'    in degrees), with u and v components in m/s, oriented to true east and north; see
+#'    [wind_rose()].
+#' @param order Either `"uuvv"`, the default, indicating that each input has all u components
+#'    followed by all v components, or `"uvuv"`, indicating alternating u and v components.
+#' @return A `wind_series` object, a `SpatRaster` with all the u layers of all inputs, followed
+#'    by all the v layers, in time order.
+#' @seealso [subset_series()] and [wind_times()] for working with time steps.
+#' @examples
+#' series <- windscape_example("wind_series")
+#' series
+#'
+#' \dontrun{
+#' # combine monthly files from ncar_download()
+#' series <- wind_series(files)
+#' }
 #' @export
 wind_series <- function(x, order = c("uuvv", "uvuv")){
 
       order <- match.arg(order)
-      if(!inherits(x, "SpatRaster")) x <- rast(x)
-      check_grid(x)
-      if(terra::nlyr(x) %% 2 != 0) stop("if `v` is not specified, `u` must have an even number of layers.")
-
-      # collate layers
-      if(order == "uvuv"){
-            even <- function(x) x %% 2 == 0
-            x <- x[[c(which(!even(1:nlyr(x))),
-                      which(even(1:nlyr(x))))]]
+      if(inherits(x, "SpatRaster")){
+            inputs <- list(x)
+      }else if(is.character(x)){
+            if(length(x) == 0) stop("`x` must contain at least one file path")
+            missing <- !file.exists(x)
+            if(any(missing)) stop("file(s) not found: ", paste(x[missing], collapse = ", "))
+            inputs <- lapply(x, terra::rast)
+      }else if(is.list(x)){
+            if(length(x) == 0 || !all(vapply(x, inherits, logical(1), "SpatRaster")))
+                  stop("a list `x` must contain SpatRasters")
+            inputs <- x
+      }else{
+            inputs <- list(terra::rast(x))
       }
 
-      # create wind_field
-      y <- as(as(x, "SpatRaster"), "wind_series")
-      y@n_steps <- nlyr(x)/2
+      for(i in seq_along(inputs)){
+            if(terra::nlyr(inputs[[i]]) %% 2 != 0)
+                  stop("each input must have an even number of layers (u and v)",
+                       if(length(inputs) > 1) paste0("; input ", i, " does not"))
+            if(i > 1 && !terra::compareGeom(inputs[[1]], inputs[[i]], stopOnError = FALSE))
+                  stop("inputs are on different grids (inputs 1 and ", i, ")")
+      }
+      check_grid(inputs[[1]])
+
+      # split each input into u and v layers, then combine all u's followed by all v's
+      half <- function(r, comp){
+            r <- as(r, "SpatRaster")
+            n <- terra::nlyr(r)
+            idx <- if(order == "uuvv"){
+                  if(comp == "u") seq_len(n / 2) else n / 2 + seq_len(n / 2)
+            }else{
+                  if(comp == "u") seq(1, n, 2) else seq(2, n, 2)
+            }
+            r[[idx]]
+      }
+      inputs <- unname(inputs) # named inputs would become argument names in c()
+      x <- c(do.call(c, lapply(inputs, half, "u")), do.call(c, lapply(inputs, half, "v")))
+
+      y <- as(x, "wind_series")
+      y@n_steps <- terra::nlyr(x) / 2
       y
 }
 
@@ -44,49 +86,91 @@ setClass("wind_field",
          slots = c(n_steps = "numeric"))
 
 
-#' Generate a wind field data set from a pair of rasters.
+#' Create a wind_field
 #'
-#' @param x A `SpatRaster` with two layers representing u and v wind components;
-#'    note that these must be in lat-long coordinates.
+#' Creates a `wind_field`, the wind across a grid at a single moment, from a two-layer raster
+#' or file, or from one time step of a `wind_series`. To summarize a whole series as a single
+#' field, use [mean()][mean,wind_series-method] or [net_flow()].
+#'
+#' @param x A `SpatRaster` with two layers holding the u and v wind components, the path to a
+#'    raster file with those two layers, or a `wind_series`. Data must be on a
+#'    longitude/latitude grid, with components in m/s, oriented to true east and north.
+#' @param step For a `wind_series` with more than one time step, the time step to use, as an
+#'    integer index (see [wind_times()] for the time of each step).
 #' @return A `wind_field` object, which is a particular form of `SpatRaster`.
+#' @seealso [mean()][mean,wind_series-method] for the time-mean wind of a series.
+#' @examples
+#' series <- windscape_example("wind_series")
+#' field <- wind_field(series, step = 1)
 #' @export
-wind_field <- function(x){
-      if(terra::nlyr(x) != 2) stop("`x` must have two layers.")
+wind_field <- function(x, step = NULL){
+      if(is.character(x)){
+            if(length(x) != 1) stop("`x` must be a single file path")
+            if(!file.exists(x)) stop("file not found: ", x)
+            x <- terra::rast(x)
+      }
+      if(!inherits(x, "SpatRaster")) stop("`x` must be a SpatRaster, a file path, or a wind_series")
+
+      # layer subsetting (e.g. series[[5]]) keeps the wind_series class without updating n_steps,
+      # so treat a series whose layers don't match its n_steps as a plain raster
+      if(inherits(x, "wind_series") && terra::nlyr(x) != 2 * x@n_steps) x <- as(x, "SpatRaster")
+      if(inherits(x, "wind_series")){
+            n <- x@n_steps
+            if(is.null(step)){
+                  if(n > 1) stop("`x` has ", n, " time steps; choose one with `step`, ",
+                                 "or summarize them with mean()")
+                  step <- 1
+            }
+            if(length(step) != 1 || !is.numeric(step) || step %% 1 != 0 || step < 1 || step > n)
+                  stop("`step` must be a single integer between 1 and ", n)
+            x <- as(x, "SpatRaster")[[c(step, n + step)]]
+      }else if(!is.null(step)){
+            stop("`step` applies only to a wind_series")
+      }
+
+      if(terra::nlyr(x) != 2) stop("`x` must have two layers (u and v); for wind data with more ",
+                                   "time steps, use wind_series()")
       xt <- ext(x)
       if(any(c(xt$xmin < -180, xt$xmax > 360, xt$ymin < -90, xt$ymax > 90))) stop("wind field rasters must be in lon-lat coordinates")
       as(as(x, "SpatRaster"), "wind_field") # via SpatRaster, so subclasses (e.g. wind_series layers) work
 }
 
 
-#' Load a wind_series from one or more raster files on disk
+#' Mean wind of a wind_series
 #'
-#' Reads files in `wind_series` layout (all u layers followed by all v layers), such as the
-#' monthly files saved by [ncar_download()], and combines them into a single `wind_series`.
-#' Data are not loaded into memory until needed.
+#' Averages the u and v components of a `wind_series` over its time steps, giving the mean wind
+#' vector in each cell as a `wind_field`. Long series stored in files are processed in blocks,
+#' without loading the whole series into memory.
 #'
-#' @param x Character vector of file paths. Each file must hold an equal number of u and v
-#'   layers, with u layers first, and all files must share the same grid. Time steps are combined
-#'   in the order the files are given.
-#' @return A `wind_series` object whose time steps are those of all the files combined: all
-#'   files' u layers, followed by all files' v layers.
-#' @seealso [ncar_download()]
-#' @export
-read_wind_series <- function(x){
-      if(!is.character(x) || length(x) == 0) stop("`x` must be a character vector of file paths")
-      missing <- !file.exists(x)
-      if(any(missing)) stop("file(s) not found: ", paste(x[missing], collapse = ", "))
-      r <- lapply(x, terra::rast)
-      for(i in seq_along(r)){
-            if(terra::nlyr(r[[i]]) %% 2 != 0) stop("file has an odd number of layers: ", x[i])
-            if(i > 1 && !terra::compareGeom(r[[1]], r[[i]], stopOnError = FALSE))
-                  stop("files are on different grids: ", x[1], " and ", x[i])
-      }
-      half <- function(z, which){
-            n <- terra::nlyr(z) / 2
-            z[[if(which == "u") seq_len(n) else n + seq_len(n)]]
-      }
-      wind_series(c(do.call(c, lapply(r, half, "u")), do.call(c, lapply(r, half, "v"))))
-}
+#' The mean wind vector describes the net drift of the air over the series: where winds blow
+#' from many directions, it is short even if winds are strong. It is similar to, but not the same
+#' as, the [net_flow()] of a wind rose built from the series. Net flow describes the connectivity
+#' model rather than the wind itself: it is shaped by `trans`, and with `trans = 1` it is
+#' typically a few percent weaker than the mean wind, because the rose divides each wind between
+#' two neighbor directions. Use `mean()` to describe the wind, and `net_flow()` to describe the
+#' wind rose used for connectivity modeling.
+#'
+#' @param x A `wind_series`.
+#' @param ... Not used.
+#' @param na.rm Logical: ignore missing values when averaging?
+#' @return A `wind_field` of the mean u and v components.
+#' @seealso [subset_series()] to average over selected time steps, such as one season.
+#' @examples
+#' series <- windscape_example("wind_series")
+#' prevailing <- mean(series)
+#' @aliases mean,wind_series-method
+#' @exportMethod mean
+setMethod("mean", "wind_series", function(x, ..., na.rm = FALSE){
+      check_series(x)
+      n <- x@n_steps
+      r <- as(x, "SpatRaster")
+      u <- terra::mean(r[[seq_len(n)]], na.rm = na.rm)
+      v <- terra::mean(r[[n + seq_len(n)]], na.rm = na.rm)
+      out <- c(u, v)
+      names(out) <- c("u", "v")
+      wind_field(out)
+})
+
 
 
 #' Get the time of each step in a wind_series
@@ -104,6 +188,7 @@ read_wind_series <- function(x){
 #' @export
 wind_times <- function(x){
       if(!inherits(x, "wind_series")) stop("`x` must be a `wind_series`")
+      check_series(x)
       u <- seq_len(x@n_steps)
       t <- layer_times(names(x)[u])
       if(all(is.na(t))){
@@ -153,6 +238,7 @@ wind_times <- function(x){
 #' @export
 subset_series <- function(x, months = NULL, hours = NULL, start = NULL, end = NULL, steps = NULL){
       if(!inherits(x, "wind_series")) stop("`x` must be a `wind_series`")
+      check_series(x)
       keep <- keep_steps(x, months, hours, start, end, steps)
       idx <- which(keep)
       if(length(idx) == 0) stop("no time steps meet the selection criteria")
@@ -216,4 +302,15 @@ as_utc_time <- function(z, arg){
       if(is.na(out)) stop("`", arg, "` could not be read as a date or time: ", z)
       attr(out, "whole_day") <- whole_day
       out
+}
+
+
+# Stop if a wind_series is malformed: layer subsetting (e.g. series[[1:10]]) keeps the class
+# without updating n_steps, which would silently corrupt anything that relies on it
+check_series <- function(x){
+      if(terra::nlyr(x) != 2 * x@n_steps)
+            stop("`x` is a malformed wind_series: it has ", terra::nlyr(x), " layers but claims ",
+                 x@n_steps, " time steps. This happens when layers are selected with `[[`; use ",
+                 "subset_series() to select time steps.", call. = FALSE)
+      invisible(x)
 }

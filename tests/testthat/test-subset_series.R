@@ -71,27 +71,13 @@ split_files <- function(){
       }, character(1))
 }
 
-test_that("wind_rose selects time steps from a wind_series", {
-      r <- wind_rose(series, months = 6:8)
-      expect_equal(r@n_steps, subset_series(series, months = 6:8)@n_steps)
-      expect_equal(terra::values(r), terra::values(wind_rose(subset_series(series, months = 6:8))))
-})
-
-test_that("wind_rose selects time steps from files, skipping files with none selected", {
+test_that("roses from selected time steps of files match roses from the whole series", {
       files <- split_files()
-      expect_equal(read_wind_series(files)@n_steps, n)
-
-      # only the second file has July-August steps
-      r <- wind_rose(files, months = 7:8)
-      ref <- wind_rose(subset_series(series, months = 7:8))
-      expect_equal(r@n_steps, ref@n_steps)
-      expect_equal(terra::values(r), terra::values(ref), tolerance = 1e-6)
-
-      # selection spanning both files
-      r <- wind_rose(files, hours = c(0, 6), trans = 2)
-      ref <- wind_rose(subset_series(series, hours = c(0, 6)), trans = 2)
-      expect_equal(r@n_steps, ref@n_steps)
-      expect_equal(terra::values(r), terra::values(ref), tolerance = 1e-6)
-
-      expect_error(wind_rose(files, start = "2001-01-01"), "no time steps in any file")
+      expect_equal(wind_series(files)@n_steps, n)
+      for(sel in list(list(months = 7:8), list(hours = c(0, 6)))){
+            r <- wind_rose(do.call(subset_series, c(list(wind_series(files)), sel)), trans = 2)
+            ref <- wind_rose(do.call(subset_series, c(list(series), sel)), trans = 2)
+            expect_equal(r@n_steps, ref@n_steps)
+            expect_equal(terra::values(r), terra::values(ref), tolerance = 1e-6)
+      }
 })

@@ -73,8 +73,8 @@ transferred.
 \details{
 Each output file holds one month of data in \code{wind_series} layout: all u layers followed by
 all v layers, named like \code{"u 2005-08-28 23:00:00"} (UTC), in m/s, oriented to true east and
-north, on a longitude/latitude grid. Load the files with \code{\link[=read_wind_series]{read_wind_series()}}, or pass them
-straight to \code{\link[=wind_rose]{wind_rose()}}, which processes them one month at a time.
+north, on a longitude/latitude grid. Combine the files into one series with \code{\link[=wind_series]{wind_series()}},
+which keeps the data on disk, and summarize it with \code{\link[=wind_rose]{wind_rose()}}.
 
 Downloads are cached: a month whose file already exists in \code{dir} is not downloaded again
 unless \code{overwrite = TRUE}, so an interrupted download can be resumed by rerunning the same
@@ -89,11 +89,11 @@ Requires the \pkg{ncdf4} package.
 files <- ncar_download("era5", xlim = c(-125, -115), ylim = c(42, 49),
                        years = 2020, months = 6:8, time_stride = 3,
                        dir = "~/wind_data")
-ws <- read_wind_series(files)
+ws <- wind_series(files)
 rose <- wind_rose(files)
 }
 }
 \seealso{
-\code{\link[=read_wind_series]{read_wind_series()}} to load the files; \code{\link[=wind_rose]{wind_rose()}} to summarize them;
+\code{\link[=wind_series]{wind_series()}} to load the files; \code{\link[=wind_rose]{wind_rose()}} to summarize them;
 \code{\link[=ncar_land]{ncar_land()}} to download a matching land-water layer.
 }

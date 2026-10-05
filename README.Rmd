@@ -37,7 +37,7 @@ remotes::install_github("matthewkling/windscape")
 
 | Task | Functions |
 |:-----|:----------|
-| Get wind data | `ncar_download()`, `ncar_land()`, `read_wind_series()`, `windscape_example()` |
+| Get wind data | `ncar_download()`, `ncar_land()`, `wind_series()`, `windscape_example()` |
 | Summarize a wind regime | `wind_rose()`, `combine_roses()`, `weight_conductance()`, `downscale()` |
 | Map windsheds | `least_cost_surface()`, `least_cost_paths()`, `random_walk()`, `ws_summarize()` |
 | Connectivity among sites | `pairwise_least_cost()`, `pairwise_random_walk()`, `check_cell_distance()` |
@@ -82,10 +82,10 @@ ggplot(katrina, aes(x, y)) +
 
 ### Summarize wind regimes
 
-A **wind rose** summarizes a time series of wind fields into a model of the wind regime: for each grid cell, the average conductance of wind toward each of its eight neighbors. `wind_rose()` can build one from a set of files a month at a time, so long records needn't fit in memory. The `trans` argument sets how wind speed translates into conductance so the rose reflects the winds that matter for dispersal, for example to model propagules that are only released in strong winds.
+A **wind rose** summarizes a time series of wind fields into a model of the wind regime: for each grid cell, the average conductance of wind toward each of its eight neighbors. `wind_rose()` builds one from a long series in chunks, so long records needn't fit in memory. The `trans` argument sets how wind speed translates into conductance so the rose reflects the winds that matter for dispersal, for example to model propagules that are only released in strong winds.
 
 ```{r, eval = FALSE}
-rose <- wind_rose(files, trans = 1)
+rose <- wind_rose(wind_series(files), trans = 1)
 ```
 
 The examples below use a small `wind_rose` object that ships with the package, built from the same region as the data downloaded above. `geom_wind_rose()` maps it as a field of glyphs, each showing the distribution of flow directions in a block of cells, colored by the direction of net flow:

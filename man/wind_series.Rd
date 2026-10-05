@@ -2,23 +2,40 @@
 % Please edit documentation in R/wind_field.R
 \name{wind_series}
 \alias{wind_series}
-\title{Generate a wind field time series data set from a set of rasters.}
+\title{Create a wind_series}
 \usage{
 wind_series(x, order = c("uuvv", "uvuv"))
 }
 \arguments{
-\item{x}{Multi-layer \code{SpatRaster} with layers containing u and v wind components, or
-an object like a file path that can be converted to a \code{SpatRaster}. Data must be
-on a longitude/latitude grid with square cells (equal x and y resolution in degrees),
-with u and v components oriented to true east and north; see \link{wind_rose}.}
+\item{x}{A multi-layer \code{SpatRaster} with layers containing u and v wind components; a list of
+them; or a character vector of paths to raster files. Each input must contain an equal
+number of u and v layers, arranged as given by \code{order}, and all inputs must share the same
+grid. Data must be on a longitude/latitude grid with square cells (equal x and y resolution
+in degrees), with u and v components in m/s, oriented to true east and north; see
+\code{\link[=wind_rose]{wind_rose()}}.}
 
-\item{order}{Either \code{"uuvv"}, the default, indicating \code{x} has all u components
-followed by all v components, or \code{"uvuv"}, indicating the u and v components
-of \code{x} are alternating.}
+\item{order}{Either \code{"uuvv"}, the default, indicating that each input has all u components
+followed by all v components, or \code{"uvuv"}, indicating alternating u and v components.}
 }
 \value{
-A \code{wind_series} object, which is a particular form of \code{SpatRaster}.
+A \code{wind_series} object, a \code{SpatRaster} with all the u layers of all inputs, followed
+by all the v layers, in time order.
 }
 \description{
-Generate a wind field time series data set from a set of rasters.
+Creates a \code{wind_series}, a time series of wind fields, from a raster, a list of rasters, or
+one or more raster files, such as the monthly files saved by \code{\link[=ncar_download]{ncar_download()}}. Multiple
+inputs are combined into one series, in the order given, without reading the data into
+memory until needed.
+}
+\examples{
+series <- windscape_example("wind_series")
+series
+
+\dontrun{
+# combine monthly files from ncar_download()
+series <- wind_series(files)
+}
+}
+\seealso{
+\code{\link[=subset_series]{subset_series()}} and \code{\link[=wind_times]{wind_times()}} for working with time steps.
 }
