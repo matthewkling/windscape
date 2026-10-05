@@ -21,6 +21,7 @@ as mantel.partial."></head><body>
     <div id="navbar" class="collapse navbar-collapse ms-3">
       <ul class="navbar-nav me-auto"><li class="nav-item"><a class="nav-link" href="../articles/windscape.html">Get started</a></li>
 <li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
+<li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><form class="form-inline" role="search">
  <input class="form-control" type="search" name="search-input" id="search-input" autocomplete="off" aria-label="Search site" placeholder="Search for" data-search-index="../search.json"></form></li>
       </ul></div>
@@ -80,10 +81,10 @@ as <a href="https://vegandevs.github.io/vegan/reference/mantel.html" class="exte
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>A list with the following components:</p><ul><li><p>`stat`: The correlation coefficient between <code>x</code> and <code>y</code>, measured on the data provided. This will be a partial correlation if <code>z</code> is specified.</p></li>
-<li><p>`quantile`: The quantile of the observed stat in the null distribution.</p></li>
-<li><p>`p.value`: Significance, derived from the combination of <code>quantile</code> and <code>alternative</code>.</p></li>
-<li><p>`perm`: A vector of null correlations based on permuted data.</p></li>
+    <p>A list with the following components:</p><ul><li><p><code>stat</code>: The correlation coefficient between <code>x</code> and <code>y</code>, measured on the data provided. This will be a partial correlation if <code>z</code> is specified.</p></li>
+<li><p><code>quantile</code>: The quantile of the observed stat in the null distribution.</p></li>
+<li><p><code>p.value</code>: Significance, derived from the combination of <code>quantile</code> and <code>alternative</code>.</p></li>
+<li><p><code>perm</code>: A vector of null correlations based on permuted data.</p></li>
 </ul></div>
 
     <div class="section level2">

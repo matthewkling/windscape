@@ -26,4 +26,4 @@ read_wind_rose(x, trans = 1, n_steps = NA_integer_)
 
 ## Value
 
-A \`wind_rose\` object.
+A `wind_rose` object.

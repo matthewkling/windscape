@@ -27,7 +27,7 @@ check_cell_distance(x, ll, return = FALSE)
 
 - x:
 
-  SpatRaster (e.g. a \`wind_rose\`)
+  SpatRaster (e.g. a `wind_rose`)
 
 - ll:
 

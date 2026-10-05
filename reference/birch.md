@@ -12,7 +12,7 @@ birch
 
 ## Format
 
-\`birch\` A list with 4 entries:
+`birch` A list with 4 entries:
 
 - sites:
 
@@ -37,4 +37,4 @@ birch
 Y. Tsuda, V. Semerikov, F. Sebastiani, G. G. Vendramin, M. Lascoux,
 Multispecies genetic structure and hybridization in the Betula genus
 across Eurasia. Molecular Ecology 26, 589-605 (2017).
-\<https://doi.org/10.1111/mec.13885\>
+<https://doi.org/10.1111/mec.13885>

@@ -21,10 +21,10 @@ wind_series(x, order = c("uuvv", "uvuv"))
 
 - order:
 
-  Either `"uuvv"`, the default, indicating \`x\` has all u components
+  Either `"uuvv"`, the default, indicating `x` has all u components
   followed by all v components, or `"uvuv"`, indicating the u and v
-  components of \`x\` are alternating.
+  components of `x` are alternating.
 
 ## Value
 
-A \`wind_series\` object, which is a particular form of `SpatRaster`.
+A `wind_series` object, which is a particular form of `SpatRaster`.

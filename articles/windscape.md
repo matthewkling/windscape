@@ -1,106 +1,85 @@
-# windscape
+# Getting started with windscape
 
-## Contents
+Wind carries pollen, seeds, spores, insects, pathogens, and pollutants
+across landscapes. Unlike most landscape connectivity, wind connectivity
+is directional: air flows strongly in some directions and weakly in
+others, so a site can send much to its downwind neighbors while
+receiving little from them. **windscape** models this directional
+connectivity from time series of wind conditions, describing the
+expected connectivity produced by many dispersal events rather than any
+single one.
 
-- [Introduction](#introduction)
-- [Importing wind data](#importing-wind-data)
-- [Constructing a connectivity
-  graph](#constructing-a-connectivity-graph)
-- [Estimating wind connectivity](#estimating-wind-connectivity)
-- [Testing statistical
-  relationships](#testing-statistical-relationships)
+A windscape analysis follows a few steps:
 
-## Introduction
+1.  **Wind data**: a time series of gridded wind vectors (a
+    `wind_series`).
+2.  **Wind rose**: a summary of the time series as the average
+    conductance of wind from each grid cell toward each of its eight
+    neighbors (a `wind_rose`).
+3.  **Connectivity model**: either a least-cost model, which finds the
+    fastest routes through the wind rose, or a random walk model, which
+    simulates particles diffusing through it.
+4.  **Analysis**: mapping **windsheds**, the connectivity between a site
+    and the whole landscape, or estimating **pairwise connectivity**
+    among a set of sites, for comparison with ecological data.
 
-The `windscape` package was designed to help users analyze the role of
-wind geography in spatial ecology. Wind strength and direction vary over
-space and time, influencing the transport dynamics of airborne particles
-like spores, pollen, seeds, and insects, and in turn shaping emergent
-biodiversity patterns such as landscape genetics, community composition,
-and species distributions.
-
-The functions in `windscape` help you to download hourly wind rasters,
-convert them into a landscape connectivity graph, use the graph to
-estimate directional wind flows among sites of interest, and test the
-statistical relationships between these flows and your own ecological
-data. Each of these four steps is detailed in its own section below.
-
-This package differs from other wind connectivity modeling frameworks
-like `rWind` in that it focuses not on a snapshot of wind conditions but
-on connectivity over longer time periods, integrating over many shorter,
-step-wise dispersal events that occur over time.
-
-To get started, let’s load the `windscape` package, as well as
-`tidyverse` for its general utility:
+This vignette walks through each step using small example data sets that
+ship with the package. We’ll use ggplot2 for maps.
 
 ``` r
 
 library(windscape)
-library(tidyverse)
+library(ggplot2)
+
+states <- map_data("state")
 ```
 
-## Importing wind data
+## Wind data
 
-The input data for a windscape analysis is a time series of wind fields.
-A single wind field is a pair of raster layers, with values in each grid
-cell representing the `u` and `v` components of the local wind vector at
-one point in time. Because the modeling approach is designed to capture
-temporal variability in wind conditions, high-frequency time series data
-should be used; summaries like monthly, annual, or multi-year mean wind
-fields will probably give poor results. “Reanalysis” data sets, such as
-the CFSR, ERA5, and NARR, are great data sources as they comprise
-decades of **hourly** gridded wind data that give excellent
-representations of wind variability over space and time.
+### Wind fields
 
-Depending on the study system, one might wish to model wind connectivity
-using a relatively short time frame of a few days or weeks, or to
-integrate over decades of wind conditions to more fully capture the
-variability of wind dynamics that shape ecological patterns over longer
-time frames. Users might also want to filter their input wind data by
-season, time of day, or temperature, in order to isolate wind conditions
-when their study species is likely to be airborne. `windscape` models
-are built using data for a single atmospheric layer, and vertical
-transport is not considered. In this vignette we’ll use data on
-near-surface (10 m) winds, but higher-altitude wind data could also be
-used.
-
-Wind data can be downloaded from within R, or can be obtained separately
-and loaded into R. Let’s see an example of both approaches.
-
-The function
-[`cfsr_dl()`](https://matthewkling.github.io/windscape/reference/cfsr_dl.md)
-downloads hourly wind data from the Climate Forecast System Reanalysis
-(CFSR). In the code below, we’ll import 10-m-level data for a chunk of
-North America for a sparse series of days distributed across a single
-summer. A real analysis would likely want a denser and/or longer time
-series. This example runs in a few minutes, but it could take hours or
-longer to download a more complete dataset. (Note that because this
-region is in the western hemisphere and CFSR uses longitudes in the
-0-360 range, some shifty business is needed.)
+The basic unit of wind data is a **wind field**: the wind across a grid
+at a single moment, stored as two raster layers giving the eastward
+(`u`) and northward (`v`) components of the wind vector in each cell.
+[`wind_field()`](https://matthewkling.github.io/windscape/reference/wind_field.md)
+creates one from a two-layer `SpatRaster`. Here’s one from the example
+data, for midnight UTC on January 1, 2000:
 
 ``` r
 
-wind <- cfsr_dl(variable = "wnd10m", years = 2000, months = 6:9, days = seq(1, 28, 3),
-                xlim = c(-120, -90) + 360, # shift longitudes to be in [0, 360] range for CFSR
-                ylim = c(30, 50)) %>%
-      shift(dx = -360) # shift longitude back to the standard [-180, 180] range
+series <- windscape_example("wind_series")
+n <- series@n_steps
+field <- wind_field(series[[c(1, n + 1)]]) # the first u layer and the first v layer
+
+ggplot(field, aes(x, y)) +
+      geom_raster(aes(fill = speed)) +
+      geom_path(data = states, aes(long, lat, group = group), color = "white", linewidth = 0.2) +
+      geom_wind_arrow(color = "white") +
+      scale_fill_viridis_c(name = "wind speed\n(m/s)") +
+      coord_quickmap(xlim = c(-120, -90), ylim = c(30, 50), expand = FALSE) +
+      theme_void()
 ```
 
-Alternatively we can load wind data locally from disk (a more likely
-scenario for an actual analysis), using
-[`terra::rast()`](https://rspatial.github.io/terra/reference/rast.html).
-The data set loaded below ships with the `windscape` package; it covers
-the same region, for every sixth hour on the 1st and 15th of each month
-in 2000 (see
-[`?windscape_example`](https://matthewkling.github.io/windscape/reference/windscape_example.md)).
-We can see it’s a `SpatRaster` object with many layers, each a ‘u’
-(east-west) or ‘v’ (north-south) component of the local wind vector for
-a particular date and time.
+![](windscape_files/figure-html/field-1.png)
+
+[`geom_wind_arrow()`](https://matthewkling.github.io/windscape/reference/geom_wind_arrow.md)
+draws wind vectors, and
+[`geom_wind_trail()`](https://matthewkling.github.io/windscape/reference/geom_wind_trail.md)
+draws trails that follow the airflow. Wind fields are useful for
+visualizing the wind at a given moment, but windscape’s connectivity
+models are built from many of them.
+
+### Wind time series
+
+A `wind_series` is a sequence of wind fields stored as a single
+`SpatRaster`: all the u layers, followed by all the v layers, in the
+same time order. The example series covers the western and central US at
+about 0.3 degree resolution, with 96 time steps from the year 2000
+(every 6 hours on the 1st and 15th of each month):
 
 ``` r
 
-wind <- rast(system.file("extdata/wind_usa.tif", package = "windscape"))
-wind
+series
 #> class       : SpatRaster
 #> size        : 64, 96, 192  (nrow, ncol, nlyr)
 #> resolution  : 0.3157895, 0.3174603  (x, y)
@@ -112,457 +91,431 @@ wind
 #> max values  :          0.7,           1,         0.9,           1,          0.7,         1.1, ...
 ```
 
-Next we’ll convert these data into a formal wind field time series
-object of class `wind_series`, which is a `SpatRaster` of wind data
-meeting certain criteria. To do this, we need to tell it that our `wind`
-dataset has `order = "uuvv"`, meaning all the u components come first,
-followed by all the v components; other data sets might have
-`order = "uvuv"`. (It’s assumed that the order of the u’s is the same as
-the v’s, so we need to be confident of this based on knowledge of our
-data.) The
-[`wind_series()`](https://matthewkling.github.io/windscape/reference/wind_series.md)
-function creates this object:
+Layer names record each time step. A real analysis would usually use far
+more data: windscape’s models describe the average behavior of the wind
+over the time series, and hourly data from many months or years captures
+its variability much better. Downsampled or averaged winds (e.g. monthly
+means) give poor results, because averaging cancels out winds blowing in
+opposite directions. How long a record to use depends on the question:
+decades for processes like gene flow that integrate over many
+generations, or a single season for dispersal during a flowering or
+sporulation period.
+
+[`ncar_download()`](https://matthewkling.github.io/windscape/reference/ncar_download.md)
+downloads hourly wind data from NCAR’s Geoscience Data Exchange, with no
+account needed: ERA5 (1940 to present), CFSR (1979-2010), and CFSv2
+(2011 to present). Data are clipped to a bounding box on the server and
+saved as one cached file per month, which
+[`read_wind_series()`](https://matthewkling.github.io/windscape/reference/read_wind_series.md)
+loads as a `wind_series`:
 
 ``` r
 
-series <- wind_series(wind, order = "uuvv")
+files <- ncar_download("era5", xlim = c(-120, -90), ylim = c(30, 50),
+                       years = 2011:2020, time_stride = 3, dir = "~/wind_data")
+series <- read_wind_series(files)
 ```
 
-## Constructing a connectivity graph
+Wind data from other sources can be used too. Load it as a `SpatRaster`
+on a longitude/latitude grid, with wind components in m/s, and convert
+it with
+[`wind_series()`](https://matthewkling.github.io/windscape/reference/wind_series.md).
+Its `order` argument describes how the layers are arranged: `"uuvv"`
+(all u layers, then all v layers) or `"uvuv"` (alternating).
 
-In order to estimate wind flows among sites of interest, we need to
-first convert our big wind field time series into a directed
-connectivity graph representing the average wind flow between each grid
-cell and each of its eight “queen” neighbors. The steps in this process
-include summarizing the time series into a `wind_rose` raster object,
-optionally modifying the wind rose to incorporate non-wind factors
-influencing dispersal, and/or to increase its spatial resolution, and
-then converting this into a `wind_graph` transition object.
+``` r
 
-### 1: Creating a wind rose
+series <- wind_series(terra::rast("my_wind_data.tif"), order = "uvuv")
+```
 
-A `wind_rose` object, constructed with the
-[`wind_rose()`](https://matthewkling.github.io/windscape/reference/wind_rose.md)
-function, is a raster data set with eight layers, each of which
-represents long-term wind conductance in the direction of a neighboring
-cell. These conductance values are a function of the input data on wind
-speed and direction, adjusted for the curvature of the earth, distances
-to neighboring cells, and potential differences between x and y raster
-resolutions.
+## Wind roses
 
-The main decision when creating a wind rose is the `trans` argument,
-which defines the transformation that turns wind speed into conductance
-strength. The default is `trans = 1`, which makes conductance
-proportional to wind speed – but alternatively, conductance can be made
-proportional to aerodynamic drag (speed^2) or to wind force (speed^3),
-can account for threshold speeds above which seed abscission is likely
-to occur, or can ignore speed entirely and consider only direction; see
-[`?wind_rose`](https://matthewkling.github.io/windscape/reference/wind_rose.md)
-for details.
-
-After a local wind vector for a particular time step is transformed from
-speed to conductance, this conductance is allocated between a cardinal
-and semi-cardinal neighbor, in proportion to the angle and distance
-between the downwind direction and the directions of the two adjacent
-downwind neighbors. Conductance values are calculated for each
-individual time step in the wind field data set, and then averaged to
-produce the final wind rose object. If input speeds are in m/s and
-`trans = 1`, then the wind rose conductance values are in units of
-1/hours.
-
-Let’s covert our `wind_field_ts` into a `wind_rose` here. Plotting it,
-we see that is has 8 layers, one for wind connectivity in each
-semi-cardinal direction.
+A **wind rose** summarizes a wind time series into a model of the wind
+regime. For each time step, windscape divides the wind in each grid cell
+between the two neighboring cells whose directions bracket the wind
+direction, in proportion to how closely the wind points toward each. It
+then averages over all time steps, giving the mean **conductance** of
+wind from each cell toward each of its eight neighbors: the rate at
+which wind moves material from the cell to that neighbor, in units of
+1/hour when wind speeds are in m/s.
 
 ``` r
 
 rose <- wind_rose(series, trans = 1)
-plot(rose)
+rose
+#> class       : SpatRaster
+#> size        : 64, 96, 8  (nrow, ncol, nlyr)
+#> resolution  : 0.3157895, 0.3174603  (x, y)
+#> extent      : -120.1579, -89.84211, 29.84127, 50.15873  (xmin, xmax, ymin, ymax)
+#> coord. ref. : lon/lat WGS 84 (EPSG:4326)
+#> source(s)   : memory
+#> names       :       SW,        W,       NW,        N,       NE,        E, ...
+#> min values  :        0,        0,        0,        0,  0.00034,   0.0003, ...
+#> max values  : 0.115176, 0.164829, 0.205505, 0.278183, 0.195127, 0.440725, ...
 ```
 
-![](windscape_files/figure-html/rose-1.png)
+The `trans` argument sets how wind speed translates into conductance.
+The default, `trans = 1`, makes conductance proportional to wind speed.
+Larger powers emphasize strong winds, for example to model seeds that
+are only released in strong winds, and a function can be supplied for
+other relationships, such as a threshold speed; see
+[`?wind_rose`](https://matthewkling.github.io/windscape/reference/wind_rose.md).
 
-### 2: Incorporationg non-wind dispersal barriers (optional)
+The rest of this vignette uses a wind rose that ships with the package,
+built from a longer version of the example time series.
+[`geom_wind_rose()`](https://matthewkling.github.io/windscape/reference/geom_wind_rose.md)
+maps a wind rose as a field of glyphs, each showing the distribution of
+flow toward the eight neighbors in a block of grid cells, colored by the
+direction of net flow:
 
-In some cases, you may want to account for factors other than wind that
-influence connectivity across a landscape, by down-weighting conductance
-over cells that contain water, inhospitable terrain, or other dispersal
-barriers. To incorporate factors like this, we can use the
+``` r
+
+rose <- windscape_example("wind_rose")
+
+ggplot(rose, aes(x, y)) +
+      geom_path(data = states, aes(long, lat, group = group), color = "gray70", linewidth = 0.2) +
+      geom_wind_rose(res = 12) +
+      coord_quickmap(xlim = c(-120.5, -89.5), ylim = c(29.5, 51), expand = FALSE) +
+      theme_void()
+```
+
+![](windscape_files/figure-html/rose-map-1.png)
+
+[`net_flow()`](https://matthewkling.github.io/windscape/reference/net_flow.md)
+reduces a wind rose to a single vector per cell: the net direction and
+rate at which the rose moves material, on balance. It returns a wind
+field, so it can be plotted the same way:
+
+``` r
+
+ggplot(net_flow(rose), aes(x, y)) +
+      geom_raster(aes(fill = speed)) +
+      geom_path(data = states, aes(long, lat, group = group), color = "white", linewidth = 0.2) +
+      geom_wind_trail(color = "white", hours = 24) +
+      scale_fill_viridis_c(name = "net flow\n(km/h)") +
+      coord_quickmap(xlim = c(-120, -90), ylim = c(30, 50), expand = FALSE) +
+      theme_void()
+```
+
+![](windscape_files/figure-html/net-flow-1.png)
+
+Two optional steps can adjust a wind rose before modeling.
 [`weight_conductance()`](https://matthewkling.github.io/windscape/reference/weight_conductance.md)
-function to scale the values in our `wind_rose`. Weights are supplied as
-a raster layer with values between 0 and 1.
-
-As an example, let’s downweight conductance by 90% in grid cells with
-open water. Large water bodies could reduce landscape genetic
-connectivity for wind-dispersed terrestrial organisms, since water can’t
-support the intermediate populations that help facilitate long-term gene
-flow across a landscape. In the example below, we’ll use the
-[`cfsr_dl_land()`](https://matthewkling.github.io/windscape/reference/cfsr_dl_land.md)
-function to download a land-water raster layer corresponding to our CFSR
-wind data set,
-[`classify()`](https://rspatial.github.io/terra/reference/classify.html)
-its values to convert 0’s (water) to 0.1 while leaving 1’s (land) as is,
-and then use this weights layer to adjust our wind rose. Plotting the
-first layer of the modified wind rose, we can see ocean and lake areas
-in the southwest and northeast corners where conductance has been
-reduced:
-
-``` r
-
-weights <- cfsr_dl_land(xlim = c(-120, -90) + 360, ylim = c(30, 50)) %>% shift(dx = -360) %>%
-      classify(matrix(c(0, .1), 1)) # change all 0's to 0.1
-rose <- weight_conductance(rose, weights)
-plot(rose[[1]])
-```
-
-### 3: Adjusting spatial resolution
-
-Next, we have to consider how the spatial resolution of our wind data
-relates to the distances among our study sites. The CFSR data we’re
-using in this example, like many comparable data sets, has a grid cell
-size of around ~30 km. This resolution will work well for estimating
-wind conductance among distant sites, but since windscape models
-estimate connectivity among the centers of the grid cells where sites
-occur (regardless of where in the cell the a site is located), estimates
-will be very noisy for sites separated by only a few cells, and will be
-impossible for sites in the same cell. We can check whether this is a
-problem using the
-[`check_cell_distance()`](https://matthewkling.github.io/windscape/reference/check_cell_distance.md)
-function.
-
-If it is a problem, we can address it by increasing the resolution of
-our data set using the
+scales conductance by a raster of weights between 0 and 1, for example
+to reduce connectivity across open water for terrestrial organisms
+([`ncar_land()`](https://matthewkling.github.io/windscape/reference/ncar_land.md)
+downloads a matching land-water layer).
 [`downscale()`](https://matthewkling.github.io/windscape/reference/downscale.md)
-function, which interpolates wind conductance data and adjusts the
-values to maintain the correct connectivity units. (Note that the
-`wind_cost_distance()` function, discussed below, can also make its own
-internal adjustments for cell-distance discrepancies, so downscaling is
-not the only solution.) Note that this downscaling process does not add
-more information; it just “smooths” the wind values. It fixes artifacts
-of the coarse resolution, but it does not account for any real
-fine-scale variation in wind dynamics that actually occurs within a grid
-cell due to factors like local terrain.
+refines the grid, which matters when sites are only a few grid cells
+apart; we’ll use it in the pairwise connectivity section below.
 
-Importantly, while downscaling increases accuracy for nearby sites, it
-comes at a computational cost. Downscaling a wind rose by a factor of 10
-will increase its size 100-fold, increasing memory usage and
-dramatically increasing processing time for the connectivity
-calculations discussed below. For many analyses, a compromise resolution
-can be used that balances accuracy and computational tractability. When
-this isn’t possible, the
-[`vrcd()`](https://matthewkling.github.io/windscape/reference/vrcd.md)
-function can be used to circumvent the trade-off; see the documentation
-for that function for more details.
+## Connectivity models
 
-As an example, let’s imagine we have a set of ten study sites. Here
-we’ll randomly generate spatial coordinates for their locations. Then
-we’ll check how our wind rose resolution will work for these sites:
+windscape offers two ways to model connectivity from a wind rose. We’ll
+apply both to the same site in north-central Colorado:
 
 ``` r
 
-sites <- cbind(x = runif(10, -115, -95),
-               y = runif(10, 33, 47))
-
-check_cell_distance(rose, sites)
-#> Total point pairs: 45
-#> Point pairs in the same grid cell: 0 (0%)
-#> Distribution of cell-point distance discrepancies:
-#>  0--1%: 21 (46.7%)
-#>  1--2.5%: 15 (33.3%)
-#>  2.5--5%: 8 (17.8%)
-#>  5--10%: 1 (2.22%)
-#>  10--25%: 0 (0%)
-#>  25--Inf%: 0 (0%)
+site <- cbind(-105, 40)
 ```
 
-It looks like we have no site pairs in the same grid cell, which is
-great. But we do have one site pair with a distance error of 5-10%, and
-another 23 pairs with errors of 1-5%. These aren’t huge errors but
-they’ll add some noise to our wind estimates. Let’s downscale our wind
-rose by a factor of 5, and then re-check our distance error rates:
+### Least-cost paths
 
-``` r
+A **least-cost model** treats the wind rose as a network of grid cells,
+where the cost of moving from a cell to a neighbor is the inverse of the
+conductance between them. The least-cost route between two places is the
+one with the lowest total cost, and its cost is a travel time, in hours
+if the rose was built with `trans = 1` from wind speeds in m/s.
 
-rose <- downscale(rose, 5)
-check_cell_distance(rose, sites)
-#> Total point pairs: 45
-#> Point pairs in the same grid cell: 0 (0%)
-#> Distribution of cell-point distance discrepancies:
-#>  0--1%: 43 (95.6%)
-#>  1--2.5%: 2 (4.44%)
-#>  2.5--5%: 0 (0%)
-#>  5--10%: 0 (0%)
-#>  10--25%: 0 (0%)
-#>  25--Inf%: 0 (0%)
-```
+These travel times are best understood as a measure of accessibility by
+wind. Each step’s cost is the time to cross it at the long-run average
+wind speed in that direction, which includes zeros for all the time the
+wind spends blowing in other directions. A travel time is therefore the
+time to follow the best route, including time waiting at a standstill
+for the wind direction to align roughly with the direction of travel.
+Travel times are comparable across places and directions, which is what
+most analyses need, but they don’t predict when real particles arrive.
 
-After downscaling, 96% of our site pairs now have distance discrepancies
-of less than 1%, and the other 4% all have discrepancies of less than
-2.5% – probably an acceptable margin of error given all the other
-sources of uncertainty in a modeling analysis, and given the additional
-corrections used in
-[`least_cost_distance()`](https://matthewkling.github.io/windscape/reference/least_cost_distance.md).
-
-### 4: Building a wind graph
-
-Next we need to create a `wind_graph` object using the
 [`wind_graph()`](https://matthewkling.github.io/windscape/reference/wind_graph.md)
-function. Technically, a wind graph is a `transitionLayer` as defined in
-the `gdistance` package.
-
-The only decision here is whether we want a `downwind` or `upwind`
-connectivity model. These are inversions of the same idea: the outbound
-(downwind) conductance from site A to site B is the same thing as the
-inbound (upwind) conductance arriving to site B from site A. The
-decision is not critical if the goal is to analyze flows among a set of
-sites, but if the goal is to create maps of the entire wind
-accessibility landscape for a single site, then the difference is more
-material. We’ll create a graph of each type here:
+builds the network, in one of two directions. A `"downwind"` graph
+measures travel from the site to other places, and an `"upwind"` graph
+measures travel from other places to the site.
+[`least_cost_surface()`](https://matthewkling.github.io/windscape/reference/least_cost_surface.md)
+maps travel times between a site and every grid cell:
 
 ``` r
 
-downwind <- wind_graph(rose, direction = "downwind")
-upwind <- wind_graph(rose, direction = "upwind")
-upwind
-#> class      : wind_graph 
-#> dimensions : 320, 480, 153600  (nrow, ncol, ncell)
-#> resolution : 0.06315789, 0.06349206  (x, y)
-#> extent     : -120.1579, -89.84211, 29.84127, 50.15873  (xmin, xmax, ymin, ymax)
-#> crs        : +proj=longlat +datum=WGS84 +no_defs 
-#> values      : resistance 
-#> matrix class: dgCMatrix
-```
+down <- least_cost_surface(wind_graph(rose, direction = "downwind"), site)
+up <- least_cost_surface(wind_graph(rose, direction = "upwind"), site)
 
-## Estimating wind connectivity
+d <- rbind(data.frame(as.data.frame(down, xy = TRUE), direction = "downwind: from the site"),
+           data.frame(as.data.frame(up, xy = TRUE), direction = "upwind: to the site"))
 
-The `wind_graph` we created above is our final wind connectivity model,
-and we can use it in various ways to estimate rates of wind transport
-among sites. This package supports two algorithms for calculating wind
-flows between sites: “least cost path” (LCP) and “random walk” (RW).
-Note that because wind inherently involves directional flow, wind
-connectivity has to be represented by a “directed cyclic” graph, which
-makes it impossible to use circuit theory-based algorithms that are
-commonly used in other landscape connectivity applications.
-
-The LCP algorithm finds the fastest wind travel route across a
-landscape, based on the local connectivity between each cell and its
-neighbors. It is computationally efficient, and it represents the speed
-at which the first air particles would arrive at site after diffusing
-across the landscape from a given origin location, given certain
-assumptions.
-
-The RW method instead runs a stepwise simulation. It is computationally
-much slower, but it captures the full distribution of particles
-diffusing in different directions rather than simply the speed of the
-first, fastest particle to reach a site.
-
-### Least cost path
-
-Wind LCP calculations are handled through the
-[`least_cost_surface()`](https://matthewkling.github.io/windscape/reference/least_cost_surface.md)
-and
-[`least_cost_distance()`](https://matthewkling.github.io/windscape/reference/least_cost_distance.md)
-functions. Both functions calculate the same metric but for different
-data structures. For wind models constructed with `trans = 1`, they
-produce results in units of travel time between grid cells; otherwise
-they give relative measures with less interpretable units.
-
-[`least_cost_surface()`](https://matthewkling.github.io/windscape/reference/least_cost_surface.md)
-calculates the least cost distance between a set of user-defined sites
-(one or more point locations) and every grid cell across the region,
-producing a wall-to-wall raster of wind cost-distance; if an `upwind`
-model is used then the output represents travel times from a given grid
-cell to the focal site, whereas a `downwind` model will calculate travel
-times from the focal site to cells across the landscape. Here we’ll
-calculate both variants, and make maps of them:
-
-``` r
-
-site <- matrix(c(-105, 40), ncol = 2)
-downwind_hrs <- least_cost_surface(downwind, site)
-upwind_hrs <- least_cost_surface(upwind, site)
-
-# restructure data and plot
-d <- c(downwind_hrs, upwind_hrs) %>%
-      setNames(c("downwind", "upwind")) %>%
-      as.data.frame(xy = T) %>%
-      gather(direction, wind_hours, -x, -y)
-ggplot(d) +
+ggplot(d, aes(x, y)) +
+      geom_raster(aes(fill = pmax(hours, 10))) + # floor at 10 hours for the log scale
+      geom_path(data = states, aes(long, lat, group = group), color = "white", linewidth = 0.15) +
+      geom_contour(aes(z = hours), color = "red", breaks = c(100, 200, 500, 1000), linewidth = 0.15) +
+      annotate("point", site[1], site[2], color = "red", size = 1.5) +
       facet_wrap(~direction) +
-      geom_raster(aes(x, y, fill = wind_hours)) +
-      geom_contour(aes(x, y, z = wind_hours), bins = 20, color = "white", linewidth = .25) +
-      geom_point(data = as.data.frame(site), aes(V1, V2)) +
-      coord_fixed(ratio = 1.2) +
-      scale_fill_gradientn(colors = c("yellow", "red", "blue", "black")) +
+      scale_fill_viridis_c(name = "hours", trans = "log10", direction = -1) +
+      coord_quickmap(xlim = c(-120, -90), ylim = c(30, 50), expand = FALSE) +
       theme_void() +
-      theme(legend.position = "top",
-            strip.text = element_text(size=15))
+      theme(strip.text = element_text(margin = margin(4, 0, 4, 0)))
 ```
 
-![](windscape_files/figure-html/accCost-1.png)
+![](windscape_files/figure-html/least-cost-1.png)
 
-In contrast,
-[`least_cost_distance()`](https://matthewkling.github.io/windscape/reference/least_cost_distance.md)
-calculates wind travel times between every pair of sites in a
-user-specified set of locations. It returns an asymmetric matrix in
-which element \[i,j\] represents the cost-distance from the i’th to j’th
-site. Here we’ll calculate cost-distances among the 10 sites we defined
-above. These values represent hours of travel time, but if we had
-specified the argument `rate = TRUE`, they would represent would
-represent the inverse, wind flow rates per hour:
+Places to the east are reached quickly from the site, while places to
+the west are reached slowly, and the pattern reverses for travel to the
+site.
+[`least_cost_paths()`](https://matthewkling.github.io/windscape/reference/least_cost_paths.md)
+returns the routes themselves, which can be drawn with
+[`geom_wind_trail()`](https://matthewkling.github.io/windscape/reference/geom_wind_trail.md).
+
+### Random walks
+
+A **random walk model** instead simulates particles moving through the
+wind rose. At each time step, particles move from each cell to its
+neighbors at rates set by the conductances, so they spread along all
+routes in proportion to how much wind flows along them, rather than only
+along the fastest one. Particles are removed from the air at a constant
+rate, set by a half-life in hours, and the particles removed from each
+cell make up its **deposition**.
+
+[`random_walk()`](https://matthewkling.github.io/windscape/reference/random_walk.md)
+has two modes. In `"pulse"` mode, particles are released once and
+tracked over time, which shows how a release spreads and drifts. Here
+are the airborne particles from a single release after one, three, and
+seven days, with a half-life of three days, each shown relative to its
+peak density (the total airborne mass declines as particles are
+deposited):
 
 ``` r
 
-wind_time <- least_cost_distance(downwind, sites)
-wind_time[1:5, 1:5]
-#>           [,1]       [,2]     [,3]     [,4]      [,5]
-#> [1,]    0.0000   95.03766 412.6061 502.2095  735.7693
-#> [2,]  347.9672    0.00000 361.4439 413.6948  847.6232
-#> [3,] 1116.4754  831.92643   0.0000 442.9732  836.1929
-#> [4,] 1358.7279 1069.39626 393.8730   0.0000 1074.8312
-#> [5,]  890.6875  934.19702 171.3222 610.0775    0.0000
+pulse <- random_walk(rose, site, mode = "pulse", half_life = 72,
+                     iter = 168, record = c(24, 72, 168))
+
+d <- as.data.frame(pulse$airborne, xy = TRUE)
+d <- data.frame(d[c("x", "y")], hours = rep(c(24, 72, 168), each = nrow(d)),
+                density = unlist(d[-(1:2)]))
+d$hours <- factor(paste(d$hours, "hours"), levels = paste(c(24, 72, 168), "hours"))
+d$density <- d$density / ave(d$density, d$hours, FUN = max) # relative to each panel's peak
+d$density <- pmax(d$density, 1e-3) # cells the particles haven't reached are exactly zero
+
+ggplot(d, aes(x, y)) +
+      geom_raster(aes(fill = density)) +
+      geom_path(data = states, aes(long, lat, group = group), color = "white", linewidth = 0.15) +
+      annotate("point", site[1], site[2], color = "red", size = 1) +
+      facet_wrap(~hours) +
+      scale_fill_viridis_c(name = "relative\ndensity", trans = "log10",
+                           limits = c(1e-3, 1), oob = scales::squish) +
+      coord_quickmap(xlim = c(-120, -90), ylim = c(30, 50), expand = FALSE) +
+      theme_void() +
+      theme(strip.text = element_text(margin = margin(4, 0, 4, 0)))
 ```
 
-As discussed later in this document, these results can be used in
-downstream analyses, such as comparing them to ecological data from the
-same set of sites to assess the role of wind in structuring spatial
-biodiversity patterns.
+![](windscape_files/figure-html/pulse-1.png)
 
-### Random walk
-
-RW is implemented via the windscape function
-[`random_walk()`](https://matthewkling.github.io/windscape/reference/random_walk.md).
-It involves an iterative computation, with “particle mass” diffusing
-from cells to their neighbors at each iteration, in proportion to local
-directional wind conductance.
-
-To run a random walk simulation, we need to specify the initial
-conditions (the starting distribution of the particle mass), the number
-of iterations, and the simulation mode. As an example, let’s start with
-one unit of particle mass in a single central site and run a random walk
-for 900 iterations, recording the distribution of particle mass every
-100 iterations. We’ll use the default `mode = "pulse"`, which models the
-fleeting diffusion of the particle mass that is initially present.
-Plotting the result (with a red marker at the starting location), we see
-the cloud of particle mass drifting and spreading as the walk proceeds:
+In `"stream"` mode, particles are released continuously, and the model
+returns the long-run steady state: the share of particles airborne over
+each cell (`residence`), and the share deposited in each cell
+(`deposition`). This suits processes that integrate over many releases,
+such as seed rain or gene flow. Like least-cost models, random walks can
+run in either direction. A downwind walk shows where particles released
+at the site end up, while an upwind walk shows where particles deposited
+at the site came from (its `origin` layer):
 
 ``` r
 
-# create a cropped, non-downscaled wind rose so that example runs quickly
-rose <- series %>% wind_rose() %>% crop(ext(.)/2)
-
-# run the RW computation
-walk <- random_walk(rose, init = site, iter = 600, record = seq(100, 600, 100))
-
-# plot the results
-walk %>%
-      as.data.frame(xy = T) %>%
-      gather(layer, value, -x, -y) %>%
-      mutate(layer = paste0(layer, " (", round(as.integer(str_remove(layer, "iter")) * iter_length(walk)), " hours", ")"),
-             layer = factor(layer, levels = unique(layer))) %>%
-      ggplot(aes(x, y, fill = value)) +
-      geom_raster() +
-      annotate(geom = "point", x = site[1], y = site[2], color = "red", size = .5) +
-      facet_wrap(~layer, nrow = 2) +
-      scale_fill_viridis_c(trans = "sqrt") +
-      theme_minimal() +
-      labs(fill = "mass", x = NULL, y = NULL)
+down <- random_walk(rose, site, mode = "stream", direction = "downwind", half_life = 48)
+up <- random_walk(rose, site, mode = "stream", direction = "upwind", half_life = 48)
 ```
 
-![](windscape_files/figure-html/rw-1.png)
+The half-life controls how far particles travel: short half-lives keep
+them close to the source, while long half-lives let them spread across
+the landscape, as they would for long-lived propagules or for gene flow
+over many generations. With `trans = 1` and winds in m/s, it is in
+hours.
 
-The amount of simulated time represented by each iteration will vary
-depending on the data; it is computed internally to maximize the ratio
-of simulation time to computational processing time, and can be accessed
-by calling
-[`iter_length()`](https://matthewkling.github.io/windscape/reference/iter_length.md)
-on the random walk output. In our case, one iteration is 1.6 hours, so
-our full simulation represents 959 hours. (It only represents actual
-clock time if you use a conductance value of `trans = 1` when creating
-the wind rose; otherwise, it represents a relative measure of diffusion
-speed with less interpretable units.)
+## Windsheds
 
-Our simulation tracked the fleeting diffusion of the initial “pulse” of
-particle mass, most of which will eventually leave the modeling domain
-after enough iterations. Alternatively, we could have specified
-`mode = "ratchet"` to run a propagating simulation in which local
-particle mass never declines, continuing to transmit mass at the
-cumulative maximum rate. This is equivalent to simulating continued
-input of the initial particle mass at every iteration. Compared to the
-“pulse” mode, this option may be more useful in modeling a biological
-process where particles are continually released or can propagate
-locally after colonization.
+The least cost maps above are **windsheds**: by analogy to a watershed,
+the area a site’s propagules can reach (its downwind windshed), or the
+area its arriving propagules come from (its upwind windshed). Here are
+the site’s random walk windsheds:
 
-## Testing statistical relationships
+``` r
 
-The `windscape` library also provides a set of utilities for testing
-statistical relationships between wind connectivity results and data
-representing other ecological features of the same landscape. These
-functions are intended for working with pairwise wind connectivity
-estimates among a set of sites, such as the `wind_time` data we
-generated in the “least cost path” example above.
+d <- rbind(data.frame(fortify(down)[c("x", "y")], value = fortify(down)$deposition,
+                      windshed = "downwind: where particles released here land"),
+           data.frame(fortify(up)[c("x", "y")], value = fortify(up)$origin,
+                      windshed = "upwind: where particles landing here come from"))
+d$value <- d$value / ave(d$value, d$windshed, FUN = max) # relative to each windshed's peak
 
-We’ll work with those results here. Let’s imagine the ten sites
-represent the locations of populations where landscape genetic data were
-sampled. There are various measures of landscape genetic relationships
-among sites we could calculate using other software, including estimates
-of directional gene flow, genetic differentiation, and genetic
-diversity. Let’s look at how to test relationships between wind travel
-times and each of these genetic patterns.
+ggplot(d, aes(x, y)) +
+      geom_raster(aes(fill = value)) +
+      geom_path(data = states, aes(long, lat, group = group), color = "white", linewidth = 0.15) +
+      annotate("point", site[1], site[2], color = "red", size = 1.5) +
+      facet_wrap(~windshed) +
+      scale_fill_viridis_c(name = "relative\ndensity", trans = "log10",
+                           limits = c(1e-4, 1), oob = scales::squish) +
+      coord_quickmap(xlim = c(-120, -90), ylim = c(30, 50), expand = FALSE) +
+      theme_void() +
+      theme(strip.text = element_text(margin = margin(4, 0, 4, 0)))
+```
 
-Statistical significance is calculated based on the widely-used partial
-Mantel test. The windscape library provides a
-[`mantel_test()`](https://matthewkling.github.io/windscape/reference/mantel_test.md)
-function that allows distance matrices with different upper and lower
-triangles, and allows multiple control variables, a combination of
-features that is key for our purposes and isn’t possible in Mantel test
-implementations in other R packages. The
-[`pairwise_means()`](https://matthewkling.github.io/windscape/reference/pairwise_means.md)
+![](windscape_files/figure-html/windsheds-1.png)
+
+The downwind windshed extends east of the site and the upwind windshed
+extends to the west, reflecting the prevailing westerly winds. To
+compare windsheds across many sites,
+[`ws_summarize()`](https://matthewkling.github.io/windscape/reference/ws_summarize.md)
+reduces a windshed to summary statistics such as its centroid and its
+mean bearing from the site.
+
+## Pairwise connectivity
+
+For a set of sites, such as sampled populations,
+[`pairwise_least_cost()`](https://matthewkling.github.io/windscape/reference/pairwise_least_cost.md)
 and
-[`pairwise_ratios()`](https://matthewkling.github.io/windscape/reference/pairwise_ratios.md)
-functions refactor the data to help test different hypotheses.
+[`pairwise_random_walk()`](https://matthewkling.github.io/windscape/reference/pairwise_random_walk.md)
+estimate wind connectivity between every pair, as matrices in which
+element `[i, j]` describes flow from site `i` to site `j`. Because wind
+connectivity is directional, these matrices are asymmetric (`[j, i]` can
+differ strongly fom `[i, j]`).
 
-In the example below, we’ll test how wind flow, wind speed, and wind
-asymmetry relate to a hypothetical genetic data set (see
-[here](https://doi.org/10.1073/pnas.2017317118) for details on these
-hypotheses). Because the genetic data are generated randomly in this
-example, the results are not significant. Here we’ll use geographic
-distances as a control variable; in other cases, you might want to use
-variables like environmental differences or non-wind dispersal
-influences as controls.
+Let’s generate ten random sites:
 
 ``` r
 
-# pairwise geographic distance between sites,
-# for use as a control variable in the partial Mantel tests
-distance <- point_distance(sites)
-
-# test correlation between wind flow and gene flow, controlling for distance
-n <- nrow(sites)
-gene_flow <- matrix(runif(n^2), n) # simulate random gene flow data
-r <- mantel_test(wind_time, gene_flow, z = list(distance))
-
-# test correlation between bidirectional wind connectivity and genetic isolation,
-# controlling for distance
-gene_dist <- matrix(runif(n^2), n) # simulate random genetic differentiation data
-wind_conn <- pairwise_means(wind_time) # convert to symmetric matrix
-r <- mantel_test(wind_conn, gene_dist, z = list(distance))
-
-# test correlation between wind asymmetry and gene flow asymmetry
-# (no distance control is needed for a test of reciprocally symmetric matrices)
-wind_asym <- pairwise_ratios(wind_time) # convert to asymmetry matrix
-gene_asym <- pairwise_ratios(gene_flow) # convert to asymmetry matrix
-r <- mantel_test(wind_asym, gene_asym)
-
-# test correlation between wind asymmetry and genetic diversity asymmetry
-diversity <- runif(n) # simulated diversity for each population
-div_asym <- pairwise_ratios(diversity) # pairwise diversity ratios
-r <- mantel_test(wind_asym, div_asym)
-
-str(r)
-#> List of 4
-#>  $ stat    : num 0.105
-#>  $ quantile: num 0.654
-#>  $ p.value : num 0.693
-#>  $ perm    : num [1:999] -0.179 -0.124 0.4 -0.197 -0.22 ...
+sites <- cbind(lon = runif(10, -115, -95), lat = runif(10, 33, 47))
 ```
+
+Connectivity is calculated between the centers of the grid cells
+containing the sites, so when sites are only a few cells apart, the
+distances between cell centers can differ noticeably from the distances
+between the sites themselves.
+[`check_cell_distance()`](https://matthewkling.github.io/windscape/reference/check_cell_distance.md)
+reports these discrepancies:
+
+``` r
+
+check_cell_distance(rose, sites)
+```
+
+Most site pairs are fine, but a few have discrepancies of several
+percent.
+[`downscale()`](https://matthewkling.github.io/windscape/reference/downscale.md)
+refines the wind rose grid by interpolation, which reduces them, at the
+cost of slower computation:
+
+``` r
+
+rose_fine <- downscale(rose, 2)
+check_cell_distance(rose_fine, sites)
+```
+
+Now we can estimate connectivity among the sites. Least-cost travel
+times, in hours:
+
+``` r
+
+hours <- pairwise_least_cost(wind_graph(rose_fine), sites)
+round(hours[1:5, 1:5])
+#>      [,1] [,2] [,3] [,4] [,5]
+#> [1,]    0   89  406  475  725
+#> [2,]  315    0  381  386  816
+#> [3,] 1098  868    0  422  853
+#> [4,] 1328 1087  418    0 1151
+#> [5,]  906  936  169  589    0
+```
+
+And random walk deposition, the density of particles released at each
+site that are deposited at each other site:
+
+``` r
+
+deposition <- pairwise_random_walk(rose_fine, sites, half_life = 48)
+signif(deposition[1:5, 1:5], 2)
+#>         [,1]    [,2]    [,3]    [,4]    [,5]
+#> [1,] 9.0e-05 1.3e-06 1.0e-08 4.7e-13 7.1e-16
+#> [2,] 1.7e-11 1.2e-04 1.1e-09 2.2e-12 3.9e-18
+#> [3,] 1.1e-27 5.0e-25 8.6e-05 3.7e-13 2.8e-24
+#> [4,] 6.0e-31 2.8e-28 1.2e-10 7.0e-05 4.9e-27
+#> [5,] 3.8e-26 1.1e-25 1.8e-06 2.4e-14 1.0e-04
+```
+
+The diagonal of the deposition matrix is each site’s self-retention: the
+share of its own release deposited in its own grid cell. It is usually
+much larger than the other values, but the tests below ignore diagonals.
+
+### Testing hypotheses
+
+Pairwise wind connectivity can be compared with pairwise ecological
+data, such as genetic differentiation or gene flow, to test whether wind
+shapes ecological patterns. windscape provides tools for testing several
+kinds of hypotheses (see Kling and Ackerly 2021 for examples):
+
+- **Flow**: is directional wind connectivity related to directional
+  ecological flow, such as gene flow? Compare the matrices directly.
+- **Isolation**: are sites with weaker wind connectivity in both
+  directions more different, for example genetically?
+  [`pairwise_means()`](https://matthewkling.github.io/windscape/reference/pairwise_means.md)
+  converts an asymmetric matrix into a symmetric one by averaging the
+  two directions.
+- **Asymmetry**: are imbalances in wind connectivity related to
+  imbalances in ecological flow?
+  [`pairwise_ratios()`](https://matthewkling.github.io/windscape/reference/pairwise_ratios.md)
+  converts a matrix into log ratios of the two directions.
+
+[`mantel_test()`](https://matthewkling.github.io/windscape/reference/mantel_test.md)
+tests these relationships with Mantel tests, which assess significance
+by permutation, since the values in a pairwise matrix aren’t
+independent. Unlike most implementations, it handles asymmetric matrices
+and multiple control variables. Here we run each test against simulated
+random data, using geographic distance as a control variable for the
+flow and isolation tests:
+
+``` r
+
+set.seed(1)
+distance <- point_distance(sites)
+gene_flow <- matrix(runif(100), 10) # simulated gene flow
+gene_diff <- pairwise_means(matrix(runif(100), 10)) # simulated genetic differentiation
+
+flow <- mantel_test(deposition, gene_flow, z = list(distance))
+isolation <- mantel_test(pairwise_means(hours), gene_diff, z = list(distance))
+asymmetry <- mantel_test(pairwise_ratios(hours), pairwise_ratios(gene_flow))
+
+sapply(list(flow = flow, isolation = isolation, asymmetry = asymmetry),
+       function(x) round(c(stat = x$stat, p.value = x$p.value), 3))
+#>           flow isolation asymmetry
+#> stat    -0.088     0.046     0.155
+#> p.value  0.426     0.751     0.278
+```
+
+As expected for random data, none of the relationships are significant.
+With only ten sites, these tests also have little power; real analyses
+generally need more sites.
+
+## Learn more
+
+The package website has articles on each part of the workflow in more
+depth:
+
+- **Wind data**: choosing, downloading, and preparing wind data, and
+  building wind roses from long records.
+- **Windsheds**: mapping and comparing site-to-landscape connectivity
+  with least-cost and random walk models.
+- **Pairwise connectivity**: estimating connectivity among sites and
+  testing hypotheses about the role of wind in ecological patterns.
+
+windscape implements and extends methods introduced in:
+
+- Kling, M. M., and D. D. Ackerly. 2020. Global wind patterns and the
+  vulnerability of wind-dispersed species to climate change. *Nature
+  Climate Change* 10: 868-875.
+- Kling, M. M., and D. D. Ackerly. 2021. Global wind patterns shape
+  genetic differentiation, asymmetric gene flow, and genetic diversity
+  in trees. *Proceedings of the National Academy of Sciences* 118:
+  e2017317118.

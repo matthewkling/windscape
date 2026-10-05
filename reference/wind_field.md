@@ -12,9 +12,9 @@ wind_field(x)
 
 - x:
 
-  A \`SpatRaster\` with two layers representing u and v wind components;
+  A `SpatRaster` with two layers representing u and v wind components;
   note that these must be in lat-long coordinates.
 
 ## Value
 
-A \`wind_field\` object, which is a particular form of \`SpatRaster\`.
+A `wind_field` object, which is a particular form of `SpatRaster`.

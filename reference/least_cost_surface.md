@@ -31,11 +31,16 @@ least_cost_surface(graph, sites, rate = FALSE)
 
 ## Value
 
-A SpatRaster of wind connectivity values.
+A single-layer SpatRaster. With `rate = FALSE`, the layer is named
+`hours` and gives the travel cost from the nearest site to each cell, in
+hours if `trans = 1` in
+[`wind_rose()`](https://matthewkling.github.io/windscape/reference/wind_rose.md)
+and wind speeds are in m/s (otherwise in relative units). With
+`rate = TRUE`, it is named `rate` and gives the inverse.
 
 ## Details
 
 Paths are restricted to the eight neighbor directions, so cost distances
 are overestimated for routes between neighbor bearings; see
-[least_cost_distance](https://matthewkling.github.io/windscape/reference/least_cost_distance.md)
+[pairwise_least_cost](https://matthewkling.github.io/windscape/reference/pairwise_least_cost.md)
 for magnitudes.

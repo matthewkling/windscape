@@ -27,4 +27,4 @@ as_wind_rose(x, trans, n_steps = NA_integer_)
 
 ## Value
 
-A \`wind_rose\` object.
+A `wind_rose` object.

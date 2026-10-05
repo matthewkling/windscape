@@ -47,17 +47,17 @@ mantel_test(
 
 A list with the following components:
 
-- \`stat\`: The correlation coefficient between `x` and `y`, measured on
+- `stat`: The correlation coefficient between `x` and `y`, measured on
   the data provided. This will be a partial correlation if `z` is
   specified.
 
-- \`quantile\`: The quantile of the observed stat in the null
+- `quantile`: The quantile of the observed stat in the null
   distribution.
 
-- \`p.value\`: Significance, derived from the combination of `quantile`
+- `p.value`: Significance, derived from the combination of `quantile`
   and `alternative`.
 
-- \`perm\`: A vector of null correlations based on permuted data.
+- `perm`: A vector of null correlations based on permuted data.
 
 ## Examples
 

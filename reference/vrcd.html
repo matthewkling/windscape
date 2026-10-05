@@ -29,6 +29,7 @@ between each pair of nearby sites."></head><body>
     <div id="navbar" class="collapse navbar-collapse ms-3">
       <ul class="navbar-nav me-auto"><li class="nav-item"><a class="nav-link" href="../articles/windscape.html">Get started</a></li>
 <li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
+<li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><form class="form-inline" role="search">
  <input class="form-control" type="search" name="search-input" id="search-input" autocomplete="off" aria-label="Search site" placeholder="Search for" data-search-index="../search.json"></form></li>
       </ul></div>
@@ -113,16 +114,16 @@ In this context, changing this parameter is equivalent to transposing the result
     <p>A list of square matrices:</p><dl><dt>wind_dist</dt>
 <dd><p>Wind cost-distances between site pairs, in hours if <code>rose</code> has a p = 1. Computed using <a href="https://AgrDataSci.github.io/gdistance/reference/costDistance-methods.html" class="external-link">costDistance</a>.</p></dd>
 
- <dt>wind_dist_coarse</dt>
+<dt>wind_dist_coarse</dt>
 <dd><p>Wind cost-distances using the coarse input wind grid (<code>rose</code>); this will differ from <code>wind_dist</code> only for site pairs closer than <code>threshold_km</code>. This is provided for reference, to judge how higher-resolution models impact results relative to the coarse grid.</p></dd>
 
- <dt>point_dist</dt>
+<dt>point_dist</dt>
 <dd><p>Distances between sites, in km.</p></dd>
 
- <dt>cell_dist</dt>
+<dt>cell_dist</dt>
 <dd><p>Distances between the centroids of the grid cells used to model wind connectivity, in km. For site pairs where this distance deviates from <code>point_dist</code> by a substantial percentage, <code>wind_dist</code> estimates may contain nontrivial rounding noise resulting from the discrete grid.</p></dd>
 
- <dt>cell_dist_coarse</dt>
+<dt>cell_dist_coarse</dt>
 <dd><p>Distances between the cell centroids in the coarse-resolution input wind dataset (<code>rose</code>), in km. This is provided for reference, to judge improvements relative to <code>cell_dist</code>.</p></dd>
 
 

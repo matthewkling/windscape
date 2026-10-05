@@ -36,7 +36,7 @@ reciprocal values in the upper and lower triangles. If `x` is a matrix,
 the output represents the ratios of above-diagonal to below-diagonal
 values in `x`. If `x` is a vector, the output represents the ratios of
 every pairwise combination of `x` values; e.g. a matrix in which the
-value of cell \[2,4\] equals x\[2\] / x\[4\].
+value of cell `[2, 4]` equals `x[2] / x[4]`.
 
 ## References
 

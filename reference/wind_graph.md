@@ -13,7 +13,7 @@ wind_graph(x, direction = "downwind", wrap = FALSE)
 
 - x:
 
-  An object of class \`wind_rose\`.
+  An object of class `wind_rose`.
 
 - direction:
 
@@ -23,11 +23,11 @@ wind_graph(x, direction = "downwind", wrap = FALSE)
 - wrap:
 
   Should the left and right edges of the raster be connected? Default is
-  FALSE. Set to TRUE if, for example, \`x\` is a global raster where
-  -180 and 180 are equivalent longitudes.
+  FALSE. Set to TRUE if, for example, `x` is a global raster where -180
+  and 180 are equivalent longitudes.
 
 ## Value
 
-a \`wind_graph\` object consisting of a gdistance
+a `wind_graph` object consisting of a gdistance
 [Transition-class](https://AgrDataSci.github.io/gdistance/reference/Transition-classes.html)
 object and additional metadata

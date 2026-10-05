@@ -1,7 +1,7 @@
 # Generate initial particle locations
 
 Initialize a set of particle locations for use in
-[particle_flow](https://matthewkling.github.io/windscape/reference/particle_flow.md).
+[`wind_trails()`](https://matthewkling.github.io/windscape/reference/wind_trails.md).
 
 ## Usage
 

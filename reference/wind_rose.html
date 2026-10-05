@@ -23,6 +23,7 @@ toward each of a cell's 'queen' neighbors."></head><body>
     <div id="navbar" class="collapse navbar-collapse ms-3">
       <ul class="navbar-nav me-auto"><li class="nav-item"><a class="nav-link" href="../articles/windscape.html">Get started</a></li>
 <li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
+<li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><form class="form-inline" role="search">
  <input class="form-control" type="search" name="search-input" id="search-input" autocomplete="off" aria-label="Search site" placeholder="Search for" data-search-index="../search.json"></form></li>
       </ul></div>
@@ -55,7 +56,11 @@ toward each of a cell's 'queen' neighbors.</p>
 
 
 <dl><dt id="arg-x">x<a class="anchor" aria-label="anchor" href="#arg-x"></a></dt>
-<dd><p>Data set of class `wind_series`.</p></dd>
+<dd><p>Data set of class <code>wind_series</code>, or a character vector of paths to files in
+<code>wind_series</code> layout, such as those returned by <code><a href="ncar_download.html">ncar_download()</a></code>. Multiple files are
+processed one at a time and combined with <code><a href="combine_roses.html">combine_roses()</a></code>, so a long record can be
+summarized without loading it all into memory at once. The result is identical to
+building a rose from all files combined with <code><a href="read_wind_series.html">read_wind_series()</a></code>.</p></dd>
 
 
 <dt id="arg-trans">trans<a class="anchor" aria-label="anchor" href="#arg-trans"></a></dt>
@@ -63,18 +68,20 @@ toward each of a cell's 'queen' neighbors.</p>
 
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
-<dd><p>Additional arguments passed to `terra::app`, e.g. 'filename'.</p></dd>
+<dd><p>Additional arguments passed to <code><a href="https://rspatial.github.io/terra/reference/app.html" class="external-link">terra::app</a></code>, e.g. 'filename'. When <code>x</code> is a
+vector of files, these are passed to <code><a href="https://rspatial.github.io/terra/reference/app.html" class="external-link">terra::app</a></code> for each file, and <code>filename</code> is not
+allowed; use <code><a href="https://rspatial.github.io/terra/reference/writeRaster.html" class="external-link">terra::writeRaster()</a></code> on the result instead.</p></dd>
 
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>A <code>wind_rose</code> object. This is an 8-layer raster stack, where each layer is wind conductance from
-  the focal cell to one of its neighbors (clockwise starting in the SW).
-  If input windspeeds are in m/s and `trans = 1`, values are in (1 / hours)</p>
+the focal cell to one of its neighbors (clockwise starting in the SW).
+If input windspeeds are in m/s and <code>trans = 1</code>, values are in (1 / hours)</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
-    <p>The `trans` parameter defines the transformation function used to convert wind speed
+    <p>The <code>trans</code> parameter defines the transformation function used to convert wind speed
 into conductance. If a numeric value is supplied, the function speed^trans is used.
 A value of trans = 0 will ignore speed, assigning weights based on direction only;
 trans = 1 assumes conductance is proportional to windspeed, trans = 2 assumes it's
@@ -82,7 +89,7 @@ proportional to aerodynamic drag, and trans = 3 assumes it's proportional to for
 Any intermediate value can also be used. Any function that transforms a numeric
 vector can also be supplied; for example, to model seed dispersal for a species
 that only releases seeds when winds exceed 10 m/s, we could specify a threshold
-function `trans = function(x)x[x &lt; 10] &lt;- 0; return(x)`.</p>
+function <code>trans = function(x){x[x &lt; 10] &lt;- 0; return(x)}</code>.</p>
 <p>Grid geometry: windscape works on longitude/latitude grids with square cells. Distances
 and bearings to each cell's neighbors are computed on the ellipsoid at that cell's latitude,
 so conductance accounts for the narrowing of cells toward the poles. Projected grids are not

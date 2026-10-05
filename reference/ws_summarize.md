@@ -18,8 +18,9 @@ ws_summarize(x, origin, radius = NULL)
 
   SpatRaster representing wind accessibility, with higher values
   indicating greater accessibility. (For example, this could be the
-  output of \`random_walk()\`, or \`least_cost_surface(..., rate =
-  TRUE)\`.)
+  output of
+  [`random_walk()`](https://matthewkling.github.io/windscape/reference/random_walk.md),
+  or `least_cost_surface(..., rate = TRUE)`.)
 
 - origin:
 

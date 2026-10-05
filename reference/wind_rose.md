@@ -15,7 +15,15 @@ wind_rose(x, trans = 1, ...)
 
 - x:
 
-  Data set of class \`wind_series\`.
+  Data set of class `wind_series`, or a character vector of paths to
+  files in `wind_series` layout, such as those returned by
+  [`ncar_download()`](https://matthewkling.github.io/windscape/reference/ncar_download.md).
+  Multiple files are processed one at a time and combined with
+  [`combine_roses()`](https://matthewkling.github.io/windscape/reference/combine_roses.md),
+  so a long record can be summarized without loading it all into memory
+  at once. The result is identical to building a rose from all files
+  combined with
+  [`read_wind_series()`](https://matthewkling.github.io/windscape/reference/read_wind_series.md).
 
 - trans:
 
@@ -24,18 +32,24 @@ wind_rose(x, trans = 1, ...)
 
 - ...:
 
-  Additional arguments passed to \`terra::app\`, e.g. 'filename'.
+  Additional arguments passed to
+  [`terra::app`](https://rspatial.github.io/terra/reference/app.html),
+  e.g. 'filename'. When `x` is a vector of files, these are passed to
+  [`terra::app`](https://rspatial.github.io/terra/reference/app.html)
+  for each file, and `filename` is not allowed; use
+  [`terra::writeRaster()`](https://rspatial.github.io/terra/reference/writeRaster.html)
+  on the result instead.
 
 ## Value
 
 A `wind_rose` object. This is an 8-layer raster stack, where each layer
 is wind conductance from the focal cell to one of its neighbors
 (clockwise starting in the SW). If input windspeeds are in m/s and
-\`trans = 1\`, values are in (1 / hours)
+`trans = 1`, values are in (1 / hours)
 
 ## Details
 
-The \`trans\` parameter defines the transformation function used to
+The `trans` parameter defines the transformation function used to
 convert wind speed into conductance. If a numeric value is supplied, the
 function speed^trans is used. A value of trans = 0 will ignore speed,
 assigning weights based on direction only; trans = 1 assumes conductance
@@ -44,8 +58,8 @@ aerodynamic drag, and trans = 3 assumes it's proportional to force. Any
 intermediate value can also be used. Any function that transforms a
 numeric vector can also be supplied; for example, to model seed
 dispersal for a species that only releases seeds when winds exceed 10
-m/s, we could specify a threshold function \`trans = function(x)x\[x \<
-10\] \<- 0; return(x)\`.
+m/s, we could specify a threshold function
+`trans = function(x){x[x < 10] <- 0; return(x)}`.
 
 Grid geometry: windscape works on longitude/latitude grids with square
 cells. Distances and bearings to each cell's neighbors are computed on
