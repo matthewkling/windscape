@@ -9,3 +9,4 @@
 ^data-raw$
 ^LICENSE\.md$
 ^wind.rds$
+^vignettes/articles$
