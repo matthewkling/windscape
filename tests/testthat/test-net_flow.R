@@ -10,20 +10,20 @@ test_that("net_flow matches the net flow statistics from fortify()", {
       r <- noisy_rose()
       f <- terra::values(net_flow(r))
       d <- ggplot2::fortify(r, na.rm = FALSE)
-      expect_equal(sqrt(f[, "u"]^2 + f[, "v"]^2), d$net, tolerance = 1e-12)
+      expect_equal(sqrt(f[, "u"]^2 + f[, "v"]^2) * 3.6, d$net, tolerance = 1e-12) # net is in km/h
       expect_equal((atan2(f[, "u"], f[, "v"]) * 180 / pi) %% 360, d$bearing, tolerance = 1e-10)
 })
 
-test_that("steady wind toward a neighbor gives net flow equal to wind speed, in km/h", {
+test_that("steady wind toward a neighbor gives net flow equal to wind speed, in m/s", {
       for(lat in c(0, 30, 60)){
             east <- build_rose(3, 3, function(x, y) list(u = rep(5, 10), v = rep(0, 10)), ymin = lat)
             fe <- terra::values(net_flow(east))
-            expect_equal(fe[, "u"], rep(5 * 3.6, 9), tolerance = 1e-10)
+            expect_equal(fe[, "u"], rep(5, 9), tolerance = 1e-10)
             expect_equal(fe[, "v"], rep(0, 9), tolerance = 1e-10)
             north <- build_rose(3, 3, function(x, y) list(u = rep(0, 10), v = rep(5, 10)), ymin = lat)
             fn <- terra::values(net_flow(north))
             expect_equal(fn[, "u"], rep(0, 9), tolerance = 1e-10)
-            expect_equal(fn[, "v"], rep(5 * 3.6, 9), tolerance = 1e-10)
+            expect_equal(fn[, "v"], rep(5, 9), tolerance = 1e-10)
       }
 })
 
@@ -58,8 +58,17 @@ test_that("net flow is the drift velocity of a random walk on the rose", {
                                            latitude_correction = lc))
                   a <- vals(w$airborne)
                   t <- rw_max_step(if(lc) rw_latitude_correction(r) else r)
-                  drift <- c(sum(a[nb] * d[k[nb], 1]), sum(a[nb] * d[k[nb], 2])) / sum(a) / t
-                  expect_equal(drift, unname(f[cell, ]), tolerance = 1e-10)
+                  drift <- c(sum(a[nb] * d[k[nb], 1]), sum(a[nb] * d[k[nb], 2])) / sum(a) / t # km/h
+                  expect_equal(drift / 3.6, unname(f[cell, ]), tolerance = 1e-10)
             }
       }
+})
+
+test_that("trails through net flow travel the distance their hours imply", {
+      # steady 5 m/s east wind: 10 hours of transport covers 5 * 3.6 * 10 = 180 km
+      r <- build_rose(9, 31, function(x, y) list(u = rep(5, 10), v = rep(0, 10)), ymin = 40, res = 0.25)
+      tr <- wind_trails(net_flow(r), cbind(-98, 41), hours = 10, direction = "downwind")
+      ends <- tr[tr$step %in% range(tr$step), c("x", "y")]
+      km <- geosphere::distGeo(as.matrix(ends[1, ]), as.matrix(ends[2, ])) / 1000
+      expect_equal(km, 180, tolerance = 0.01)
 })
