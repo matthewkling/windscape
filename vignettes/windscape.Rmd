@@ -32,7 +32,10 @@ A windscape analysis follows a few steps:
    data.
 
 This vignette walks through each step using small example data sets that ship with the package.
-We'll use ggplot2 for maps.
+For more details on specific topics, see the articles on wind data, random walk models, least
+cost models, and statistical tests (coming soon).
+
+
 
 ```{r setup}
 library(windscape)
@@ -244,7 +247,7 @@ ggplot(d, aes(x, y)) +
       annotate("point", site[1], site[2], color = "red", size = 1) +
       facet_wrap(~hours) +
       scale_fill_viridis_c(name = "relative\ndensity", trans = "log10",
-                           limits = c(1e-3, 1), oob = scales::squish) +
+                           limits = c(1e-3, NA), oob = scales::squish) +
       coord_quickmap(xlim = c(-120, -90), ylim = c(30, 50), expand = FALSE) +
       theme_void() +
       theme(strip.text = element_text(margin = margin(4, 0, 4, 0)))
