@@ -54,7 +54,9 @@ components \code{u} and \code{v} are mapped automatically to columns of the same
 by \code{fortify()} on a \code{wind_field} (see \link{fortify.windscape}).}
 
 \item{data}{A \code{wind_field}, which is converted with \code{fortify()}, or a data frame like its
-\code{fortify()} output. Default is to inherit the plot's data.}
+\code{fortify()} output. Default is to inherit the plot's data.
+The data must have one wind vector per grid cell in each panel and group, so to plot a
+\code{wind_series}, select a time step with \code{\link[=subset_series]{subset_series()}} or facet by \code{time}.}
 
 \item{stat, geom}{Use to override the default pairing of stat and geom.}
 

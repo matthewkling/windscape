@@ -52,7 +52,9 @@ main call: \code{ggplot(field, aes(x, y))}. The wind components \code{u} (eastwa
 differently, map them in this layer's \code{mapping} rather than in \code{\link[ggplot2:ggplot]{ggplot2::ggplot()}}.}
 
 \item{data}{A data frame, or a \code{wind_field}, which is converted with \code{fortify()}. Default is
-to inherit the plot's data.}
+to inherit the plot's data.
+The data must have one wind vector per grid cell in each panel and group, so to plot a
+\code{wind_series}, select a time step with \code{\link[=subset_series]{subset_series()}} or facet by \code{time}.}
 
 \item{stat, geom}{Use to override the default pairing of \code{stat_wind_arrow()} and
 \code{geom_wind_arrow()}.}

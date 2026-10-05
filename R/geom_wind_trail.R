@@ -13,6 +13,8 @@
 #'    by `fortify()` on a `wind_field` (see [fortify.windscape]).
 #' @param data A `wind_field`, which is converted with `fortify()`, or a data frame like its
 #'    `fortify()` output. Default is to inherit the plot's data.
+#'    The data must have one wind vector per grid cell in each panel and group, so to plot a
+#'    `wind_series`, select a time step with [subset_series()] or facet by `time`.
 #' @param stat,geom Use to override the default pairing of stat and geom.
 #' @param position Position adjustment; see [ggplot2::layer()].
 #' @param ... Other arguments passed to [ggplot2::layer()], such as fixed aesthetics like
@@ -121,6 +123,7 @@ StatWindTrail <- ggplot2::ggproto("StatWindTrail", ggplot2::Stat,
                                         if(nrow(data) == 0) return(data.frame())
                                         spec <- block_spec(data, params$res)
                                         pieces <- split(data, list(data$PANEL, data$group), drop = TRUE)
+                                        lapply(pieces, check_one_time_step)
 
                                         # trail extent, set once for the whole layer so panels are comparable
                                         km <- params$length * spec$spacing_km

@@ -122,3 +122,25 @@ test_that("geom_wind_trail computes trails from a wind field, like stat_wind_tra
       expect_equal(g[c("x", "y", "group", "t", "speed")], s[c("x", "y", "group", "t", "speed")])
       expect_error(ggplot2::layer_data(base + geom_wind_trail(res = 0)), "res")
 })
+
+test_that("field layers reject multi-step series but allow one step per panel", {
+      series <- windscape_example("wind_series")
+      s2 <- subset_series(series, steps = 1:2)
+      base <- ggplot2::ggplot(s2, ggplot2::aes(x, y))
+      expect_error(ggplot2::layer_data(base + geom_wind_trail(res = 6)), "more than one wind vector")
+      expect_error(ggplot2::layer_data(base + geom_wind_arrow(res = 6)), "more than one wind vector")
+
+      # faceting by time gives one step per panel
+      faceted <- base + ggplot2::facet_wrap(~time)
+      expect_gt(nrow(ggplot2::layer_data(faceted + geom_wind_trail(res = 6))), 0)
+      expect_gt(nrow(ggplot2::layer_data(faceted + geom_wind_arrow(res = 6))), 0)
+
+      # so do groups, e.g. two fields overlaid by color
+      d <- ggplot2::fortify(s2)
+      grouped <- ggplot2::ggplot(d, ggplot2::aes(x, y, color = factor(step)))
+      expect_gt(nrow(ggplot2::layer_data(grouped + geom_wind_arrow(res = 6))), 0)
+
+      # and a one-step series plots like a wind field
+      expect_gt(nrow(ggplot2::layer_data(ggplot2::ggplot(subset_series(series, steps = 1), ggplot2::aes(x, y)) +
+                                               geom_wind_trail(res = 6))), 0)
+})

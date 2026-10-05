@@ -231,3 +231,16 @@ flow_stats <- function(flows, lat, cell){
       data.frame(speed = speed, net = net, bearing = (atan2(nx, ny) * 180 / pi) %% 360,
                  consistency = ifelse(speed > 0, net / speed, 0))
 }
+
+
+# Wind field layers (arrows, trails) need one wind vector per grid cell in each panel and group.
+# Several per cell usually means a multi-step wind_series was plotted, which would otherwise mix
+# time steps silently.
+check_one_time_step <- function(d){
+      if(anyDuplicated(d[, c("x", "y")]))
+            stop("the data have more than one wind vector for some grid cells in a panel. This ",
+                 "usually means a wind_series with several time steps was plotted: select one time ",
+                 "step with subset_series(), facet by `time`, or plot the net flow of a wind rose ",
+                 "with net_flow().", call. = FALSE)
+      invisible(NULL)
+}

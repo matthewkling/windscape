@@ -12,6 +12,8 @@
 #'    differently, map them in this layer's `mapping` rather than in [ggplot2::ggplot()].
 #' @param data A data frame, or a `wind_field`, which is converted with `fortify()`. Default is
 #'    to inherit the plot's data.
+#'    The data must have one wind vector per grid cell in each panel and group, so to plot a
+#'    `wind_series`, select a time step with [subset_series()] or facet by `time`.
 #' @param stat,geom Use to override the default pairing of `stat_wind_arrow()` and
 #'    `geom_wind_arrow()`.
 #' @param position Position adjustment; see [ggplot2::layer()].
@@ -97,6 +99,7 @@ StatWindArrow <- ggplot2::ggproto("StatWindArrow", ggplot2::Stat,
                                         data$cell_speed <- sqrt(data$u^2 + data$v^2)
 
                                         pieces <- split(data, list(data$PANEL, data$group), drop = TRUE)
+                                        lapply(pieces, check_one_time_step)
                                         blocks <- lapply(pieces, function(d){
                                               b <- block_means(d, c("u", "v", "cell_speed"), spec = spec)
                                               if(nrow(b) == 0) return(NULL)
