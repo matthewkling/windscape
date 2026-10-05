@@ -248,6 +248,9 @@ lengths beyond the area of interest, until this fraction is small or the bias in
 interest is acceptable. With \code{half_life = Inf}, edges are the only place stream-mode mass can
 leave, so the result measures connectivity within the chosen domain and depends on its
 extent; every valid cell must have a path to an edge or NA cell, or an error is raised.
+\code{\link[=rw_exit_prob]{rw_exit_prob()}} maps the probability that mass released at each cell leaves the domain,
+which bounds the effect of the domain boundary on results for particles released there; the
+reported edge-loss fraction is this probability averaged over sources, weighted by release.
 }
 
 \subsection{Latitude correction}{

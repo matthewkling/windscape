@@ -179,7 +179,7 @@ test_that("invalid inputs are rejected", {
 
 test_that("pulse mode runs and conserves mass away from edges", {
       r <- uniform_rose(u = 1)
-      w <- quietly(random_walk(r, point_raster(r, 221), iter = 3))$airborne
+      w <- quietly(random_walk(r, point_raster(r, 221), iter = 3, density = FALSE))$airborne
       expect_equal(terra::global(w, "sum")[[1]], 1, tolerance = 1e-12)
 })
 
@@ -187,7 +187,8 @@ test_that("pulse mode runs and conserves mass away from edges", {
 
 test_that("pulse decay removes a fraction lambda of airborne mass per step", {
       r <- uniform_rose(u = 1)
-      w <- quietly(random_walk(r, point_raster(r, 221), iter = 3, record = 0:3, half_life = 24))$airborne
+      w <- quietly(random_walk(r, point_raster(r, 221), iter = 3, record = 0:3, half_life = 24,
+                               density = FALSE))$airborne
       lam <- w@decay
       expect_equal(lam, lambda_24(w@iter_length))
       expect_equal(unname(terra::global(w, "sum")[[1]]), (1 - lam)^(0:3), tolerance = 1e-12)
@@ -229,7 +230,8 @@ test_that("pulse deposition is lambda times the sum of earlier airborne mass", {
 
 test_that("pulse airborne + deposition + edge loss equals release", {
       r <- uniform_rose(u = 1)
-      w <- quietly(random_walk(r, point_raster(r, 221), iter = 4, record = 0:4, half_life = 24))
+      w <- quietly(random_walk(r, point_raster(r, 221), iter = 4, record = 0:4, half_life = 24,
+                               density = FALSE))
       total <- terra::global(w$airborne, "sum")[[1]] + terra::global(w$deposition, "sum")[[1]]
       expect_equal(total, rep(1, 5), tolerance = 1e-12) # source far from edges: no loss yet
 })

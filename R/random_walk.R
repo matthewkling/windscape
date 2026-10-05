@@ -198,6 +198,9 @@
 #' interest is acceptable. With `half_life = Inf`, edges are the only place stream-mode mass can
 #' leave, so the result measures connectivity within the chosen domain and depends on its
 #' extent; every valid cell must have a path to an edge or NA cell, or an error is raised.
+#' [rw_exit_prob()] maps the probability that mass released at each cell leaves the domain,
+#' which bounds the effect of the domain boundary on results for particles released there; the
+#' reported edge-loss fraction is this probability averaged over sources, weighted by release.
 #'
 #' ## Latitude correction
 #'
@@ -444,6 +447,130 @@ rw_self_retention <- function(rose, half_life = Inf, timescale = 1, latitude_cor
 
 
 
+#' Probability of exiting a random walk's domain
+#'
+#' Computes, for each grid cell, the probability that particles released there leave the domain
+#' before being deposited: across its edges, into NA cells, or either. Because mass that leaves
+#' the domain is lost (see the Domain edges section of [random_walk()]), this measures how much
+#' each cell's results are affected by the choice of domain. See Details for how to use it.
+#'
+#' @param rose A `wind_rose`.
+#' @param half_life Half-life of airborne mass, in hours. Should match the value used for the
+#'    random walk being assessed; see [random_walk()]. With the default `Inf`, every cell with
+#'    a path to an exit has exit probability 1 (in the long run, all mass leaves), so the result
+#'    is informative only with `iter` or for comparing `exits = "edges"` with `"na"`.
+#' @param exits Which exits to count. `"all"` (the default) counts mass leaving across domain
+#'    edges or into NA cells, matching the edge-loss fraction reported by [random_walk()].
+#'    `"edges"` counts only mass leaving across the outer edges of the grid, and `"na"` only mass
+#'    entering NA cells, e.g. to separate truncation of the domain from loss to a deliberately
+#'    masked area. Both kinds of exit remain absorbing in every case: `"edges"` and `"na"` give
+#'    the probability that mass is lost by that route, and they sum to `"all"`.
+#' @param latitude_correction Logical. Should match the value used for the random walk being
+#'    assessed; see [random_walk()].
+#' @param iter Number of pulse-mode iterations (time steps) over which to count exits. The
+#'    default `NULL` gives the probability of ever exiting, which applies to stream-mode results
+#'    and does not depend on `timescale`. An integer gives the probability of exiting within
+#'    `iter` steps, which applies to pulse-mode results at that iteration.
+#' @param timescale With `iter` only: time step scaling factor; see [random_walk()]. Should
+#'    match the value used for the pulse-mode walk.
+#'
+#' @return A single-layer SpatRaster named `exit_prob`, giving for each cell the probability that
+#'    a particle released there exits by the routes in `exits` (within `iter` steps, if given)
+#'    before being deposited. NA where `rose` is NA. Cells from which no exit can be reached
+#'    have probability 0.
+#'
+#' @details
+#' ## Interpreting exit probabilities as error bounds
+#'
+#' Consider a random walk on a larger domain that contains this one, with any winds outside it.
+#' A particle released at cell `x` follows the same process in both domains until it first
+#' exits this one, so results for particles released at `x` can differ between the two only
+#' through particles that exit. This makes the exit probability `h(x)` a bound on the effect of
+#' the domain boundary, with no assumptions about winds outside the domain, for any quantity
+#' that is a probability over particles released at `x`:
+#'
+#' * For an upwind walk (`direction = "upwind"`), stream-mode `deposition` at `x` (the
+#'   probability that a particle released at `x` is deposited at the receptor) is off by at most
+#'   `h(x)`. The same holds for pulse-mode `airborne` and `deposition` at iteration `iter`, using
+#'   `h` computed with that `iter`.
+#' * For [pairwise_random_walk()], values for source `x` are off by at most `h(x)`.
+#' * For a downwind walk from a unit source at `x`, the deposition map is off by at most `h(x)`
+#'   in total, summed over all cells (with `density = FALSE`). This bounds the map as a whole,
+#'   not the error at any particular cell. For a downwind walk with several sources, the
+#'   edge-loss fraction reported by [random_walk()] is `h` averaged over sources, weighted by
+#'   release.
+#'
+#' Masking cells where `h` exceeds a tolerance therefore leaves cells whose values are accurate
+#' to within that tolerance. The bound is conservative, since it counts every particle that
+#' exits as fully misplaced, whereas some would return. It does not cover the error at
+#' individual cells of downwind maps, which comes from particles that exit and later return, nor
+#' the absence of sources beyond the domain in results that assume release everywhere (such
+#' as upwind `origin` with the default `source`); bounding these requires assumptions about
+#' the winds and sources outside the domain.
+#'
+#' Exit probabilities are typically highest near the domain's downwind margins, where released
+#' mass is carried out of the domain, and fall off quickly toward upwind margins. The width of
+#' the affected band grows with `half_life`.
+#'
+#' ## Computation
+#'
+#' Exit probabilities solve `(I - (1 - lambda) P) h = (1 - lambda) l`, where `P` is the
+#' transition matrix, `lambda` the per-step deposition fraction, and `l` the per-step
+#' probability of stepping out of the domain by the routes in `exits`. This is one sparse
+#' solve, the same size as a stream-mode walk. With `iter`, the recursion
+#' `h <- (1 - lambda) * (l + P h)` is applied `iter` times from `h = 0`.
+#'
+#' @examples
+#' \donttest{
+#' rose <- windscape_example("wind_rose")
+#' h <- rw_exit_prob(rose, half_life = 24)
+#' plot(h)
+#'
+#' # mask an upwind walk to cells where the domain affects results by less than 1%
+#' rw <- random_walk(rose, cbind(-100, 40), mode = "stream", direction = "upwind",
+#'                   half_life = 24)
+#' plot(terra::mask(rw$deposition, h > 0.01, maskvalues = TRUE))
+#' }
+#' @export
+rw_exit_prob <- function(rose, half_life = Inf, exits = c("all", "edges", "na"),
+                         latitude_correction = TRUE, iter = NULL, timescale = 1){
+      exits <- match.arg(exits)
+      if(!(timescale > 0 && timescale <= 1)) stop("'timescale' must be greater than 0 and less than or equal to 1.")
+      if(!is.null(iter) && !(length(iter) == 1 && is.numeric(iter) && iter >= 0 && iter == round(iter)))
+            stop("`iter` must be NULL or a single non-negative integer")
+      if(latitude_correction) rose <- rw_latitude_correction(rose)
+      if(is.null(iter)) timescale <- 1 # results don't depend on the step length
+      t <- rw_max_step(rose) * timescale
+      lambda <- rw_decay(half_life, t)
+      p <- rw_prob(rose, t)
+      P <- rw_matrix(p)
+      valid <- attr(P, "valid")
+      L <- rw_leak(p)
+      l <- switch(exits, all = rowSums(L), edges = L[, "edges"], na = L[, "na"])
+      l[!valid] <- 0
+
+      if(!is.null(iter)){
+            h <- numeric(length(l))
+            for(j in seq_len(iter)) h <- (1 - lambda) * (l + as.vector(P %*% h))
+      }else{
+            # without decay, cells with no path to any exit never leave: h = 0 there, and they
+            # are dropped so the system is nonsingular
+            live <- if(lambda == 0) rw_drains(P) else valid
+            h <- numeric(length(l))
+            if(any(live)){
+                  A <- Matrix::Diagonal(sum(live)) - (1 - lambda) * P[live, live, drop = FALSE]
+                  h[live] <- as.vector(Matrix::solve(A, (1 - lambda) * l[live]))
+            }
+            h <- pmin(pmax(h, 0), 1) # remove LU round-off
+      }
+
+      h[!valid] <- NA
+      out <- terra::rast(rose, nlyrs = 1)
+      terra::values(out) <- h
+      names(out) <- "exit_prob"
+      out
+}
+
 # Internal helpers ---------------------
 
 rw_prob <- function(x, t){
@@ -684,17 +811,53 @@ rw_matrix <- function(p){
 # mass (to a domain edge or NA cell). Otherwise I - P' is singular.
 rw_check_drainage <- function(P){
       valid <- attr(P, "valid")
+      reach <- rw_drains(P)
+      stuck <- sum(valid & !reach)
+      if(stuck > 0) stop(stuck, " cell(s) have no path to a domain edge or NA cell, so with ",
+                         "`half_life = Inf` mass accumulates there without limit and there is no ",
+                         "steady state. Use a finite `half_life`.")
+      invisible(TRUE)
+}
+
+
+# Valid cells with a path to a cell that leaks mass (to a domain edge or NA cell).
+rw_drains <- function(P){
+      valid <- attr(P, "valid")
       reach <- valid & (1 - Matrix::rowSums(P)) > 1e-12
       repeat{
             new <- valid & (reach | as.vector(P %*% as.numeric(reach)) > 0)
             if(all(new == reach)) break
             reach <- new
       }
-      stuck <- sum(valid & !reach)
-      if(stuck > 0) stop(stuck, " cell(s) have no path to a domain edge or NA cell, so with ",
-                         "`half_life = Inf` mass accumulates there without limit and there is no ",
-                         "steady state. Use a finite `half_life`.")
-      invisible(TRUE)
+      reach
+}
+
+
+# Per-step probability of leaving the domain from each cell, split by where mass goes: off
+# the grid (`edges`) or into an NA cell (`na`). A two-column matrix in terra cell order, from
+# the 9-layer simplex returned by rw_prob(), using the same neighbor offsets as rw_matrix().
+# For valid cells, the row sums equal 1 - rowSums(rw_matrix(p)); NA cells leak nothing.
+rw_leak <- function(p){
+      nr <- terra::nrow(p)
+      nc <- terra::ncol(p)
+      v <- terra::values(p)
+      valid <- stats::complete.cases(v)
+      v[!valid, ] <- 0
+      row <- rep(seq_len(nr), each = nc)
+      col <- rep(seq_len(nc), times = nr)
+      dr <- c(0,  1,  0, -1, -1, -1, 0, 1, 1)  # stay, SW, W, NW, N, NE, E, SE, S
+      dc <- c(0, -1, -1, -1,  0,  1, 1, 1, 0)
+      edges <- na <- numeric(nr * nc)
+      for(k in 2:9){
+            r2 <- row + dr[k]
+            c2 <- col + dc[k]
+            inside <- r2 >= 1 & r2 <= nr & c2 >= 1 & c2 <= nc
+            edges[!inside] <- edges[!inside] + v[!inside, k]
+            to_na <- inside
+            to_na[inside] <- !valid[((r2 - 1) * nc + c2)[inside]]
+            na[to_na] <- na[to_na] + v[to_na, k]
+      }
+      cbind(edges = edges, na = na)
 }
 
 
