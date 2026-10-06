@@ -32,9 +32,15 @@ and random walk models, which produce path data, windshed maps, and
 pairwise matrices for hypothesis tests.](workflow.svg)
 
 This vignette walks through each step using small example data sets that
-ship with the package. For more details on specific topics, see the
-articles on wind data, random walk models, least cost models, and
-statistical tests (coming soon).
+ship with the package. For more depth, the [package
+website](https://matthewkling.github.io/windscape/) has articles on
+[wind
+data](https://matthewkling.github.io/windscape/articles/wind-data.html),
+[windsheds](https://matthewkling.github.io/windscape/articles/windsheds.html),
+[pairwise
+connectivity](https://matthewkling.github.io/windscape/articles/pairwise-connectivity.html),
+and the [connectivity
+models](https://matthewkling.github.io/windscape/articles/connectivity-models.html).
 
 ``` r
 
@@ -224,8 +230,12 @@ before using it.
 
 ## Connectivity models
 
-windscape offers two ways to model connectivity from a wind rose. We’ll
-apply both to the same site in north-central Colorado:
+windscape offers two ways to model connectivity from a wind rose. The
+[connectivity
+models](https://matthewkling.github.io/windscape/articles/connectivity-models.html)
+article gives more detail on how both models work, what their settings
+do, and how to choose between them.We’ll apply both to the same site in
+north-central Colorado:
 
 ``` r
 
@@ -388,6 +398,11 @@ compare windsheds across many sites,
 reduces a windshed to summary statistics such as its centroid and its
 mean bearing from the site.
 
+The
+[windsheds](https://matthewkling.github.io/windscape/articles/windsheds.html)
+article covers windsheds in more depth, including the routes that
+connect a site to its windshed and the flux of material through it.
+
 ## Pairwise connectivity
 
 For a set of sites, such as sampled populations,
@@ -525,17 +540,32 @@ As expected for random data, none of the relationships here are
 significant. With only ten sites, these tests also have little power;
 real analyses often need more sites.
 
+The [pairwise
+connectivity](https://matthewkling.github.io/windscape/articles/pairwise-connectivity.html)
+article compares the two models’ matrices, covers site placement in more
+detail, and works through these tests with the `birch` landscape genetic
+data set.
+
 ## Learn more
 
-The package website has articles on each part of the workflow in more
-depth:
+The [package website](https://matthewkling.github.io/windscape/) has
+articles on each part of the workflow in more depth:
 
-- **Wind data**: choosing, downloading, and preparing wind data, and
-  building wind roses from long records.
-- **Windsheds**: mapping and comparing site-to-landscape connectivity
-  with least-cost and random walk models.
-- **Pairwise connectivity**: estimating connectivity among sites and
-  testing hypotheses about the role of wind in ecological patterns.
+- [**Wind
+  data**](https://matthewkling.github.io/windscape/articles/wind-data.html):
+  choosing, downloading, and preparing wind data, and building wind
+  roses from long records.
+- [**Windsheds**](https://matthewkling.github.io/windscape/articles/windsheds.html):
+  mapping and comparing site-to-landscape connectivity with least-cost
+  and random walk models.
+- [**Pairwise
+  connectivity**](https://matthewkling.github.io/windscape/articles/pairwise-connectivity.html):
+  estimating connectivity among sites and testing hypotheses about the
+  role of wind in ecological patterns.
+- [**Connectivity models in
+  depth**](https://matthewkling.github.io/windscape/articles/connectivity-models.html):
+  how least-cost and random walk models work, their settings and
+  limitations, and how to choose between them.
 
 windscape implements and extends methods introduced in:
 

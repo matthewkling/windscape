@@ -1,7 +1,5 @@
 # windscape
 
-’
-
 Because wind disperses particles ranging from pollen, seeds, and spores
 to insects, pathogens, and pollutants, wind patterns shape many aspects
 of spatial ecology. But the variation in wind strength and direction
@@ -260,3 +258,26 @@ directionality of wind connectivity, and
 tests their relationships with other pairwise data. The package includes
 `birch`, a landscape genetic data set for silver birch, for trying these
 out.
+
+## Learn more
+
+The [package website](https://matthewkling.github.io/windscape/)
+includes a more detailed [**getting
+started**](https://matthewkling.github.io/windscape/articles/windscape.html)
+vignette, and articles on each part of the workflow in more depth:
+
+- [**Wind
+  data**](https://matthewkling.github.io/windscape/articles/wind-data.html):
+  choosing, downloading, and preparing wind data, and building wind
+  roses from long records.
+- [**Windsheds**](https://matthewkling.github.io/windscape/articles/windsheds.html):
+  mapping and comparing site-to-landscape connectivity with least-cost
+  and random walk models.
+- [**Pairwise
+  connectivity**](https://matthewkling.github.io/windscape/articles/pairwise-connectivity.html):
+  estimating connectivity among sites and testing hypotheses about the
+  role of wind in ecological patterns.
+- [**Connectivity models in
+  depth**](https://matthewkling.github.io/windscape/articles/connectivity-models.html):
+  how least-cost and random walk models work, their settings and
+  limitations, and how to choose between them.

@@ -36,7 +36,10 @@
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
-<li><a class="dropdown-item" href="articles/wind-data.html">Wind data</a></li>
+<li><a class="dropdown-item" href="articles/connectivity_models.html">Connectivity models in depth</a></li>
+    <li><a class="dropdown-item" href="articles/pairwise.html">Pairwise connectivity</a></li>
+    <li><a class="dropdown-item" href="articles/wind-data.html">Wind data</a></li>
+    <li><a class="dropdown-item" href="articles/windsheds.html">Windsheds</a></li>
   </ul>
 </li>
 <li class="nav-item"><a class="nav-link" href="news/index.html">Changelog</a></li>
@@ -57,7 +60,6 @@
 </h1></div>
 <!-- badges: start -->
 <!-- badges: end -->
-<p>’</p>
 <p>Because wind disperses particles ranging from pollen, seeds, and spores to insects, pathogens, and pollutants, wind patterns shape many aspects of spatial ecology. But the variation in wind strength and direction over space and time makes it challenging to study wind’s role in landscape connectivity. The <strong>windscape</strong> package provides a toolset for modeling the effects of time-integrated wind regimes in spatial ecology, landscape genetics, and related fields.</p>
 <p>While <strong>windscape</strong> can be used to map air flow patterns at a single moment, its core connectivity models summarize long time series of wind data into wind regimes, describing the expected connectivity averaged over many dispersal events. It is thus designed for analyzing processes that accumulate over time, such as gene flow, colonization, and range expansion. The package offers the following functionality:</p>
 <table class="table">
@@ -253,6 +255,21 @@
 <span id="cb11-4"><a href="#cb11-4" tabindex="-1"></a><span class="do">## [3,] 1.5e-15 7.5e-10 1.9e-05 3.1e-07</span></span>
 <span id="cb11-5"><a href="#cb11-5" tabindex="-1"></a><span class="do">## [4,] 4.2e-18 7.1e-11 1.5e-10 2.3e-05</span></span></code></pre></div>
 <p>These matrices can be compared with ecological data, such as genetic differentiation or gene flow, to test whether wind shapes ecological patterns. <code><a href="reference/pairwise_means.html">pairwise_means()</a></code> and <code><a href="reference/pairwise_ratios.html">pairwise_ratios()</a></code> derive matrices for testing hypotheses about the strength and the directionality of wind connectivity, and <code><a href="reference/mantel_test.html">mantel_test()</a></code> tests their relationships with other pairwise data. The package includes <code>birch</code>, a landscape genetic data set for silver birch, for trying these out.</p>
+</div>
+<div class="section level2">
+<h2 id="learn-more">Learn more<a class="anchor" aria-label="anchor" href="#learn-more"></a>
+</h2>
+<p>The <a href="https://matthewkling.github.io/windscape/">package website</a> includes a more detailed <a href="https://matthewkling.github.io/windscape/articles/windscape.html"><strong>getting started</strong></a> vignette, and articles on each part of the workflow in more depth:</p>
+<ul>
+<li>
+<a href="https://matthewkling.github.io/windscape/articles/wind-data.html"><strong>Wind data</strong></a>: choosing, downloading, and preparing wind data, and building wind roses from long records.</li>
+<li>
+<a href="https://matthewkling.github.io/windscape/articles/windsheds.html"><strong>Windsheds</strong></a>: mapping and comparing site-to-landscape connectivity with least-cost and random walk models.</li>
+<li>
+<a href="https://matthewkling.github.io/windscape/articles/pairwise-connectivity.html"><strong>Pairwise connectivity</strong></a>: estimating connectivity among sites and testing hypotheses about the role of wind in ecological patterns.</li>
+<li>
+<a href="https://matthewkling.github.io/windscape/articles/connectivity-models.html"><strong>Connectivity models in depth</strong></a>: how least-cost and random walk models work, their settings and limitations, and how to choose between them.</li>
+</ul>
 </div>
 </div>
   </main><aside class="col-md-3"><div class="license">
