@@ -2,3 +2,116 @@ url: https://matthewkling.github.io/windscape/
 template:
   bootstrap: 5
 
+articles:
+- title: Articles
+  navbar: ~
+  contents:
+  - articles/wind-data
+  - articles/windsheds
+  - articles/pairwise
+  - articles/connectivity_models
+
+reference:
+
+- title: Wind data
+  desc: >
+    Download hourly wind, and represent it as a time series (`wind_series`) or a
+    single snapshot (`wind_field`).
+- subtitle: Downloading
+  contents:
+  - ncar_download
+  - ncar_land
+- subtitle: Wind series and fields
+  contents:
+  - wind_series
+  - wind_times
+  - subset_series
+  - wind_field
+  - "`mean,wind_series-method`"
+
+- title: Wind roses
+  desc: >
+    Summarize a long time series of wind conditions as the conductance from each
+    cell to its eight neighbors: the basis of both connectivity models.
+  contents:
+  - wind_rose
+  - combine_roses
+  - weight_conductance
+  - net_flow
+  - "`wind_rose-grid`"
+
+- title: Least-cost model
+  desc: >
+    Travel time along the fastest route through the wind graph: windshed maps,
+    paths, and pairwise matrices.
+  contents:
+  - least_cost
+  - least_cost_paths
+  - pairwise_least_cost
+  - wind_graph
+
+- title: Random walk model
+  desc: >
+    Dispersal of material spreading across the grid in proportion to the wind:
+    windshed maps, paths, and pairwise matrices.
+  contents:
+  - random_walk
+  - random_walk_paths
+  - pairwise_random_walk
+- subtitle: Diagnostics
+  desc: >
+    Properties of the random walk on a given rose: time steps, edge losses, and
+    self-retention.
+  contents:
+  - rw_exit_prob
+  - rw_self_retention
+  - rw_max_step
+  - iter_length
+- subtitle: Site placement and grid resolution
+  contents:
+  - check_cell_distance
+  - downscale
+  - cell_distance
+- subtitle: Windshed summaries
+  contents:
+  - ws_summarize
+
+- title: Hypothesis testing
+  desc: >
+    Test hypotheses about directional connectivity using pairwise matrices of
+    wind, gene flow, or other relationships among sites.
+  contents:
+  - mantel_test
+  - pairwise_ratios
+  - pairwise_means
+  - point_distance
+
+- title: Plotting
+  desc: >
+    ggplot2 layers for wind data and connectivity results.
+- subtitle: Geoms
+  contents:
+  - geom_wind_rose
+  - geom_wind_arrow
+  - geom_wind_trail
+  - geom_wind_path
+  - scale_fill_bearing
+  - fortify.windscape
+- subtitle: Streamlines and particle trails
+  contents:
+  - wind_trails
+  - generate_particles
+
+- title: Datasets
+  contents:
+  - windscape_example
+  - birch
+
+- title: Classes and methods
+  contents:
+  - "`wind_series-class`"
+  - "`wind_field-class`"
+  - "`wind_rose-class`"
+  - "`wind_graph-class`"
+  - "`windscape-layers`"
+  - "`geoCorrection,wind_graph,ANY-method`"

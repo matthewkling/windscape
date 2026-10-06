@@ -18,17 +18,6 @@ spin90 <- function(x){
       x
 }
 
-#' Extend a global raster with copies of itself
-#'
-#' @param x SpatRaster
-#' @param width Longitudinal degrees of extension
-#' @return a wider version of x, with the eastern side repeated on the west and vice-versa
-#' @export
-tesselate <- function(x, width = 20){
-      x <- x %>% crop(ext(180 - width, 180, -90, 90)) %>% terra::shift(-360) %>% terra::merge(x)
-      x <- x %>% crop(ext(-180, -180 + width, -90, 90)) %>% terra::shift(360) %>% terra::merge(x)
-      x
-}
 
 
 #' Aspect ratio of grid cell at a given latitude

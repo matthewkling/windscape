@@ -11,7 +11,7 @@
 #'   \code{identity} (the default) assumes conductance is proportional to windspeed,
 #'   \code{function(s) s^2} assumes it's proportional to aerodynamic drag, and
 #'   \code{function(s) s^3} assumes it's proportional to force. See \link{wind_rose}.
-#' @export
+#' @noRd
 rose <- function(x, trans = identity){
 
       # unpack & restructure: row=timestep, col=u&v components

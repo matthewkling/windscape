@@ -22,7 +22,7 @@ While **windscape** can be used to map air flow patterns at a single moment, its
 | Model wind regimes | Summarize wind time series into | `wind_rose()`, `combine_roses()`, `weight_conductance()`, `downscale()` |
 | Map windsheds | Model a site's upwind catchment area and downwind deposition shadow using *least cost path* or *random walk* approaches | `least_cost()`, `least_cost_paths()`, `random_walk()`, `ws_summarize()` |
 | Compute pairwise connectivity | Model directional connectivity among sets of sites | `pairwise_least_cost()`, `pairwise_random_walk()`, `check_cell_distance()` |
-| Test hypotheses | Run statistical significance tests about spatial relationships between wind and ecological outcomes | `pairwise_ratios()`, `pairwise_means()`, `mantel_test()` |
+| Test hypotheses | Run statistical significance tests about spatial relationships between wind and ecological outcomes | `mantel_test()`, `pairwise_ratios()`, `pairwise_means()`, `point_distance()` |
 | Trace airflow | | `wind_trails()` |
 | Visualize | Map spatial wind patterns in ggplot2, including instantaneous wind fields, time-integrated wind regimes, and windsheds | `geom_wind_rose()`, `geom_wind_arrow()`, `geom_wind_trail()`, `geom_wind_path()`, `scale_fill_bearing()` |
  
