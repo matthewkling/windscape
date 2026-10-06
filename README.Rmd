@@ -39,7 +39,7 @@ remotes::install_github("matthewkling/windscape")
 |:-----|:----------|
 | Get wind data | `ncar_download()`, `ncar_land()`, `wind_series()`, `windscape_example()` |
 | Summarize a wind regime | `wind_rose()`, `combine_roses()`, `weight_conductance()`, `downscale()` |
-| Map windsheds | `least_cost_surface()`, `least_cost_paths()`, `random_walk()`, `ws_summarize()` |
+| Map windsheds | `least_cost()`, `least_cost_paths()`, `random_walk()`, `ws_summarize()` |
 | Connectivity among sites | `pairwise_least_cost()`, `pairwise_random_walk()`, `check_cell_distance()` |
 | Test hypotheses | `pairwise_ratios()`, `pairwise_means()`, `mantel_test()` |
 | Trace airflow | `wind_trails()` |
@@ -110,14 +110,14 @@ By analogy to watersheds, "windsheds" are the upwind catchment area where partic
 
 ### Least-cost paths
 
-Least-cost path models find the fastest route between places, giving wind travel times in hours of effective wind transport along the best route under the long-run wind regime. `least_cost_surface()` maps travel time from a site, and `least_cost_paths()` traces a set of individual routes. Here we use them together to model *downwind* connectivity from a site in the center of the landscape.
+Least-cost path models find the fastest route between places, giving wind travel times in hours of effective wind transport along the best route under the long-run wind regime. `least_cost()` maps travel time from a site, and `least_cost_paths()` traces a set of individual routes. Here we use them together to model *downwind* connectivity from a site in the center of the landscape.
 
 ```{r least-cost, fig.width = 8, fig.height = 5.5}
 site <- cbind(-105, 40)
 destinations <- generate_particles(rose, 500, "grid")
 
 graph <- wind_graph(rose, direction = "downwind")
-hours <- least_cost_surface(graph, site)
+hours <- least_cost(graph, site)
 paths <- least_cost_paths(graph, site, destinations)
 
 ggplot(as.data.frame(hours, xy = TRUE), aes(x, y)) +

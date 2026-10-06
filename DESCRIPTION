@@ -65,6 +65,7 @@ Collate:
     'pairwise_random_walk.R'
     'particles.R'
     'random_walk.R'
+    'random_walk_paths.R'
     'rose.R'
     'utils.R'
     'weight_conductance.R'

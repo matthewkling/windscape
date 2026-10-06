@@ -25,7 +25,7 @@
 #' within cells by default (`snap = FALSE`), so it handles nearby sites without downscaling, and
 #' downscaling changes its results little: typically by a few percent, reflecting the smoother
 #' interpolated wind field. Downscaling does reduce error for nearby sites when sites are
-#' snapped to cell centers, as in `pairwise_least_cost(snap = TRUE)`, [least_cost_surface()], and
+#' snapped to cell centers, as in `pairwise_least_cost(snap = TRUE)`, [least_cost()], and
 #' [least_cost_paths()].
 #'
 #' **Random walk analyses.** The random walk functions treat each site as its cell, so downscaling

@@ -6,7 +6,7 @@
 #' properties of multiple different sites.
 #'
 #' @param x SpatRaster representing wind accessibility, with higher values indicating greater accessibility.
-#'    (For example, this could be the output of `random_walk()`, or `least_cost_surface(..., rate = TRUE)`.)
+#'    (For example, this could be the output of `random_walk()`, or `least_cost(..., rate = TRUE)`.)
 #' @param origin Coordinates of center point (matrix with 2 columns and 1 row).
 #' @param radius Optional windshed radius, in km; cells farther from the origin than this will be excluded
 #'    from the summary statistics.

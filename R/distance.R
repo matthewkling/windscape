@@ -32,7 +32,7 @@ cell_distance <- function(x, ll){
 #' the sites fall in, and prints a report. Connectivity models that work from cell to cell treat
 #' each site as the center of its cell: the random walk functions ([random_walk()],
 #' [pairwise_random_walk()]), and the least-cost functions when sites are snapped to cell centers
-#' ([least_cost_surface()], [least_cost_paths()], and `pairwise_least_cost(snap = TRUE)`). For
+#' ([least_cost()], [least_cost_paths()], and `pairwise_least_cost(snap = TRUE)`). For
 #' these, sites separated by only a few cells have distorted distances and directions, and sites in
 #' the same cell can't be distinguished at all. [pairwise_least_cost()] with its default
 #' `snap = FALSE` places sites at their actual locations, so this check does not apply to it.

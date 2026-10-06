@@ -25,7 +25,7 @@ Compares pairwise distances among sites with distances between the centers of th
 the sites fall in, and prints a report. Connectivity models that work from cell to cell treat
 each site as the center of its cell: the random walk functions (\code{\link[=random_walk]{random_walk()}},
 \code{\link[=pairwise_random_walk]{pairwise_random_walk()}}), and the least-cost functions when sites are snapped to cell centers
-(\code{\link[=least_cost_surface]{least_cost_surface()}}, \code{\link[=least_cost_paths]{least_cost_paths()}}, and \code{pairwise_least_cost(snap = TRUE)}). For
+(\code{\link[=least_cost]{least_cost()}}, \code{\link[=least_cost_paths]{least_cost_paths()}}, and \code{pairwise_least_cost(snap = TRUE)}). For
 these, sites separated by only a few cells have distorted distances and directions, and sites in
 the same cell can't be distinguished at all. \code{\link[=pairwise_least_cost]{pairwise_least_cost()}} with its default
 \code{snap = FALSE} places sites at their actual locations, so this check does not apply to it.

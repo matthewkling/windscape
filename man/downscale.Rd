@@ -38,7 +38,7 @@ connectivity model.
 within cells by default (\code{snap = FALSE}), so it handles nearby sites without downscaling, and
 downscaling changes its results little: typically by a few percent, reflecting the smoother
 interpolated wind field. Downscaling does reduce error for nearby sites when sites are
-snapped to cell centers, as in \code{pairwise_least_cost(snap = TRUE)}, \code{\link[=least_cost_surface]{least_cost_surface()}}, and
+snapped to cell centers, as in \code{pairwise_least_cost(snap = TRUE)}, \code{\link[=least_cost]{least_cost()}}, and
 \code{\link[=least_cost_paths]{least_cost_paths()}}.
 
 \strong{Random walk analyses.} The random walk functions treat each site as its cell, so downscaling

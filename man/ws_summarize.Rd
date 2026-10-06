@@ -8,7 +8,7 @@ ws_summarize(x, origin, radius = NULL)
 }
 \arguments{
 \item{x}{SpatRaster representing wind accessibility, with higher values indicating greater accessibility.
-(For example, this could be the output of \code{random_walk()}, or \code{least_cost_surface(..., rate = TRUE)}.)}
+(For example, this could be the output of \code{random_walk()}, or \code{least_cost(..., rate = TRUE)}.)}
 
 \item{origin}{Coordinates of center point (matrix with 2 columns and 1 row).}
 

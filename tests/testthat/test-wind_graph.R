@@ -1,4 +1,4 @@
-# wind_graph(), pairwise_least_cost(), least_cost_surface() ------------------------
+# wind_graph(), pairwise_least_cost(), least_cost() ------------------------
 
 # cell-center coordinates of row `row`, columns `cols`, of raster r
 centers <- function(r, row, cols) terra::xyFromCell(r, terra::cellFromRowCol(r, row, cols))
@@ -38,16 +38,16 @@ test_that("rate = TRUE returns inverse cost distances", {
                    1 / pairwise_least_cost(g, xy, snap = TRUE))
 })
 
-test_that("least_cost_surface agrees with pairwise_least_cost", {
+test_that("least_cost agrees with pairwise_least_cost", {
       r <- noisy_rose()
       xy <- terra::xyFromCell(r, c(5, 40, 77))
       g <- wind_graph(r)
-      s <- least_cost_surface(g, xy[1, , drop = FALSE])
+      s <- least_cost(g, xy[1, , drop = FALSE])
       expect_s4_class(s, "SpatRaster")
       expect_equal(names(s), "hours")
       d <- pairwise_least_cost(g, xy, snap = TRUE)
       expect_equal(terra::extract(s, xy)[, 1], d[1, ], tolerance = 1e-8)
-      sr <- least_cost_surface(g, xy[1, , drop = FALSE], rate = TRUE)
+      sr <- least_cost(g, xy[1, , drop = FALSE], rate = TRUE)
       expect_equal(names(sr), "rate")
       expect_equal(terra::values(sr), 1 / terra::values(s), ignore_attr = TRUE)
 })
@@ -141,4 +141,16 @@ test_that("paths draw with geom_wind_path", {
       ld <- ggplot2::layer_data(plt)
       expect_equal(length(unique(ld$group)), 2)
       expect_s3_class(ggplot2::ggplotGrob(plt), "gtable")
+})
+
+test_that("least_cost_paths defaults to a grid of destinations", {
+      rose <- windscape_example("wind_rose")
+      g <- wind_graph(rose)
+      site <- cbind(-105, 40)
+      expect_silent(p <- least_cost_paths(g, site, n = 60))
+      k <- length(unique(p$trail))
+      expect_gt(k, 40)
+      expect_lte(k, 75)
+      expect_true(all(p$x[p$step == 0] == terra::xFromCell(rose, terra::cellFromXY(rose, site))))
+      expect_error(least_cost_paths(g, site, pairs = "matched"), "requires `to`")
 })

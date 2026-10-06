@@ -76,7 +76,7 @@ pairwise_least_cost <- function(graph, sites, snap = FALSE, rate = FALSE){
 #'   and wind speeds are in m/s (otherwise in relative units). With `rate = TRUE`, it is named
 #'   `rate` and gives the inverse.
 #' @export
-least_cost_surface <- function(graph, sites, rate = FALSE){
+least_cost <- function(graph, sites, rate = FALSE){
       if(inherits(sites, "SpatVector")) sites <- crds(sites)
       d <- gdistance::accCost(graph, sites)
       if(rate){
@@ -92,15 +92,19 @@ least_cost_surface <- function(graph, sites, rate = FALSE){
 #'
 #' Traces the least-cost (fastest) paths between sites through a wind graph, as sequences of
 #' grid cell centers. The result has the same structure as [wind_trails()] output, so it can be
-#' drawn with [geom_wind_trail()].
+#' drawn with [geom_wind_path()]. Without `to`, paths run to a regular grid of destinations
+#' across the domain, showing the network of fastest routes from the origin(s).
 #'
 #' @param graph A `wind_graph`, created with [wind_graph()].
 #' @param from,to Origin and destination sites: two-column matrices (or data frames) of
-#'    longitude and latitude, or `SpatVector`s of points.
+#'    longitude and latitude, or `SpatVector`s of points. If `to` is `NULL` (the default),
+#'    destinations are about `n` points on a regular grid across the domain, and destinations
+#'    that can't be reached are dropped silently.
 #' @param pairs Which origin-destination pairs to trace: `"all"` (the default) traces a path
 #'    from every origin to every destination; `"nearest"` traces one path from each origin, to
 #'    the destination it can reach at the lowest cost; `"matched"` pairs `from` and `to` row by
-#'    row, which requires them to have the same number of sites.
+#'    row, which requires them to have the same number of sites; it isn't available without `to`.
+#' @param n Approximate number of destinations, when `to` is `NULL`.
 #'
 #' @return A data frame with one row per path vertex, ordered from origin to destination along
 #'    each path:
@@ -138,20 +142,26 @@ least_cost_surface <- function(graph, sites, rate = FALSE){
 #'
 #' library(ggplot2)
 #' ggplot(paths, aes(x, y)) +
-#'   geom_wind_trail(aes(color = hours)) +
+#'   geom_wind_path(aes(color = hours)) +
+#'   coord_quickmap()
+#'
+#' # the network of fastest routes from the site, to a grid of destinations
+#' network <- least_cost_paths(graph, site, n = 200)
+#' ggplot(network, aes(x, y)) +
+#'   geom_wind_path(aes(color = hours), arrow = NULL) +
 #'   coord_quickmap()
 #' @export
-least_cost_paths <- function(graph, from, to, pairs = c("all", "nearest", "matched")){
+least_cost_paths <- function(graph, from, to = NULL, pairs = c("all", "nearest", "matched"), n = 50){
       if(!inherits(graph, "TransitionLayer")) stop("`graph` must be a wind_graph")
       pairs <- match.arg(pairs)
-      as_sites <- function(s, name){
-            if(inherits(s, "SpatVector")) s <- terra::crds(s)
-            s <- as.matrix(s)
-            if(ncol(s) != 2 || !is.numeric(s)) stop("`", name, "` must be a two-column matrix of coordinates")
-            unname(s)
+      from <- as_site_matrix(from, "from")
+      grid <- is.null(to)
+      if(grid){
+            if(pairs == "matched") stop("`pairs = \"matched\"` requires `to`")
+            if(length(n) != 1 || !is.numeric(n) || n < 1) stop("`n` must be a positive number")
+            to <- grid_points(terra::rast(raster::raster(graph)), n)
       }
-      from <- as_sites(from, "from")
-      to <- as_sites(to, "to")
+      to <- as_site_matrix(to, "to")
 
       # origin-destination pairs to trace
       cost <- gdistance::costDistance(graph, from, to)
@@ -171,7 +181,7 @@ least_cost_paths <- function(graph, from, to, pairs = c("all", "nearest", "match
             raster::cellFromXY(template, to[od$to, , drop = FALSE])
       od <- od[!same_cell, , drop = FALSE]
       unreachable <- !is.finite(cost[cbind(od$from, od$to)])
-      if(any(unreachable)) warning(sum(unreachable), " origin-destination pair(s) have no path and were omitted")
+      if(any(unreachable) && !grid) warning(sum(unreachable), " origin-destination pair(s) have no path and were omitted")
       od <- od[!unreachable, , drop = FALSE]
       if(nrow(od) == 0){
             return(data.frame(trail = integer(0), from = integer(0), to = integer(0),

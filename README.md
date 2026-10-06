@@ -46,9 +46,9 @@ remotes::install_github("matthewkling/windscape")
 
 | Task | Functions |
 |:---|:---|
-| Get wind data | `ncar_download()`, `ncar_land()`, `read_wind_series()`, `windscape_example()` |
+| Get wind data | `ncar_download()`, `ncar_land()`, `wind_series()`, `windscape_example()` |
 | Summarize a wind regime | `wind_rose()`, `combine_roses()`, `weight_conductance()`, `downscale()` |
-| Map windsheds | `least_cost_surface()`, `least_cost_paths()`, `random_walk()`, `ws_summarize()` |
+| Map windsheds | `least_cost()`, `least_cost_paths()`, `random_walk()`, `ws_summarize()` |
 | Connectivity among sites | `pairwise_least_cost()`, `pairwise_random_walk()`, `check_cell_distance()` |
 | Test hypotheses | `pairwise_ratios()`, `pairwise_means()`, `mantel_test()` |
 | Trace airflow | `wind_trails()` |
@@ -101,14 +101,14 @@ ggplot(katrina, aes(x, y)) +
 
 A **wind rose** summarizes a time series of wind fields into a model of
 the wind regime: for each grid cell, the average conductance of wind
-toward each of its eight neighbors. `wind_rose()` can build one from a
-set of files a month at a time, so long records needn’t fit in memory.
-The `trans` argument sets how wind speed translates into conductance so
-the rose reflects the winds that matter for dispersal, for example to
-model propagules that are only released in strong winds.
+toward each of its eight neighbors. `wind_rose()` builds one from a long
+series in chunks, so long records needn’t fit in memory. The `trans`
+argument sets how wind speed translates into conductance so the rose
+reflects the winds that matter for dispersal, for example to model
+propagules that are only released in strong winds.
 
 ``` r
-rose <- wind_rose(files, trans = 1)
+rose <- wind_rose(wind_series(files), trans = 1)
 ```
 
 The examples below use a small `wind_rose` object that ships with the
@@ -146,17 +146,17 @@ connectivity, both of which use a `wind_rose` as input.
 
 Least-cost path models find the fastest route between places, giving
 wind travel times in hours of effective wind transport along the best
-route under the long-run wind regime. `least_cost_surface()` maps travel
-time from a site, and `least_cost_paths()` traces a set of individual
-routes. Here we use them together to model *downwind* connectivity from
-a site in the center of the landscape.
+route under the long-run wind regime. `least_cost()` maps travel time
+from a site, and `least_cost_paths()` traces a set of individual routes.
+Here we use them together to model *downwind* connectivity from a site
+in the center of the landscape.
 
 ``` r
 site <- cbind(-105, 40)
 destinations <- generate_particles(rose, 500, "grid")
 
 graph <- wind_graph(rose, direction = "downwind")
-hours <- least_cost_surface(graph, site)
+hours <- least_cost(graph, site)
 paths <- least_cost_paths(graph, site, destinations)
 
 ggplot(as.data.frame(hours, xy = TRUE), aes(x, y)) +

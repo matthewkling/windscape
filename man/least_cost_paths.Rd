@@ -4,18 +4,28 @@
 \alias{least_cost_paths}
 \title{Least-cost paths through a wind graph}
 \usage{
-least_cost_paths(graph, from, to, pairs = c("all", "nearest", "matched"))
+least_cost_paths(
+  graph,
+  from,
+  to = NULL,
+  pairs = c("all", "nearest", "matched"),
+  n = 50
+)
 }
 \arguments{
 \item{graph}{A \code{wind_graph}, created with \code{\link[=wind_graph]{wind_graph()}}.}
 
 \item{from, to}{Origin and destination sites: two-column matrices (or data frames) of
-longitude and latitude, or \code{SpatVector}s of points.}
+longitude and latitude, or \code{SpatVector}s of points. If \code{to} is \code{NULL} (the default),
+destinations are about \code{n} points on a regular grid across the domain, and destinations
+that can't be reached are dropped silently.}
 
 \item{pairs}{Which origin-destination pairs to trace: \code{"all"} (the default) traces a path
 from every origin to every destination; \code{"nearest"} traces one path from each origin, to
 the destination it can reach at the lowest cost; \code{"matched"} pairs \code{from} and \code{to} row by
-row, which requires them to have the same number of sites.}
+row, which requires them to have the same number of sites; it isn't available without \code{to}.}
+
+\item{n}{Approximate number of destinations, when \code{to} is \code{NULL}.}
 }
 \value{
 A data frame with one row per path vertex, ordered from origin to destination along
@@ -37,7 +47,8 @@ grid cell are omitted, since their path has no length.
 \description{
 Traces the least-cost (fastest) paths between sites through a wind graph, as sequences of
 grid cell centers. The result has the same structure as \code{\link[=wind_trails]{wind_trails()}} output, so it can be
-drawn with \code{\link[=geom_wind_trail]{geom_wind_trail()}}.
+drawn with \code{\link[=geom_wind_path]{geom_wind_path()}}. Without \code{to}, paths run to a regular grid of destinations
+across the domain, showing the network of fastest routes from the origin(s).
 }
 \details{
 Paths are computed with \code{\link[gdistance:shortestPath]{gdistance::shortestPath()}}. They follow the graph's direction:
@@ -61,6 +72,12 @@ head(paths)
 
 library(ggplot2)
 ggplot(paths, aes(x, y)) +
-  geom_wind_trail(aes(color = hours)) +
+  geom_wind_path(aes(color = hours)) +
+  coord_quickmap()
+
+# the network of fastest routes from the site, to a grid of destinations
+network <- least_cost_paths(graph, site, n = 200)
+ggplot(network, aes(x, y)) +
+  geom_wind_path(aes(color = hours), arrow = NULL) +
   coord_quickmap()
 }

@@ -142,7 +142,11 @@ through each cell: the flow from the cell to each neighbor minus the flow back, 
 distance to that neighbor, halved (each flow is shared between two cells). Units are mass
 times km per hour (if \code{init} is a release rate, \code{trans = 1}, and wind speeds are in m/s);
 direction and relative magnitude are usually what matter. Draw it with
-\code{\link[=geom_wind_arrow]{geom_wind_arrow()}}, or \code{\link[=stat_wind_trail]{stat_wind_trail()}} with \code{fixed_length = TRUE}. Unlike the gradient
+\code{\link[=geom_wind_trail]{geom_wind_trail()}} with \code{fixed_length = TRUE}, mapping flux magnitude to line width rather
+than length, e.g. \code{geom_wind_trail(aes(linewidth = after_stat(speed)), fixed_length = TRUE)}
+(a square-root scale, \code{scale_linewidth(trans = "sqrt")}, helps because flux spans orders of
+magnitude), or with \code{\link[=geom_wind_arrow]{geom_wind_arrow()}}. To show the routes material takes from the source(s),
+trace the flux with \code{\link[=random_walk_paths]{random_walk_paths()}}. Unlike the gradient
 of \code{residence} or \code{deposition}, which describes the shape of the windshed, net flux shows the
 transport that produces it: across a plume's flanks, for example, material moves mostly
 downwind, not sideways down the gradient. Each cell's net outflow equals its release minus
@@ -274,5 +278,27 @@ blowing between neighbor directions (up to about 8 percent at the equator, more 
 latitude). The added conductance shortens the time step by an amount set by the
 highest-latitude cells in the domain. Spread remains dependent on grid resolution with or
 without the correction.
+}
+}
+\examples{
+\donttest{
+library(ggplot2)
+rose <- windscape_example("wind_rose")
+site <- cbind(-105, 40)
+
+# downwind windshed: where particles released at the site are deposited
+w <- random_walk(rose, site, mode = "stream", half_life = 48, flux = TRUE)
+ggplot(w, aes(x, y)) +
+  geom_raster(aes(fill = deposition)) +
+  scale_fill_viridis_c(trans = "log10", limits = c(1e-8, NA), oob = scales::squish) +
+  coord_quickmap()
+
+# net flux of the dispersing material, with magnitude shown as line width
+ggplot(w$flux, aes(x, y)) +
+  geom_wind_trail(aes(linewidth = after_stat(speed), alpha = after_stat(speed)),
+                  fixed_length = TRUE) +
+  scale_linewidth(trans = "sqrt", range = c(0.1, 2.5)) +
+  scale_alpha(trans = "sqrt", range = c(0.05, 1)) +
+  coord_quickmap()
 }
 }
