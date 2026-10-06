@@ -31,6 +31,13 @@ A windscape analysis follows a few steps:
    or estimating **pairwise connectivity** among a set of sites, for comparison with ecological
    data.
 
+The diagram below maps how windscape's main objects (teal) and functions connect, along with the
+ggplot2 layers for drawing each object (purple):
+
+```{r workflow, echo = FALSE, fig.alt = "Diagram of the windscape workflow: wind data become a wind_series, which yields wind fields and a wind rose; the wind rose feeds least-cost and random walk models, which produce path data, windshed maps, and pairwise matrices for hypothesis tests."}
+knitr::include_graphics("workflow.svg")
+```
+
 This vignette walks through each step using small example data sets that ship with the package.
 For more details on specific topics, see the articles on wind data, random walk models, least
 cost models, and statistical tests (coming soon).
