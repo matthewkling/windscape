@@ -18,21 +18,6 @@ spin90 <- function(x){
       x
 }
 
-#' Augment a raster object, adding layers containing cell row-column indices.
-#'
-#' @param x SpatRaster
-#' @return x, with additional row and column index layers added
-#' @noRd
-add_coords <- function(windrose){
-      rows <- cols <- windrose[[1]]
-      rows[] <- rep(1:nrow(rows), each=ncol(rows))
-      cols[] <- rep(1:ncol(rows), nrow(rows))
-      windrose <- c(windrose, rows, cols)
-      names(windrose) <- c("SW", "W", "NW", "N", "NE", "E", "SE", "S", "row", "col")
-      return(windrose)
-}
-
-
 #' Extend a global raster with copies of itself
 #'
 #' @param x SpatRaster

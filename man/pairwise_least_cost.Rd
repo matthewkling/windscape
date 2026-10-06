@@ -4,25 +4,32 @@
 \alias{pairwise_least_cost}
 \title{Pairwise least-cost travel times among sites}
 \usage{
-pairwise_least_cost(graph, sites, snap = FALSE, rate = FALSE)
+pairwise_least_cost(rose, sites, snap = FALSE, rate = FALSE, ...)
 }
 \arguments{
-\item{graph}{A \link{wind_graph}.}
+\item{rose}{A \code{\link[=wind_rose]{wind_rose()}}. The least-cost functions build a \code{\link[=wind_graph]{wind_graph()}} from it
+internally. Alternatively, a \code{wind_graph} built in advance, to save rebuilding it when
+making many calls on a large grid; its direction must match the analysis (always
+\code{"downwind"} here).}
 
-\item{sites}{A two-column matrix of point coordinates.}
+\item{sites}{A two-column matrix (or data frame) of point coordinates, or a \code{SpatVector} of
+points.}
 
 \item{snap}{Logical: snap sites to the centers of their grid cells? Default \code{FALSE}, which
 places sites at their actual locations within cells; see details.}
 
 \item{rate}{Whether to return values as "rates" instead of the default "cost distances". Rates
 are the inverse of cost distances, representing flow rather than travel time.}
+
+\item{...}{Further arguments passed to \code{\link[=wind_graph]{wind_graph()}}, such as \code{wrap}. Not allowed when
+\code{rose} is already a \code{wind_graph}.}
 }
 \value{
 A square matrix with one row and column per site: the least-cost travel time (or,
 with \code{rate = TRUE}, its inverse) from the row's site to the column's site, in hours if
 \code{trans = 1} in \code{\link[=wind_rose]{wind_rose()}} and wind speeds are in m/s. Small travel times mean strong
-connectivity. Because wind graphs are directed, the matrix is generally asymmetric. The
-diagonal is zero. Sites outside the graph's extent get \code{NA}, with a warning.
+connectivity. Because wind is directional, the matrix is generally asymmetric. The
+diagonal is zero. Sites outside the grid get \code{NA}, with a warning.
 }
 \description{
 Calculate pairwise wind cost-distances (e.g. travel times) or flow rates (the inverse of
@@ -56,4 +63,13 @@ about 8 percent (routes 22.5 degrees off a grid axis). On a longitude/latitude g
 narrow east-west toward the poles and neighbor bearings become uneven, so the maximum error
 grows with latitude, to roughly 18 percent at 60 degrees. Site edges have the same
 directional bias, so that it is consistent across distances.
+
+Unlike \code{\link[=least_cost]{least_cost()}} and \code{\link[=least_cost_paths]{least_cost_paths()}}, this function has no \code{direction} argument:
+the matrix holds travel in both directions between every pair of sites. Row \code{i} gives travel
+downwind from site \code{i}, and column \code{j} gives travel upwind of site \code{j}.
+}
+\examples{
+rose <- windscape_example("wind_rose")
+sites <- cbind(lon = c(-110, -105, -100, -95), lat = c(40, 42, 38, 44))
+pairwise_least_cost(rose, sites) # travel time from row site to column site, in hours
 }

@@ -34,7 +34,7 @@ test_that("example wind_field is Hurricane Katrina", {
 test_that("example rose works in the connectivity functions", {
       rose <- windscape_example("wind_rose")
       xy <- cbind(c(-110, -95), c(40, 40))
-      d <- pairwise_least_cost(wind_graph(rose), xy)
+      d <- pairwise_least_cost(rose, xy)
       expect_true(all(is.finite(d)))
       w <- quietly(random_walk(rose, xy[1, , drop = FALSE], mode = "stream", half_life = 24))
       expect_gt(terra::global(w[["deposition"]], "sum", na.rm = TRUE)[[1]], 0)

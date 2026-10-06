@@ -2,72 +2,85 @@
 % Please edit documentation in R/least_cost.R
 \name{least_cost_paths}
 \alias{least_cost_paths}
-\title{Least-cost paths through a wind graph}
+\title{Least-cost paths}
 \usage{
 least_cost_paths(
-  graph,
-  from,
+  rose,
+  sites,
   to = NULL,
+  direction = "downwind",
   pairs = c("all", "nearest", "matched"),
-  n = 50
+  n = 50,
+  ...
 )
 }
 \arguments{
-\item{graph}{A \code{wind_graph}, created with \code{\link[=wind_graph]{wind_graph()}}.}
+\item{rose}{A \code{\link[=wind_rose]{wind_rose()}}, or a \code{wind_graph} built in advance whose direction matches
+\code{direction}; see \code{\link[=pairwise_least_cost]{pairwise_least_cost()}}.}
 
-\item{from, to}{Origin and destination sites: two-column matrices (or data frames) of
-longitude and latitude, or \code{SpatVector}s of points. If \code{to} is \code{NULL} (the default),
-destinations are about \code{n} points on a regular grid across the domain, and destinations
-that can't be reached are dropped silently.}
+\item{sites, to}{Sites, and the points to trace paths to (downwind) or from (upwind):
+two-column matrices (or data frames) of longitude and latitude, or \code{SpatVector}s of points.
+If \code{to} is \code{NULL} (the default), the points are about \code{n} points on a regular grid across
+the domain, and points that can't be reached are dropped silently.}
 
-\item{pairs}{Which origin-destination pairs to trace: \code{"all"} (the default) traces a path
-from every origin to every destination; \code{"nearest"} traces one path from each origin, to
-the destination it can reach at the lowest cost; \code{"matched"} pairs \code{from} and \code{to} row by
-row, which requires them to have the same number of sites; it isn't available without \code{to}.}
+\item{direction}{Either \code{"downwind"} (the default), for paths from \code{sites} to \code{to}, or
+\code{"upwind"}, for paths from \code{to} to \code{sites}. With explicit \code{to} points, the two give the
+same paths for swapped arguments; \code{direction} matters most with the grid of points and
+with \code{pairs = "nearest"}.}
 
-\item{n}{Approximate number of destinations, when \code{to} is \code{NULL}.}
+\item{pairs}{Which pairs to trace: \code{"all"} (the default) traces a path between every site
+and every point in \code{to}; \code{"nearest"} traces one path for each site, to or from the point
+in \code{to} with the lowest travel time; \code{"matched"} pairs \code{sites} and \code{to} row by row, which
+requires them to have the same number of rows; it isn't available without \code{to}.}
+
+\item{n}{Approximate number of grid points, when \code{to} is \code{NULL}.}
+
+\item{...}{Further arguments passed to \code{\link[=wind_graph]{wind_graph()}}, such as \code{wrap}. Not allowed when
+\code{rose} is already a \code{wind_graph}.}
 }
 \value{
-A data frame with one row per path vertex, ordered from origin to destination along
-each path:
+A data frame with one row per path vertex, ordered along each path in the direction
+of travel (from the site to the point for downwind paths, and from the point to the site
+for upwind paths):
 \itemize{
 \item \code{trail}: path id.
-\item \code{from}, \code{to}: row numbers of the path's origin in \code{from} and destination in \code{to}.
-\item \code{step}: vertex number along the path, starting at 0 at the origin.
-\item \code{hours}: cumulative travel cost from the origin, in hours (if \code{trans = 1} in
+\item \code{site}, \code{to}: row numbers of the path's site in \code{sites} and point in \code{to}.
+\item \code{step}: vertex number along the path, starting at 0 at its upwind end.
+\item \code{hours}: cumulative travel time along the path, in hours (if \code{trans = 1} in
 \code{\link[=wind_rose]{wind_rose()}} and wind speeds are in m/s). Its final value on each path equals the
-pair's \code{\link[=pairwise_least_cost]{pairwise_least_cost()}} (with \code{snap = TRUE}).
+pair's travel time from \code{\link[=pairwise_least_cost]{pairwise_least_cost()}} (with \code{snap = TRUE}).
 \item \code{x}, \code{y}: longitude and latitude of the grid cell center.
 }
 
-Pairs with no path (where the destination can't be reached, e.g. because wind never blows
-toward it) are omitted with a warning. Pairs whose origin and destination fall in the same
-grid cell are omitted, since their path has no length.
+Pairs with no path (e.g. because wind never blows from one toward the other), and sites and
+points outside the grid, are omitted with a warning. Pairs whose site and point fall in the same grid cell are omitted, since
+their path has no length.
 }
 \description{
-Traces the least-cost (fastest) paths between sites through a wind graph, as sequences of
-grid cell centers. The result has the same structure as \code{\link[=wind_trails]{wind_trails()}} output, so it can be
-drawn with \code{\link[=geom_wind_path]{geom_wind_path()}}. Without \code{to}, paths run to a regular grid of destinations
-across the domain, showing the network of fastest routes from the origin(s).
+Traces the least-cost (fastest) wind paths between sites, as sequences of grid cell centers.
+The result has the same structure as \code{\link[=wind_trails]{wind_trails()}} output, so it can be drawn with
+\code{\link[=geom_wind_path]{geom_wind_path()}}. Paths run between \code{sites} and the points in \code{to}: downwind, from the
+sites to the points, or upwind, from the points to the sites. Without \code{to}, the points are a
+regular grid across the domain, so the paths show the network of fastest routes downwind
+(or upwind) of the sites.
 }
 \details{
-Paths are computed with \code{\link[gdistance:shortestPath]{gdistance::shortestPath()}}. They follow the graph's direction:
-with a downwind graph (the default in \code{\link[=wind_graph]{wind_graph()}}), a path from \code{from} to \code{to} is the
-fastest downwind route. With an upwind graph, it is the fastest downwind route from \code{to} to
-\code{from}, traced in reverse. Because wind graphs are directed, the path from A to B generally
-differs from the path from B to A.
+Paths are computed with \code{\link[gdistance:shortestPath]{gdistance::shortestPath()}}. Because wind is directional, the
+fastest path from A to B generally differs from the fastest path from B to A.
 
 Paths move between neighboring grid cells, in eight directions, so they appear as segments
 at 45-degree angles, including occasional staircase patterns where the optimal route lies
 between two neighbor directions. This reflects the model's structure rather than the plot.
-Paths from one origin often share segments, showing the main transport corridors.
+Paths from one site form a tree: once two paths meet, they share the rest of their route back
+to the site, so shared segments show the main transport corridors. Because diagonal steps
+between cell centers can cross without passing through a common cell, two branches of the
+tree occasionally appear to cross.
 }
 \examples{
 rose <- windscape_example("wind_rose")
-graph <- wind_graph(rose)
 site <- cbind(-105, 40)
 destinations <- cbind(c(-95, -115, -100, -110), c(45, 35, 32, 48))
-paths <- least_cost_paths(graph, site, destinations)
+paths <- least_cost_paths(rose, site, destinations)
 head(paths)
 
 library(ggplot2)
@@ -75,9 +88,12 @@ ggplot(paths, aes(x, y)) +
   geom_wind_path(aes(color = hours)) +
   coord_quickmap()
 
-# the network of fastest routes from the site, to a grid of destinations
-network <- least_cost_paths(graph, site, n = 200)
-ggplot(network, aes(x, y)) +
+# the network of fastest routes from the site, and to it
+down <- least_cost_paths(rose, site, n = 200)
+up <- least_cost_paths(rose, site, n = 200, direction = "upwind")
+ggplot(rbind(cbind(down, direction = "downwind"), cbind(up, direction = "upwind")),
+       aes(x, y)) +
   geom_wind_path(aes(color = hours), arrow = NULL) +
+  facet_wrap(~direction) +
   coord_quickmap()
 }

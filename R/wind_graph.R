@@ -7,17 +7,36 @@ setClass("wind_graph",
 
 #' Build a wind connectivity graph
 #'
-#' This function constructs a landscape connectivity graph from a windrose raster stack.
+#' Constructs the directed network that the least-cost functions ([least_cost()],
+#' [least_cost_paths()], and [pairwise_least_cost()]) find paths through. Those functions build
+#' the graph from a wind rose automatically, so you don't normally need to call this function.
+#' Building the graph yourself can save time when making many least-cost calls on a large grid:
+#' pass the graph in place of the rose.
 #'
-#' @param x An object of class `wind_rose`.
-#' @param direction Either "downwind" (the default) or "upwind", indicating whether outbound or inbound wind conductance should be computed, respectively.
-#' @param wrap Should the left and right edges of the raster be connected? Default is FALSE. Set to TRUE if, for example, `x` is a global raster where -180 and 180 are equivalent longitudes.
-#' @return a `wind_graph` object consisting of a gdistance \link[gdistance]{Transition-class} object and additional metadata
+#' The graph links each grid cell to its eight neighbors. Each link's conductance is the mean,
+#' over its two cells, of the rose's conductance in the link's direction. In a downwind graph,
+#' links point the way the wind carries material; an upwind graph is the same network with every
+#' link reversed, for measuring travel toward a site.
+#'
+#' @param x A `wind_rose`.
+#' @param direction Either `"downwind"` (the default) or `"upwind"`: whether links follow the
+#'    wind, or run against it.
+#' @param wrap Should the left and right edges of the raster be connected? Default is FALSE. Set
+#'    to TRUE if, for example, `x` is a global raster where -180 and 180 are equivalent
+#'    longitudes.
+#' @return A `wind_graph`: a gdistance \link[gdistance]{Transition-class} object, with its
+#'    direction recorded.
+#' @examples
+#' rose <- windscape_example("wind_rose")
+#' graph <- wind_graph(rose)
+#' sites <- cbind(c(-110, -100), c(40, 40))
+#' pairwise_least_cost(graph, sites)
 #' @export
 #' @aliases build_wind_graph
 wind_graph <- function(x, direction = "downwind", wrap = FALSE){
-      g <- transition_stack(add_coords(x), flow, directions = 8, symm = F, wrap = wrap, direction = direction)
-      g <- as(g, "wind_graph")
+      if(!inherits(x, "wind_rose")) stop("`x` must be a wind_rose")
+      direction <- match.arg(direction, c("downwind", "upwind"))
+      g <- as(wind_transition(x, direction = direction, wrap = wrap), "wind_graph")
       g@p <- g@p
       g@direction <- direction
       g
@@ -39,103 +58,58 @@ setMethod("geoCorrection", "wind_graph", function(x, type, ...){
 })
 
 
-#' A wind transition function to supply to `transition_stack`.
-#'
-#' @param x as used internally within `transition_stack`, this is a vector of
-#'   collated windrose values for FROM and TO cells
-#' @param direction either "downwind" (the default) or "upwind", indicating
-#'   whether outbound or inbound wind conductance should be computed.
-#' @noRd
-flow <- function(x, direction = "downwind"){
-
-      # node row and column indices
-      g <- x[17:20]
-
-      # edge wind loadings (clockwise from southwest)
-      p <- c(x[1]+x[2],
-             x[3]+x[4],
-             x[5]+x[6],
-             x[7]+x[8],
-             x[9]+x[10],
-             x[11]+x[12],
-             x[13]+x[14],
-             x[15]+x[16]) / 2
-
-      if(direction=="upwind") p <- p[c(5:8, 1:4)]
-
-      if(abs(g[3] - g[4]) == 1){ # standard non-suture edges
-            if(g[1]<g[2] & g[4]<g[3]) return(p[1]) #SW
-            if(g[1]==g[2] & g[4]<g[3]) return(p[2]) #W
-            if(g[2]<g[1] & g[4]<g[3]) return(p[3]) #NW
-            if(g[3]==g[4] & g[2]<g[1]) return(p[4]) #N
-            if(g[2]<g[1] & g[3]<g[4]) return(p[5]) #NE
-            if(g[1]==g[2] & g[3]<g[4]) return(p[6]) #E
-            if(g[1]<g[2] & g[3]<g[4]) return(p[7]) #SE
-            if(g[3]==g[4] & g[1]<g[2]) return(p[8]) #S
-      }else{ # suture edges (only relevant if wrap == TRUE)
-            if(g[1]<g[2] & g[4]>g[3]) return(p[1]) #SW
-            if(g[1]==g[2] & g[4]>g[3]) return(p[2]) #W
-            if(g[2]<g[1] & g[4]>g[3]) return(p[3]) #NW
-            if(g[3]==g[4] & g[2]<g[1]) return(p[4]) #N
-            if(g[2]<g[1] & g[3]>g[4]) return(p[5]) #NE
-            if(g[1]==g[2] & g[3]>g[4]) return(p[6]) #E
-            if(g[1]<g[2] & g[3]>g[4]) return(p[7]) #SE
-            if(g[3]==g[4] & g[1]<g[2]) return(p[8]) #S
-      }
-}
-
-
-
-#' A modified version of `gdistance::transition`,
-#'
-#' This version accepts a raster stack and a custom transition function; the
-#' original does not support arbitrary transition functions for multi-layer
-#' transition data.
-#' @noRd
-transition_stack <- function(x, transitionFunction, directions, symm, wrap = FALSE, ...){
-
-      brk <- raster::stack(x)
-      x <- brk[[1]]
+# Build the transition layer of a wind graph from a wind rose, vectorized over edges. Edges
+# connect each non-NA cell to its eight neighbors (plus left-right "suture" edges between the
+# first and last columns, if `wrap`). Each edge's conductance is the mean, over the edge's two
+# cells, of the rose's conductance in the edge's direction (or, for an upwind graph, in the
+# opposite direction).
+wind_transition <- function(x, direction = "downwind", wrap = FALSE){
+      v <- terra::values(x) # cells x 8 layers: SW, W, NW, N, NE, E, SE, S
+      nr <- terra::nrow(x)
+      nc <- terra::ncol(x)
+      n <- nr * nc
+      e <- terra::ext(x)
+      template <- raster::raster(nrows = nr, ncols = nc, crs = terra::crs(x),
+                                 ext = raster::extent(e$xmin, e$xmax, e$ymin, e$ymax)) # geometry only
 
       tr <- new("TransitionLayer",
-                nrows=as.integer(raster::nrow(x)),
-                ncols=as.integer(raster::ncol(x)),
-                extent=raster::extent(x),
-                crs=raster::projection(x, asText=FALSE),
-                transitionMatrix = Matrix::Matrix(0, raster::ncell(x), raster::ncell(x)),
-                transitionCells = 1:raster::ncell(x))
-      transitionMatr <- gdistance::transitionMatrix(tr)
-      Cells <- which(!is.na(raster::getValues(x)))
-      adj <- raster::adjacent(x, cells=Cells, pairs=TRUE, target=Cells, directions=directions)
+                nrows = as.integer(nr), ncols = as.integer(nc),
+                extent = raster::extent(template), crs = raster::projection(template, asText = FALSE),
+                transitionMatrix = Matrix::Matrix(0, n, n), transitionCells = 1:n)
 
-
-      ##### start modifications to gdistance::transition #####
-
-      # add adjacencies between left and right edges
+      cells <- which(!is.na(v[, 1]))
+      adj <- raster::adjacent(template, cells = cells, pairs = TRUE, target = cells, directions = 8)
       if(wrap){
-            i <- raster::raster(x)
-            i[] <- Cells
-            i <- terra::as.matrix(i)
-            nc <- ncol(i)
-            nr <- nrow(i)
-            s <- rbind(cbind(i[, 1], i[, nc]), # horizontal
-                       cbind(i[2:nr, 1], i[1:(nr-1), nc]),
-                       cbind(i[1:(nr-1), 1], i[2:nr, nc]))
-            adj <- rbind(adj, s, s[,2:1])
+            id <- matrix(seq_len(n), nr, nc, byrow = TRUE)
+            s <- rbind(cbind(id[, 1], id[, nc]),                       # horizontal
+                       cbind(id[2:nr, 1], id[1:(nr - 1), nc]),         # diagonal
+                       cbind(id[1:(nr - 1), 1], id[2:nr, nc]))         # diagonal
+            s <- s[s[, 1] %in% cells & s[, 2] %in% cells, , drop = FALSE]
+            adj <- rbind(adj, s, s[, 2:1])
       }
 
-      # format raster data layers to feed to transitionFunction
-      # col order is x[[1]][from, to] ... x[[n]][from,to]
-      dataVals <- lapply(1:raster::nlayers(brk),
-                         function(i) cbind(raster::values(brk[[i]])[adj[,1]],
-                                           raster::values(brk[[i]])[adj[,2]]))
-      dataVals <- do.call("cbind", dataVals)
+      from <- adj[, 1]
+      to <- adj[, 2]
+      rf <- (from - 1) %/% nc + 1; cf <- (from - 1) %% nc + 1
+      rt <- (to - 1) %/% nc + 1;   ct <- (to - 1) %% nc + 1
 
-      ##### end modifications #####
+      # direction of each edge; suture edges (columns not adjacent) have reversed east-west sense
+      suture <- abs(cf - ct) != 1
+      west <- ifelse(suture, ct > cf, ct < cf)
+      east <- ifelse(suture, ct < cf, ct > cf)
+      south <- rf < rt
+      north <- rt < rf
+      k <- ifelse(south & west, 1, ifelse(!south & !north & west, 2, ifelse(north & west, 3,
+           ifelse(north & !west & !east, 4, ifelse(north & east, 5, ifelse(!south & !north & east, 6,
+           ifelse(south & east, 7, 8)))))))
+      if(direction == "upwind") k <- c(5:8, 1:4)[k]
 
-      transition.values <- apply(dataVals, 1, transitionFunction, ...)
-      transitionMatr[adj] <- as.vector(transition.values)
-      gdistance::transitionMatrix(tr) <- transitionMatr
+      # mean of the two cells' conductance in the edge's direction
+      cond <- (v[cbind(from, k)] + v[cbind(to, k)]) / 2
+
+      # zero-conductance edges (wind never blows that way) are left out, not stored as explicit zeros
+      gdistance::transitionMatrix(tr) <- Matrix::drop0(Matrix::sparseMatrix(i = from, j = to, x = cond,
+                                                                             dims = c(n, n)))
       gdistance::matrixValues(tr) <- "resistance"
-      return(tr)
+      tr
 }

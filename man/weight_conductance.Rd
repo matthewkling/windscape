@@ -2,20 +2,20 @@
 % Please edit documentation in R/weight_conductance.R
 \name{weight_conductance}
 \alias{weight_conductance}
-\title{Weight a windrose conductance raster}
+\title{Weight a wind rose's conductances}
 \usage{
 weight_conductance(rose, w)
 }
 \arguments{
-\item{rose}{A raster stack created using \code{windrose_rasters()}.}
+\item{rose}{A \code{wind_rose}.}
 
-\item{w}{A raster layer with values to be multiplied by \code{rose}. This layer must have the same spatial properties as the windrose raster.}
+\item{w}{A single-layer \code{SpatRaster} with values to be multiplied by \code{rose}, on the same grid as \code{rose}.}
 }
 \value{
-A version of \code{rose}, with conductance values weighted by \code{w}.
+A \code{wind_rose}, with conductance values weighted by \code{w}.
 }
 \description{
-This function adjusts the conductance values in a windrose raster, multiplying them by the values of a secondary raster data set \code{w},
+This function adjusts the conductance values in a wind rose, multiplying them by the values of a secondary raster data set \code{w},
 which can be used to integrate non-wind factors into a wind connectivity analysis.
 }
 \details{

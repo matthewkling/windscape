@@ -11,7 +11,7 @@ test_that("lc_leg_time solves the continuum least-cost problem", {
 
 test_that("sites in the same cell get exact travel times in uniform wind", {
       r <- uv_rose(nr = 3, nc = 3, u = 5, v = 0) # 5 m/s westerly, 1-degree cells
-      g <- wind_graph(r)
+      g <- r
       ctr <- terra::xyFromCell(r, 5)
       xy <- rbind(ctr + c(-0.3, 0.1), ctr + c(0.2, 0.1)) # same cell, due east
       d <- pairwise_least_cost(g, xy)
@@ -23,7 +23,7 @@ test_that("sites in the same cell get exact travel times in uniform wind", {
 
 test_that("travel times change continuously as a site crosses a cell boundary", {
       r <- noisy_rose()
-      g <- wind_graph(r)
+      g <- r
       edge <- terra::xmax(r) - 5 # a column boundary
       a <- cbind(-98.6, 34.3)
       b <- function(x) rbind(a, cbind(x, 36.7))
@@ -37,7 +37,7 @@ test_that("travel times change continuously as a site crosses a cell boundary", 
 
 test_that("for sites at cell centers, results are close to and no greater than snapped results", {
       r <- noisy_rose()
-      g <- wind_graph(r)
+      g <- r
       xy <- terra::xyFromCell(r, c(5, 40, 77, 160))
       s <- pairwise_least_cost(g, xy)
       grid <- pairwise_least_cost(g, xy, snap = TRUE)
@@ -46,19 +46,19 @@ test_that("for sites at cell centers, results are close to and no greater than s
       expect_true(all(s[off] / grid[off] > 0.95))
 })
 
-test_that("upwind results are the transpose of downwind", {
+test_that("a prebuilt downwind graph gives the same result as the rose", {
       r <- noisy_rose()
       set.seed(3)
       xy <- cbind(runif(6, -99.5, -86), runif(6, 30.5, 41.5))
       xy <- rbind(xy, xy[1, ] + c(0.1, 0.05)) # a pair within one cell
-      down <- pairwise_least_cost(wind_graph(r), xy)
-      up <- pairwise_least_cost(wind_graph(r, direction = "upwind"), xy)
-      expect_equal(up, t(down), tolerance = 1e-10)
+      expect_equal(pairwise_least_cost(wind_graph(r), xy), pairwise_least_cost(r, xy))
+      expect_error(pairwise_least_cost(wind_graph(r, direction = "upwind"), xy), "downwind")
+      expect_error(pairwise_least_cost(wind_graph(r), xy, wrap = TRUE), "already a wind_graph")
 })
 
 test_that("results are finite and positive for distinct sites, zero on the diagonal", {
       r <- noisy_rose()
-      g <- wind_graph(r)
+      g <- r
       ctr <- terra::xyFromCell(r, 80)
       xy <- rbind(ctr + c(-0.2, -0.2), ctr + c(0.2, 0.2), ctr + c(1.3, 0.1))
       d <- pairwise_least_cost(g, xy)
@@ -71,7 +71,7 @@ test_that("results are finite and positive for distinct sites, zero on the diago
 test_that("sites outside the grid get NA with a warning", {
       r <- noisy_rose()
       xy <- rbind(terra::xyFromCell(r, c(5, 40)), c(0, 0))
-      expect_warning(d <- pairwise_least_cost(wind_graph(r), xy), "outside")
+      expect_warning(d <- pairwise_least_cost(r, xy), "outside")
       expect_true(all(is.na(d[3, ])) && all(is.na(d[, 3])))
       expect_true(is.finite(d[1, 2]) || d[1, 2] == Inf)
 })

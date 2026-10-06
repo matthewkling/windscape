@@ -2,30 +2,47 @@
 % Please edit documentation in R/least_cost.R
 \name{least_cost}
 \alias{least_cost}
-\title{Accumulated wind cost surface}
+\title{Least-cost travel time surface}
 \usage{
-least_cost(graph, sites, rate = FALSE)
+least_cost(rose, sites, direction = "downwind", rate = FALSE, ...)
 }
 \arguments{
-\item{graph}{A \link{wind_graph}.}
+\item{rose}{A \code{\link[=wind_rose]{wind_rose()}}, or a \code{wind_graph} built in advance whose direction matches
+\code{direction}; see \code{\link[=pairwise_least_cost]{pairwise_least_cost()}}.}
 
-\item{sites}{A two-column matrix of point coordinates.}
+\item{sites}{A two-column matrix (or data frame) of point coordinates, or a \code{SpatVector} of
+points.}
+
+\item{direction}{Either \code{"downwind"} (the default), for travel from the sites to each cell, or
+\code{"upwind"}, for travel from each cell to the sites.}
 
 \item{rate}{Whether to return values as "rates" instead of the default "cost distances". Rates
 are the inverse of cost distances, representing flow rather than travel time.}
+
+\item{...}{Further arguments passed to \code{\link[=wind_graph]{wind_graph()}}, such as \code{wrap}. Not allowed when
+\code{rose} is already a \code{wind_graph}.}
 }
 \value{
 A single-layer SpatRaster. With \code{rate = FALSE}, the layer is named \code{hours} and gives
-the travel cost from the nearest site to each cell, in hours if \code{trans = 1} in \code{\link[=wind_rose]{wind_rose()}}
-and wind speeds are in m/s (otherwise in relative units). With \code{rate = TRUE}, it is named
-\code{rate} and gives the inverse.
+the travel time between each cell and the nearest site (in the given direction), in hours if
+\code{trans = 1} in \code{\link[=wind_rose]{wind_rose()}} and wind speeds are in m/s (otherwise in relative units). With
+\code{rate = TRUE}, it is named \code{rate} and gives the inverse. Sites outside the grid are ignored,
+with a warning.
 }
 \description{
-Calculate the accumulated wind cost-distance (e.g. travel times) or flow rate (the inverse of cost-distance)
-from one or more sites to every grid cell across the domain, using the least cost path algorithm. This
-function is a wrapper around \link[gdistance]{accCost}.
+Map the least-cost wind travel time (or flow rate, its inverse) between one or more sites and
+every grid cell across the domain: downwind, from the sites to each cell, or upwind, from each
+cell to the sites. This function is a wrapper around \link[gdistance]{accCost}.
 }
 \details{
 Paths are restricted to the eight neighbor directions, so cost distances are overestimated
-for routes between neighbor bearings; see \link{pairwise_least_cost} for magnitudes.
+for routes between neighbor bearings; see \link{pairwise_least_cost} for magnitudes. Sites
+are snapped to the centers of their grid cells.
+}
+\examples{
+rose <- windscape_example("wind_rose")
+site <- cbind(-105, 40)
+from_site <- least_cost(rose, site)
+to_site <- least_cost(rose, site, direction = "upwind")
+terra::plot(c(from_site, to_site), main = c("from the site", "to the site"))
 }

@@ -8,15 +8,35 @@
 wind_graph(x, direction = "downwind", wrap = FALSE)
 }
 \arguments{
-\item{x}{An object of class \code{wind_rose}.}
+\item{x}{A \code{wind_rose}.}
 
-\item{direction}{Either "downwind" (the default) or "upwind", indicating whether outbound or inbound wind conductance should be computed, respectively.}
+\item{direction}{Either \code{"downwind"} (the default) or \code{"upwind"}: whether links follow the
+wind, or run against it.}
 
-\item{wrap}{Should the left and right edges of the raster be connected? Default is FALSE. Set to TRUE if, for example, \code{x} is a global raster where -180 and 180 are equivalent longitudes.}
+\item{wrap}{Should the left and right edges of the raster be connected? Default is FALSE. Set
+to TRUE if, for example, \code{x} is a global raster where -180 and 180 are equivalent
+longitudes.}
 }
 \value{
-a \code{wind_graph} object consisting of a gdistance \link[gdistance]{Transition-class} object and additional metadata
+A \code{wind_graph}: a gdistance \link[gdistance]{Transition-class} object, with its
+direction recorded.
 }
 \description{
-This function constructs a landscape connectivity graph from a windrose raster stack.
+Constructs the directed network that the least-cost functions (\code{\link[=least_cost]{least_cost()}},
+\code{\link[=least_cost_paths]{least_cost_paths()}}, and \code{\link[=pairwise_least_cost]{pairwise_least_cost()}}) find paths through. Those functions build
+the graph from a wind rose automatically, so you don't normally need to call this function.
+Building the graph yourself can save time when making many least-cost calls on a large grid:
+pass the graph in place of the rose.
+}
+\details{
+The graph links each grid cell to its eight neighbors. Each link's conductance is the mean,
+over its two cells, of the rose's conductance in the link's direction. In a downwind graph,
+links point the way the wind carries material; an upwind graph is the same network with every
+link reversed, for measuring travel toward a site.
+}
+\examples{
+rose <- windscape_example("wind_rose")
+graph <- wind_graph(rose)
+sites <- cbind(c(-110, -100), c(40, 40))
+pairwise_least_cost(graph, sites)
 }
