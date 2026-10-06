@@ -19,6 +19,7 @@ random_walk(
   half_life = Inf,
   timescale = 1,
   latitude_correction = TRUE,
+  wrap = NULL,
   density = TRUE,
   iter = 100,
   record = iter,
@@ -89,6 +90,18 @@ random_walk(
   drift, which shortens the time step (pulse mode needs about 1.3 times
   as many iterations at 45 degrees, 1.9 at 60). Has no effect on
   projected rasters. See Details.
+
+- wrap:
+
+  Logical: join the east and west edges of the grid, so that mass
+  leaving one re-enters on the opposite side, and only the north and
+  south edges absorb mass? The default, `NULL`, does so if `rose` is a
+  global grid spanning all 360 degrees of longitude, where -180 and 180
+  are the same meridian, and not otherwise. `TRUE` or `FALSE` overrides
+  this; `TRUE` on a longitude/latitude grid that isn't global gives a
+  warning. As for `wrap` in
+  [`wind_graph()`](https://matthewkling.github.io/windscape/reference/wind_graph.md),
+  for the least-cost model.
 
 - density:
 
@@ -328,9 +341,11 @@ and receptor `r`, the upwind value at `s` equals the downwind value at
 
 Domain edges are absorbing: mass that disperses off the grid, or into NA
 cells, is lost and never returns. Values near edges are therefore biased
-low, because they receive no inflow from beyond the edge. In stream mode
-with finite `half_life`, the fraction of released mass lost across edges
-is reported as a message; the domain should be buffered by several decay
+low, because they receive no inflow from beyond the edge. On a global
+grid, the east and west edges are joined by default (see `wrap`),
+leaving only the north and south edges absorbing. In stream mode with
+finite `half_life`, the fraction of released mass lost across edges is
+reported as a message; the domain should be buffered by several decay
 lengths beyond the area of interest, until this fraction is small or the
 bias in the area of interest is acceptable. With `half_life = Inf`,
 edges are the only place stream-mode mass can leave, so the result

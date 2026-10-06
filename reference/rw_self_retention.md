@@ -15,6 +15,7 @@ rw_self_retention(
   half_life = Inf,
   timescale = 1,
   latitude_correction = TRUE,
+  wrap = NULL,
   cells = NULL,
   exact = FALSE,
   chunk = 200
@@ -40,9 +41,9 @@ rw_self_retention(
   Affects only the approximate values; exact values are independent of
   `timescale`.
 
-- latitude_correction:
+- latitude_correction, wrap:
 
-  Logical. Must match the value used for the stream-mode walk; see
+  Logical. Must match the values used for the stream-mode walk; see
   [`random_walk()`](https://matthewkling.github.io/windscape/reference/random_walk.md).
 
 - cells:

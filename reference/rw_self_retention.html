@@ -11,7 +11,7 @@ subtracted for a leave-one-out surface, e.g. to avoid a site predicting itself."
 
     <a class="navbar-brand me-2" href="../index.html">windscape</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.1.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.1.0.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -57,6 +57,7 @@ subtracted for a leave-one-out surface, e.g. to avoid a site predicting itself.<
 <span>  half_life <span class="op">=</span> <span class="cn">Inf</span>,</span>
 <span>  timescale <span class="op">=</span> <span class="fl">1</span>,</span>
 <span>  latitude_correction <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  wrap <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  cells <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  exact <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  chunk <span class="op">=</span> <span class="fl">200</span></span>
@@ -81,9 +82,9 @@ stream-mode walk; see <code><a href="random_walk.html">random_walk()</a></code>.
 values; exact values are independent of <code>timescale</code>.</p></dd>
 
 
-<dt id="arg-latitude-correction">latitude_correction<a class="anchor" aria-label="anchor" href="#arg-latitude-correction"></a></dt>
-<dd><p>Logical. Must match the value used for the stream-mode walk; see
-<code><a href="random_walk.html">random_walk()</a></code>.</p></dd>
+<dt id="arg-latitude-correction-wrap">latitude_correction, wrap<a class="anchor" aria-label="anchor" href="#arg-latitude-correction-wrap"></a></dt>
+<dd><p>Logical. Must match the values used for the stream-mode walk;
+see <code><a href="random_walk.html">random_walk()</a></code>.</p></dd>
 
 
 <dt id="arg-cells">cells<a class="anchor" aria-label="anchor" href="#arg-cells"></a></dt>

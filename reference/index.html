@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">windscape</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.1.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.1.0.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -45,11 +45,6 @@
 
       <dl></dl></div><div class="section level2">
 
-      <h3 id="downloading">Downloading<a class="anchor" aria-label="anchor" href="#downloading"></a></h3>
-
-
-      <dl></dl></div><div class="section level2">
-
 
 
 
@@ -66,17 +61,8 @@
 
         </dt>
         <dd>Download a land-water layer from NCAR</dd>
-      </dl></div><div class="section level2">
 
-      <h3 id="wind-series-and-fields">Wind series and fields<a class="anchor" aria-label="anchor" href="#wind-series-and-fields"></a></h3>
-
-
-      <dl></dl></div><div class="section level2">
-
-
-
-
-      <dl><dt>
+        <dt>
 
           <code><a href="wind_series.html">wind_series()</a></code>
 
@@ -113,7 +99,7 @@
       </dl></div><div class="section level2">
       <h2 id="wind-roses">Wind roses<a class="anchor" aria-label="anchor" href="#wind-roses"></a></h2>
 
-      <div class="section-desc"><p>Summarize a long time series of wind conditions as the conductance from each cell to its eight neighbors: the basis of both connectivity models.</p></div>
+      <div class="section-desc"><p>Summarize a long time series of wind conditions as the conductance from each cell to its eight neighbors—the basis of both connectivity models.</p></div>
 
       <dl></dl></div><div class="section level2">
 
@@ -157,7 +143,7 @@
       </dl></div><div class="section level2">
       <h2 id="least-cost-model">Least-cost model<a class="anchor" aria-label="anchor" href="#least-cost-model"></a></h2>
 
-      <div class="section-desc"><p>Travel time along the fastest route through the wind graph: windshed maps, paths, and pairwise matrices.</p></div>
+      <div class="section-desc"><p>Travel time along the fastest route through the wind graph.</p></div>
 
       <dl></dl></div><div class="section level2">
 
@@ -194,7 +180,7 @@
       </dl></div><div class="section level2">
       <h2 id="random-walk-model">Random walk model<a class="anchor" aria-label="anchor" href="#random-walk-model"></a></h2>
 
-      <div class="section-desc"><p>Dispersal of material spreading across the grid in proportion to the wind: windshed maps, paths, and pairwise matrices.</p></div>
+      <div class="section-desc"><p>Dispersal of material spreading across the grid in proportion to the wind.</p></div>
 
       <dl></dl></div><div class="section level2">
 
@@ -221,17 +207,8 @@
 
         </dt>
         <dd>Pairwise random walk connectivity among sites</dd>
-      </dl></div><div class="section level2">
 
-      <h3 id="diagnostics">Diagnostics<a class="anchor" aria-label="anchor" href="#diagnostics"></a></h3>
-      <div class="section-desc"><p>Properties of the random walk on a given rose: time steps, edge losses, and self-retention.</p></div>
-
-      <dl></dl></div><div class="section level2">
-
-
-
-
-      <dl><dt>
+        <dt>
 
           <code><a href="rw_exit_prob.html">rw_exit_prob()</a></code>
 
@@ -258,17 +235,8 @@
 
         </dt>
         <dd>Iteration step length of a random walk</dd>
-      </dl></div><div class="section level2">
 
-      <h3 id="site-placement-and-grid-resolution">Site placement and grid resolution<a class="anchor" aria-label="anchor" href="#site-placement-and-grid-resolution"></a></h3>
-
-
-      <dl></dl></div><div class="section level2">
-
-
-
-
-      <dl><dt>
+        <dt>
 
           <code><a href="check_cell_distance.html">check_cell_distance()</a></code>
 
@@ -288,17 +256,8 @@
 
         </dt>
         <dd>Pairwise distances between cell centroids</dd>
-      </dl></div><div class="section level2">
 
-      <h3 id="windshed-summaries">Windshed summaries<a class="anchor" aria-label="anchor" href="#windshed-summaries"></a></h3>
-
-
-      <dl></dl></div><div class="section level2">
-
-
-
-
-      <dl><dt>
+        <dt>
 
           <code><a href="ws_summarize.html">ws_summarize()</a></code>
 
@@ -307,7 +266,7 @@
       </dl></div><div class="section level2">
       <h2 id="hypothesis-testing">Hypothesis testing<a class="anchor" aria-label="anchor" href="#hypothesis-testing"></a></h2>
 
-      <div class="section-desc"><p>Test hypotheses about directional connectivity using pairwise matrices of wind, gene flow, or other relationships among sites.</p></div>
+      <div class="section-desc"><p>Test hypotheses about wind connectivity using pairwise matrices of wind, gene flow, or other relationships among sites.</p></div>
 
       <dl></dl></div><div class="section level2">
 
@@ -326,14 +285,14 @@
           <code><a href="pairwise_ratios.html">pairwise_ratios()</a></code>
 
         </dt>
-        <dd>Convert data to reciprocally symmetrical pairwise matrix</dd>
+        <dd>Convert asymmetric pairwise matrix to reciprocally symmetrical matrix</dd>
 
         <dt>
 
           <code><a href="pairwise_means.html">pairwise_means()</a></code>
 
         </dt>
-        <dd>Convert asymmetric pairwise matrix to symmetrical matrix of pairwise means</dd>
+        <dd>Convert asymmetric pairwise matrix to symmetrical pairwise means</dd>
 
         <dt>
 

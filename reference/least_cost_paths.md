@@ -73,10 +73,13 @@ A data frame with one row per path vertex, ordered along each path in
 the direction of travel (from the site to the point for downwind paths,
 and from the point to the site for upwind paths):
 
-- `trail`: path id.
+- `trail`: line id, for drawing. Each path is one trail, unless it
+  crosses the east-west seam of a wrapped global grid (see `wrap` in
+  [`wind_graph()`](https://matthewkling.github.io/windscape/reference/wind_graph.md)),
+  where a new trail starts so that lines don't cross the map.
 
 - `site`, `to`: row numbers of the path's site in `sites` and point in
-  `to`.
+  `to`, which together identify the path.
 
 - `step`: vertex number along the path, starting at 0 at its upwind end.
 

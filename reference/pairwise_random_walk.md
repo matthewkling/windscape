@@ -18,6 +18,7 @@ pairwise_random_walk(
   density = TRUE,
   timescale = 1,
   latitude_correction = TRUE,
+  wrap = NULL,
   chunk = 200
 )
 ```
@@ -54,7 +55,7 @@ pairwise_random_walk(
   single analysis. Dividing by area removes that bias, and also makes
   values comparable across grid resolutions (though see Details).
 
-- timescale, latitude_correction:
+- timescale, latitude_correction, wrap:
 
   See
   [`random_walk()`](https://matthewkling.github.io/windscape/reference/random_walk.md).

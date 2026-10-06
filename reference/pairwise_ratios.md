@@ -1,4 +1,4 @@
-# Convert data to reciprocally symmetrical pairwise matrix
+# Convert asymmetric pairwise matrix to reciprocally symmetrical matrix
 
 This function produces a "pairwise ratio matrix" that can be used in
 tests about asymmetric flows among nodes in a data set (e.g. the
@@ -7,7 +7,9 @@ input data set can be an asymmetric matrix with entries representing
 directed edge weights (e.g. directional flows of wind or genes
 connecting each pair of populations or "nodes"), or it can be a vector
 of node attributes (e.g. properties of a site or population, such as
-genetic diversity).
+genetic diversity). The result is a matrix that represents each pair's
+relative asymmetry, removing information about their absolute
+magnitudes.
 
 ## Usage
 

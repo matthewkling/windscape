@@ -55,11 +55,12 @@ every link reversed, for measuring travel to a site. The least-cost
 functions build the graph from a rose automatically.
 [`wind_graph()`](https://matthewkling.github.io/windscape/reference/wind_graph.md)
 builds it explicitly, which can save time when making many calls on a
-large grid; pass the graph in place of the rose.
-[`wind_graph()`](https://matthewkling.github.io/windscape/reference/wind_graph.md)
-also has a `wrap` argument for global grids, where the left and right
-edges should be connected; the least-cost functions pass it on through
-`...`.
+large grid; pass the graph in place of the rose. On a global grid
+spanning all 360 degrees of longitude, the graph links cells across the
+-180/180 meridian;
+[`wind_graph()`](https://matthewkling.github.io/windscape/reference/wind_graph.md)’s
+`wrap` argument controls this, and the least-cost functions pass it on
+through `...`.
 
 ### Travel time as accessibility
 
@@ -352,6 +353,13 @@ stream results measure connectivity within the chosen domain and depend
 on its extent. See
 [`?rw_exit_prob`](https://matthewkling.github.io/windscape/reference/rw_exit_prob.md)
 for which results the bound covers.
+
+A global grid has no east or west edge to buffer: the random walk
+functions detect a grid spanning all 360 degrees of longitude and join
+its two sides at the -180/180 meridian, as the least-cost model does, so
+only the north and south edges are absorbing. The `wrap` argument
+overrides this. Paths from either model that cross the meridian are
+split there into separate trails, so they don’t streak across the map.
 
 ### Flux and paths
 

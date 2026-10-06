@@ -15,7 +15,7 @@ pass the graph in place of the rose."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">windscape</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.1.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.1.0.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -58,7 +58,7 @@ pass the graph in place of the rose.</p>
 
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">wind_graph</span><span class="op">(</span><span class="va">x</span>, direction <span class="op">=</span> <span class="st">"downwind"</span>, wrap <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">wind_graph</span><span class="op">(</span><span class="va">x</span>, direction <span class="op">=</span> <span class="st">"downwind"</span>, wrap <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -75,9 +75,10 @@ wind, or run against it.</p></dd>
 
 
 <dt id="arg-wrap">wrap<a class="anchor" aria-label="anchor" href="#arg-wrap"></a></dt>
-<dd><p>Should the left and right edges of the raster be connected? Default is FALSE. Set
-to TRUE if, for example, <code>x</code> is a global raster where -180 and 180 are equivalent
-longitudes.</p></dd>
+<dd><p>Logical: join the east and west edges of the grid, linking cells across them? The
+default, <code>NULL</code>, does so if <code>x</code> is a global grid spanning all 360 degrees of longitude,
+where -180 and 180 are the same meridian, and not otherwise. <code>TRUE</code> or <code>FALSE</code> overrides
+this; <code>TRUE</code> on a longitude/latitude grid that isn't global gives a warning.</p></dd>
 
 </dl></div>
     <div class="section level2">

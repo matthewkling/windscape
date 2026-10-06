@@ -7,12 +7,12 @@
 ## Citation
 
 Kling M (2026). *windscape: Landscape connectivity by wind*. R package
-version 1.1.0, <https://matthewkling.github.io/windscape/>.
+version 1.1.0.9000, <https://matthewkling.github.io/windscape/>.
 
     @Manual{,
       title = {windscape: Landscape connectivity by wind},
       author = {Matthew Kling},
       year = {2026},
-      note = {R package version 1.1.0},
+      note = {R package version 1.1.0.9000},
       url = {https://matthewkling.github.io/windscape/},
     }

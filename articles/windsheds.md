@@ -120,7 +120,7 @@ head(paths)
 # travel time between each vertex and the site: elapsed time on downwind paths, and time
 # remaining on upwind paths
 paths$from_site <- ifelse(paths$windshed == "downwind", paths$hours,
-                          ave(paths$hours, paths$windshed, paths$trail, FUN = max) - paths$hours)
+                          ave(paths$hours, paths$windshed, paths$to, FUN = max) - paths$hours)
 
 ggplot(paths, aes(x, y)) +
       geom_path(data = states, aes(long, lat, group = group), color = "gray70",
@@ -237,8 +237,8 @@ range_windshed <- random_walk(rose, abundance, mode = "stream", half_life = 48)
 [`random_walk_paths()`](https://matthewkling.github.io/windscape/reference/random_walk_paths.md)
 is the random walk counterpart to
 [`least_cost_paths()`](https://matthewkling.github.io/windscape/reference/least_cost_paths.md),
-and returns path data in a similar layout (`trail`, `step`, `x`, and
-`y`), for drawing with
+and returns path data in a similar layout (`trail`, `path`, `step`, `x`,
+and `y`), for drawing with
 [`geom_wind_path()`](https://matthewkling.github.io/windscape/reference/geom_wind_path.md).
 **Despite its name, it involves no randomness.** It doesn’t simulate the
 zigzagging paths of individual particles. It traces streamlines of the
@@ -259,7 +259,7 @@ rw_paths <- rbind(
       data.frame(random_walk_paths(rose, site, n = 150, half_life = 48, direction = "upwind"),
                  windshed = "upwind"))
 # where each path's material lands (downwind) or originates (upwind)
-id <- paste(rw_paths$windshed, rw_paths$trail)
+id <- paste(rw_paths$windshed, rw_paths$path)
 ends <- rw_paths[ifelse(rw_paths$windshed == "downwind", !duplicated(id, fromLast = TRUE), !duplicated(id)), ]
 
 ggplot(rw_paths, aes(x, y)) +
@@ -292,7 +292,8 @@ the difference is easy to see:
 to <- cbind(c(-94, -92, -97, -100, -96), c(46, 38, 33, 47, 41))
 both <- rbind(
       data.frame(least_cost_paths(rose, site, to)[c("trail", "step", "x", "y")], model = "least-cost"),
-      data.frame(random_walk_paths(rose, site, to = to, half_life = 48), model = "random walk"))
+      data.frame(random_walk_paths(rose, site, to = to, half_life = 48)[c("trail", "step", "x", "y")],
+                 model = "random walk"))
 
 ggplot(both, aes(x, y)) +
       geom_path(data = states, aes(long, lat, group = group), color = "gray70",

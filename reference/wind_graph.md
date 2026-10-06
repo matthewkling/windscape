@@ -13,7 +13,7 @@ calls on a large grid: pass the graph in place of the rose.
 ## Usage
 
 ``` r
-wind_graph(x, direction = "downwind", wrap = FALSE)
+wind_graph(x, direction = "downwind", wrap = NULL)
 ```
 
 ## Arguments
@@ -29,9 +29,11 @@ wind_graph(x, direction = "downwind", wrap = FALSE)
 
 - wrap:
 
-  Should the left and right edges of the raster be connected? Default is
-  FALSE. Set to TRUE if, for example, `x` is a global raster where -180
-  and 180 are equivalent longitudes.
+  Logical: join the east and west edges of the grid, linking cells
+  across them? The default, `NULL`, does so if `x` is a global grid
+  spanning all 360 degrees of longitude, where -180 and 180 are the same
+  meridian, and not otherwise. `TRUE` or `FALSE` overrides this; `TRUE`
+  on a longitude/latitude grid that isn't global gives a warning.
 
 ## Value
 

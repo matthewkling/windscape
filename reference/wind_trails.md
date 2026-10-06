@@ -17,7 +17,7 @@ wind_trails(
   distance = NULL,
   steps = 100,
   direction = c("both", "downwind", "upwind"),
-  wrap = c("neither", "horizontal", "vertical", "both"),
+  wrap = NULL,
   sf = FALSE,
   ...
 )
@@ -65,9 +65,12 @@ wind_trails(
 - wrap:
 
   Wrap particles that leave the field across its edges back in on the
-  opposite side: `"neither"` (the default), `"horizontal"` (e.g. for
-  global fields), `"vertical"`, or `"both"`. Otherwise, trails end where
-  they leave the field.
+  opposite side: `"neither"`, `"horizontal"`, `"vertical"`, or `"both"`;
+  `TRUE` and `FALSE` are shorthand for `"horizontal"` and `"neither"`.
+  Trails end where they leave the field across an edge that doesn't
+  wrap. The default, `NULL`, wraps horizontally if `x` is a global field
+  spanning all 360 degrees of longitude, where -180 and 180 are the same
+  meridian, and not otherwise.
 
 - sf:
 

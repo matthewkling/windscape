@@ -17,7 +17,7 @@ regular grid across the domain, so the paths show the network of fastest routes 
 
     <a class="navbar-brand me-2" href="../index.html">windscape</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.1.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.1.0.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -115,8 +115,11 @@ requires them to have the same number of rows; it isn't available without <code>
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>A data frame with one row per path vertex, ordered along each path in the direction
 of travel (from the site to the point for downwind paths, and from the point to the site
-for upwind paths):</p><ul><li><p><code>trail</code>: path id.</p></li>
-<li><p><code>site</code>, <code>to</code>: row numbers of the path's site in <code>sites</code> and point in <code>to</code>.</p></li>
+for upwind paths):</p><ul><li><p><code>trail</code>: line id, for drawing. Each path is one trail, unless it crosses the east-west seam
+of a wrapped global grid (see <code>wrap</code> in <code><a href="wind_graph.html">wind_graph()</a></code>), where a new trail starts so that
+lines don't cross the map.</p></li>
+<li><p><code>site</code>, <code>to</code>: row numbers of the path's site in <code>sites</code> and point in <code>to</code>, which together
+identify the path.</p></li>
 <li><p><code>step</code>: vertex number along the path, starting at 0 at its upwind end.</p></li>
 <li><p><code>hours</code>: cumulative travel time along the path, in hours (if <code>trans = 1</code> in
 <code><a href="wind_rose.html">wind_rose()</a></code> and wind speeds are in m/s). Its final value on each path equals the

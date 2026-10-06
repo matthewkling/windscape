@@ -1,8 +1,8 @@
-# Convert asymmetric pairwise matrix to symmetrical matrix of pairwise means
+# Convert asymmetric pairwise matrix to symmetrical pairwise means
 
 This function produces a symmetrical matrix with values representing the
-pairwise means of directional flows in an asymmetric in put matrix. The
-output can be used in tests about the strength of direction-agnostic
+pairwise means of directional flows in an asymmetric input matrix. The
+output can be used in tests about the **strength** of direction-agnostic
 connectivity among nodes in a data set (e.g. the "isolation" hypothesis;
 Kling and Ackerly (2021)).
 

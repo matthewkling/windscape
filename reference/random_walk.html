@@ -17,7 +17,7 @@ represent probability, numbers of seeds or spores, etc. Particles can be release
 
     <a class="navbar-brand me-2" href="../index.html">windscape</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.1.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.1.0.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -69,6 +69,7 @@ represent probability, numbers of seeds or spores, etc. Particles can be release
 <span>  half_life <span class="op">=</span> <span class="cn">Inf</span>,</span>
 <span>  timescale <span class="op">=</span> <span class="fl">1</span>,</span>
 <span>  latitude_correction <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  wrap <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  density <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  iter <span class="op">=</span> <span class="fl">100</span>,</span>
 <span>  record <span class="op">=</span> <span class="va">iter</span>,</span>
@@ -132,6 +133,15 @@ longitude/latitude grids, where cells narrow toward the poles? Default <code>TRU
 conductance to east and west edges without changing drift, which shortens the time step
 (pulse mode needs about 1.3 times as many iterations at 45 degrees, 1.9 at 60). Has no effect
 on projected rasters. See Details.</p></dd>
+
+
+<dt id="arg-wrap">wrap<a class="anchor" aria-label="anchor" href="#arg-wrap"></a></dt>
+<dd><p>Logical: join the east and west edges of the grid, so that mass leaving one
+re-enters on the opposite side, and only the north and south edges absorb mass? The
+default, <code>NULL</code>, does so if <code>rose</code> is a global grid spanning all 360 degrees of longitude,
+where -180 and 180 are the same meridian, and not otherwise. <code>TRUE</code> or <code>FALSE</code> overrides
+this; <code>TRUE</code> on a longitude/latitude grid that isn't global gives a warning. As for <code>wrap</code>
+in <code><a href="wind_graph.html">wind_graph()</a></code>, for the least-cost model.</p></dd>
 
 
 <dt id="arg-density">density<a class="anchor" aria-label="anchor" href="#arg-density"></a></dt>
@@ -323,7 +333,8 @@ the downwind value at <code>r</code>. The same holds for each pulse iteration.</
 
 <p>Domain edges are absorbing: mass that disperses off the grid, or into NA cells, is lost and
 never returns. Values near edges are therefore biased low, because they receive no inflow
-from beyond the edge. In stream mode with finite <code>half_life</code>, the fraction of released mass
+from beyond the edge. On a global grid, the east and west edges are joined by default (see
+<code>wrap</code>), leaving only the north and south edges absorbing. In stream mode with finite <code>half_life</code>, the fraction of released mass
 lost across edges is reported as a message; the domain should be buffered by several decay
 lengths beyond the area of interest, until this fraction is small or the bias in the area of
 interest is acceptable. With <code>half_life = Inf</code>, edges are the only place stream-mode mass can

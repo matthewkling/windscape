@@ -3,8 +3,8 @@
 Traces the routes by which material moves in a random walk model: for a
 downwind walk, the paths from the source(s) to where material is
 deposited (or leaves the domain); for an upwind walk, the paths from
-where material originates to the receptor(s). The result is path data in
-the same layout as
+where material originates to the receptor(s). The result is path data,
+like the output of
 [`least_cost_paths()`](https://matthewkling.github.io/windscape/reference/least_cost_paths.md),
 for drawing with
 [`geom_wind_path()`](https://matthewkling.github.io/windscape/reference/geom_wind_path.md).
@@ -50,19 +50,23 @@ random_walk_paths(rose, init, to = NULL, n = 50, ...)
 
   Further arguments passed to
   [`random_walk()`](https://matthewkling.github.io/windscape/reference/random_walk.md),
-  such as `direction`, `half_life`, `latitude_correction`, or
-  `timescale`. The walk is always run in stream mode with flux, so
-  `mode`, `flux`, `density`, `iter`, and `record` can't be supplied.
+  such as `direction`, `half_life`, `latitude_correction`, `timescale`,
+  or `wrap`. The walk is always run in stream mode with flux, so `mode`,
+  `flux`, `density`, `iter`, and `record` can't be supplied.
 
 ## Value
 
 A data frame with one row per point along each path, ordered from
-upstream to downstream: `trail` (path ID; with `to`, the row of `to` the
-path was traced from), `step` (position along the path, from 0 at its
-upstream end), and `x` and `y` (coordinates). For downwind walks, each
-path starts at a source and ends where its material is deposited or
-leaves the domain; for upwind walks, it starts where its material
-originates and ends at a receptor.
+upstream to downstream: `trail` (line ID, for drawing), `path` (path ID;
+with `to`, the row of `to` the path was traced from), `step` (position
+along the path, from 0 at its upstream end), and `x` and `y`
+(coordinates). Each path is one trail, unless it crosses the east-west
+seam of a wrapped global grid (see `wrap` in
+[`random_walk()`](https://matthewkling.github.io/windscape/reference/random_walk.md)),
+where a new trail starts so that lines don't cross the map. For downwind
+walks, each path starts at a source and ends where its material is
+deposited or leaves the domain; for upwind walks, it starts where its
+material originates and ends at a receptor.
 
 ## Details
 
@@ -127,7 +131,7 @@ p <- random_walk_paths(rose, site, n = 60, half_life = 48)
 #>  fraction of released mass lost across domain edges: 0.00032
 
 # paths, with a dot where each path's share of material is deposited
-ends <- p[!duplicated(p$trail, fromLast = TRUE), ]
+ends <- p[!duplicated(p$path, fromLast = TRUE), ]
 ggplot(p, aes(x, y)) +
   geom_wind_path(arrow = NULL, alpha = 0.6) +
   geom_point(data = ends, size = 0.8) +

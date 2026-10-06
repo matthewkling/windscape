@@ -5,15 +5,10 @@
 Download hourly wind, and represent it as a time series (`wind_series`)
 or a single snapshot (`wind_field`).
 
-### Downloading
-
 - [`ncar_download()`](https://matthewkling.github.io/windscape/reference/ncar_download.md)
   : Download hourly wind data from NCAR
 - [`ncar_land()`](https://matthewkling.github.io/windscape/reference/ncar_land.md)
   : Download a land-water layer from NCAR
-
-### Wind series and fields
-
 - [`wind_series()`](https://matthewkling.github.io/windscape/reference/wind_series.md)
   : Create a wind_series
 - [`wind_times()`](https://matthewkling.github.io/windscape/reference/wind_times.md)
@@ -28,7 +23,7 @@ or a single snapshot (`wind_field`).
 ## Wind roses
 
 Summarize a long time series of wind conditions as the conductance from
-each cell to its eight neighbors: the basis of both connectivity models.
+each cell to its eight neighbors—the basis of both connectivity models.
 
 - [`wind_rose()`](https://matthewkling.github.io/windscape/reference/wind_rose.md)
   : Build or load a wind rose
@@ -47,8 +42,7 @@ each cell to its eight neighbors: the basis of both connectivity models.
 
 ## Least-cost model
 
-Travel time along the fastest route through the wind graph: windshed
-maps, paths, and pairwise matrices.
+Travel time along the fastest route through the wind graph.
 
 - [`least_cost()`](https://matthewkling.github.io/windscape/reference/least_cost.md)
   : Least-cost travel time surface
@@ -62,7 +56,7 @@ maps, paths, and pairwise matrices.
 ## Random walk model
 
 Dispersal of material spreading across the grid in proportion to the
-wind: windshed maps, paths, and pairwise matrices.
+wind.
 
 - [`random_walk()`](https://matthewkling.github.io/windscape/reference/random_walk.md)
   : Simulate wind dispersal by random walk
@@ -70,12 +64,6 @@ wind: windshed maps, paths, and pairwise matrices.
   : Paths of material through a random walk
 - [`pairwise_random_walk()`](https://matthewkling.github.io/windscape/reference/pairwise_random_walk.md)
   : Pairwise random walk connectivity among sites
-
-### Diagnostics
-
-Properties of the random walk on a given rose: time steps, edge losses,
-and self-retention.
-
 - [`rw_exit_prob()`](https://matthewkling.github.io/windscape/reference/rw_exit_prob.md)
   : Probability of exiting a random walk's domain
 - [`rw_self_retention()`](https://matthewkling.github.io/windscape/reference/rw_self_retention.md)
@@ -84,33 +72,27 @@ and self-retention.
   : Maximum iteration duration for a random walk
 - [`iter_length()`](https://matthewkling.github.io/windscape/reference/iter_length.md)
   : Iteration step length of a random walk
-
-### Site placement and grid resolution
-
 - [`check_cell_distance()`](https://matthewkling.github.io/windscape/reference/check_cell_distance.md)
   : Check how grid cells distort distances among sites
 - [`downscale()`](https://matthewkling.github.io/windscape/reference/downscale.md)
   : Downscale a wind rose to higher spatial resolution
 - [`cell_distance()`](https://matthewkling.github.io/windscape/reference/cell_distance.md)
   : Pairwise distances between cell centroids
-
-### Windshed summaries
-
 - [`ws_summarize()`](https://matthewkling.github.io/windscape/reference/ws_summarize.md)
   : Summary statistics for a windshed
 
 ## Hypothesis testing
 
-Test hypotheses about directional connectivity using pairwise matrices
-of wind, gene flow, or other relationships among sites.
+Test hypotheses about wind connectivity using pairwise matrices of wind,
+gene flow, or other relationships among sites.
 
 - [`mantel_test()`](https://matthewkling.github.io/windscape/reference/mantel_test.md)
   : Mantel test
 - [`pairwise_ratios()`](https://matthewkling.github.io/windscape/reference/pairwise_ratios.md)
-  : Convert data to reciprocally symmetrical pairwise matrix
+  : Convert asymmetric pairwise matrix to reciprocally symmetrical
+  matrix
 - [`pairwise_means()`](https://matthewkling.github.io/windscape/reference/pairwise_means.md)
-  : Convert asymmetric pairwise matrix to symmetrical matrix of pairwise
-  means
+  : Convert asymmetric pairwise matrix to symmetrical pairwise means
 - [`point_distance()`](https://matthewkling.github.io/windscape/reference/point_distance.md)
   : Pairwise distances between points
 

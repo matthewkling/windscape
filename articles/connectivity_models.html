@@ -20,7 +20,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">windscape</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.1.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.1.0.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -116,9 +116,10 @@ every link reversed, for measuring travel to a site. The least-cost
 functions build the graph from a rose automatically.
 <code><a href="../reference/wind_graph.html">wind_graph()</a></code> builds it explicitly, which can save time when
 making many calls on a large grid; pass the graph in place of the rose.
-<code><a href="../reference/wind_graph.html">wind_graph()</a></code> also has a <code>wrap</code> argument for
-global grids, where the left and right edges should be connected; the
-least-cost functions pass it on through <code>...</code>.</p>
+On a global grid spanning all 360 degrees of longitude, the graph links
+cells across the -180/180 meridian; <code><a href="../reference/wind_graph.html">wind_graph()</a></code>’s
+<code>wrap</code> argument controls this, and the least-cost functions
+pass it on through <code>...</code>.</p>
 </div>
 <div class="section level3">
 <h3 id="travel-time-as-accessibility">Travel time as accessibility<a class="anchor" aria-label="anchor" href="#travel-time-as-accessibility"></a>
@@ -378,6 +379,13 @@ can also screen results, by masking cells above a tolerance:</p>
 the edges, so stream results measure connectivity within the chosen
 domain and depend on its extent. See <code><a href="../reference/rw_exit_prob.html">?rw_exit_prob</a></code> for
 which results the bound covers.</p>
+<p>A global grid has no east or west edge to buffer: the random walk
+functions detect a grid spanning all 360 degrees of longitude and join
+its two sides at the -180/180 meridian, as the least-cost model does, so
+only the north and south edges are absorbing. The <code>wrap</code>
+argument overrides this. Paths from either model that cross the meridian
+are split there into separate trails, so they don’t streak across the
+map.</p>
 </div>
 <div class="section level3">
 <h3 id="flux-and-paths">Flux and paths<a class="anchor" aria-label="anchor" href="#flux-and-paths"></a>

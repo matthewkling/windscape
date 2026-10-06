@@ -16,6 +16,7 @@ rw_exit_prob(
   half_life = Inf,
   exits = c("all", "edges", "na"),
   latitude_correction = TRUE,
+  wrap = NULL,
   iter = NULL,
   timescale = 1
 )
@@ -48,10 +49,12 @@ rw_exit_prob(
   the domain from loss to a deliberately masked area. Both kinds of exit
   remain absorbing in every case: `"edges"` and `"na"` give the
   probability that mass is lost by that route, and they sum to `"all"`.
+  When the grid wraps (see `wrap`), its east and west edges are joined,
+  so only the north and south edges count.
 
-- latitude_correction:
+- latitude_correction, wrap:
 
-  Logical. Should match the value used for the random walk being
+  Logical. Should match the values used for the random walk being
   assessed; see
   [`random_walk()`](https://matthewkling.github.io/windscape/reference/random_walk.md).
 
