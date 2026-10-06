@@ -158,14 +158,15 @@ particle released at site <code>i</code> is deposited at site
 <span><span class="co">#&gt; [3,] 1.1e-15 2.2e-08 5.9e-05 3.7e-21 3.2e-11</span></span>
 <span><span class="co">#&gt; [4,] 1.7e-11 5.7e-07 3.0e-09 6.2e-05 1.3e-10</span></span>
 <span><span class="co">#&gt; [5,] 3.6e-19 3.4e-09 4.0e-09 1.8e-22 3.4e-05</span></span></code></pre></div>
-<p>A half-life is required, since without it nothing is deposited.
-<code>value = "residence"</code> instead gives the time particles from
-site <code>i</code> spend airborne over site <code>j</code>, which works
-without deposition. Values are per km^2 of the destination’s grid cell
-(<code>density = TRUE</code>), because a larger cell catches more of the
-particles passing over it; on a longitude/latitude grid, cell area
-shrinks toward the poles, so per-cell values would favor low-latitude
-destinations.</p>
+<p>A half-life is required under the default
+<code>value = "deposition"</code>, since without it nothing is
+deposited. <code>value = "residence"</code> instead gives the time
+particles from site <code>i</code> spend airborne over site
+<code>j</code>, which works without a half-life. Values are per km^2 of
+the destination’s grid cell (<code>density = TRUE</code>), because a
+larger cell catches more of the particles passing over it; on a
+longitude/latitude grid, cell area shrinks toward the poles, so per-cell
+values would favor low-latitude destinations.</p>
 <p>The diagonal holds each site’s self-connectivity: its own release
 deposited in its own cell. It’s usually far larger than the other
 values, and the tests below ignore it.</p>
@@ -286,12 +287,14 @@ pathogen? Compare the asymmetric matrices directly.</li>
 <strong>Isolation</strong>: are pairs of sites that are poorly
 connected by wind, in both directions, more different, for example
 genetically? <code><a href="../reference/pairwise_means.html">pairwise_means()</a></code> averages the two directions
-into a symmetric matrix of overall connectivity.</li>
+into a symmetric matrix of overall connectivity, isolating the effects
+<em>strength</em>.</li>
 <li>
 <strong>Asymmetry</strong>: are directional imbalances in wind
 connectivity related to imbalances in ecological flow?
 <code><a href="../reference/pairwise_ratios.html">pairwise_ratios()</a></code> converts a matrix into log ratios of the
-two directions, <code>log(x[i, j] / x[j, i])</code>.</li>
+two directions, <code>log(x[i, j] / x[j, i])</code>, isolating the
+effects of <em>direction</em>.</li>
 </ul>
 <p><code><a href="../reference/pairwise_ratios.html">pairwise_ratios()</a></code> also accepts a vector of site
 attributes, returning the log ratio of each pair’s values. This supports
@@ -322,7 +325,10 @@ high:</p>
 <span><span class="va">distance</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/point_distance.html">point_distance</a></span><span class="op">(</span><span class="va">sites</span><span class="op">)</span> <span class="co"># km</span></span></code></pre></div>
 <p>Now we test each hypothesis, controlling for geographic distance in
 the flow and isolation tests, since nearby sites tend to be both well
-connected by wind and ecologically similar:</p>
+connected by wind and ecologically similar. (Distance control is
+unneeded for the asymmetry test, since <code><a href="../reference/pairwise_ratios.html">pairwise_ratios()</a></code>
+generates reciprocally symmetrical matrices that, by construction, are
+uncorrelated with symmetric covariates like distance.)</p>
 <div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">tests</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
 <span>      flow <span class="op">=</span> <span class="fu"><a href="../reference/mantel_test.html">mantel_test</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">log</a></span><span class="op">(</span><span class="va">deposition</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">log</a></span><span class="op">(</span><span class="va">gene_flow</span><span class="op">)</span>, z <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="va">distance</span><span class="op">)</span><span class="op">)</span>,</span>

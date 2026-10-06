@@ -128,7 +128,7 @@ ggplot(paths, aes(x, y)) +
       geom_wind_path(aes(color = pmax(from_site, 10)), linewidth = 0.4, arrow = NULL) +
       annotate("point", site[1], site[2], color = "red", size = 1.5) +
       facet_wrap(~windshed) +
-      scale_color_viridis_c(name = "hours", trans = "log10", direction = -1) +
+      scale_color_viridis_c(name = "hours", trans = "log10", direction = -1, values = c(0, .5, .7, .85, 1)) +
       us + theme_void() + facets
 ```
 
@@ -183,7 +183,7 @@ upwind windshed, and they answer different questions:
 `origin` is `deposition` weighted by how much each cell releases, and
 normalized. By default, every cell releases the same amount per km^2, so
 the two maps have the same shape. They differ when release varies, given
-as a raster with the `source` argument, such as the abundance of a
+as a raster via the `source` argument, such as the abundance of a
 species that produces the particles: then `origin` shows where the
 site’s immigrants actually come from.
 
@@ -266,7 +266,7 @@ ggplot(rw_paths, aes(x, y)) +
       geom_path(data = states, aes(long, lat, group = group), color = "gray70",
                 linewidth = 0.15, inherit.aes = FALSE) +
       geom_wind_path(alpha = 0.5, linewidth = 0.3, arrow = NULL) +
-      geom_point(data = ends, size = 0.6, color = "dodgerblue") +
+      geom_point(data = ends, size = 0.3, color = "dodgerblue") +
       annotate("point", site[1], site[2], color = "red", size = 1.5) +
       facet_wrap(~windshed) +
       us + theme_void() + facets

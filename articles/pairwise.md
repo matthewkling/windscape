@@ -111,13 +111,13 @@ signif(deposition[1:5, 1:5], 2)
 #> [5,] 3.6e-19 3.4e-09 4.0e-09 1.8e-22 3.4e-05
 ```
 
-A half-life is required, since without it nothing is deposited.
-`value = "residence"` instead gives the time particles from site `i`
-spend airborne over site `j`, which works without deposition. Values are
-per km^2 of the destination’s grid cell (`density = TRUE`), because a
-larger cell catches more of the particles passing over it; on a
-longitude/latitude grid, cell area shrinks toward the poles, so per-cell
-values would favor low-latitude destinations.
+A half-life is required under the default `value = "deposition"`, since
+without it nothing is deposited. `value = "residence"` instead gives the
+time particles from site `i` spend airborne over site `j`, which works
+without a half-life. Values are per km^2 of the destination’s grid cell
+(`density = TRUE`), because a larger cell catches more of the particles
+passing over it; on a longitude/latitude grid, cell area shrinks toward
+the poles, so per-cell values would favor low-latitude destinations.
 
 The diagonal holds each site’s self-connectivity: its own release
 deposited in its own cell. It’s usually far larger than the other
@@ -255,12 +255,12 @@ summary of the connectivity matrix:
   in both directions, more different, for example genetically?
   [`pairwise_means()`](https://matthewkling.github.io/windscape/reference/pairwise_means.md)
   averages the two directions into a symmetric matrix of overall
-  connectivity.
+  connectivity, isolating the effects *strength*.
 - **Asymmetry**: are directional imbalances in wind connectivity related
   to imbalances in ecological flow?
   [`pairwise_ratios()`](https://matthewkling.github.io/windscape/reference/pairwise_ratios.md)
   converts a matrix into log ratios of the two directions,
-  `log(x[i, j] / x[j, i])`.
+  `log(x[i, j] / x[j, i])`, isolating the effects of *direction*.
 
 [`pairwise_ratios()`](https://matthewkling.github.io/windscape/reference/pairwise_ratios.md)
 also accepts a vector of site attributes, returning the log ratio of
@@ -297,7 +297,11 @@ distance <- point_distance(sites) # km
 
 Now we test each hypothesis, controlling for geographic distance in the
 flow and isolation tests, since nearby sites tend to be both well
-connected by wind and ecologically similar:
+connected by wind and ecologically similar. (Distance control is
+unneeded for the asymmetry test, since
+[`pairwise_ratios()`](https://matthewkling.github.io/windscape/reference/pairwise_ratios.md)
+generates reciprocally symmetrical matrices that, by construction, are
+uncorrelated with symmetric covariates like distance.)
 
 ``` r
 
