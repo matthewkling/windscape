@@ -2,7 +2,7 @@
 % Please edit documentation in R/pairwise_matrices.R
 \name{pairwise_ratios}
 \alias{pairwise_ratios}
-\title{Convert data to reciprocally symmetrical pairwise matrix}
+\title{Convert asymmetric pairwise matrix to reciprocally symmetrical matrix}
 \usage{
 pairwise_ratios(x, log = TRUE)
 }
@@ -19,8 +19,10 @@ If \code{x} is a vector, the output represents the ratios of every pairwise comb
 }
 \description{
 This function produces a "pairwise ratio matrix" that can be used in tests about asymmetric flows among nodes in a data set
-(e.g. the "asymmetry" and "diversity" hypotheses; Kling and Ackerly (2021)). The input data set can be an asymmetric matrix with entries representing directed edge weights (e.g. directional flows of wind or genes connecting each pair of populations or "nodes"),
-or it can be a vector of node attributes (e.g. properties of a site or population, such as genetic diversity).
+(e.g. the "asymmetry" and "diversity" hypotheses; Kling and Ackerly (2021)). The input data set can be an asymmetric matrix
+with entries representing directed edge weights (e.g. directional flows of wind or genes connecting each pair of populations or "nodes"),
+or it can be a vector of node attributes (e.g. properties of a site or population, such as genetic diversity). The result
+is a matrix that represents each pair's relative asymmetry, removing information about their absolute magnitudes.
 }
 \references{
 Kling and Ackerly (2021). Global wind patterns shape genetic differentiation, asymmetric gene flow, and genetic diversity in trees. Proceedings of the National Academy of Sciences. https://doi.org/10.1073/pnas.2017317118

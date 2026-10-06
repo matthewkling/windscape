@@ -9,6 +9,7 @@ rw_self_retention(
   half_life = Inf,
   timescale = 1,
   latitude_correction = TRUE,
+  wrap = NULL,
   cells = NULL,
   exact = FALSE,
   chunk = 200
@@ -23,8 +24,8 @@ stream-mode walk; see \code{\link[=random_walk]{random_walk()}}.}
 \item{timescale}{Time step scaling factor; see \code{\link[=random_walk]{random_walk()}}. Affects only the approximate
 values; exact values are independent of \code{timescale}.}
 
-\item{latitude_correction}{Logical. Must match the value used for the stream-mode walk; see
-\code{\link[=random_walk]{random_walk()}}.}
+\item{latitude_correction, wrap}{Logical. Must match the values used for the stream-mode walk;
+see \code{\link[=random_walk]{random_walk()}}.}
 
 \item{cells}{Cell numbers, or a two-column matrix of coordinates, at which to compute
 \code{G_cc}. Optional for the approximation (which defaults to every cell); required if

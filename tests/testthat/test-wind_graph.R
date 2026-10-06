@@ -69,7 +69,8 @@ test_that("wrap connects the eastern and western edges", {
       r <- uv_rose(nr = 3, nc = 4, u = 5, v = 0)
       xy <- centers(r, 2, c(4, 1))
       open <- pairwise_least_cost(r, xy, snap = TRUE)
-      wrapped <- pairwise_least_cost(r, xy, snap = TRUE, wrap = TRUE)
+      expect_warning(pairwise_least_cost(r, xy, snap = TRUE, wrap = TRUE), "360")
+      wrapped <- suppressWarnings(pairwise_least_cost(r, xy, snap = TRUE, wrap = TRUE))
       dE <- geosphere::distGeo(c(0, xy[1, 2]), c(1, xy[1, 2]))
       expect_equal(open[1, 2], Inf)
       expect_equal(wrapped[1, 2], dE / (5 * 3600), tolerance = 1e-8) # one hop across the suture
@@ -208,13 +209,13 @@ test_that("wrap adds edges across the left and right edges, skipping NA cells", 
       first <- 5 * nc + 1                     # first column of row 6
       last <- 6 * nc                          # last column of row 6
       expect_equal(gdistance::transitionMatrix(wind_graph(rose))[last, first], 0)
-      expect_gt(gdistance::transitionMatrix(wind_graph(rose, wrap = TRUE))[last, first], 0)
+      expect_gt(gdistance::transitionMatrix(suppressWarnings(wind_graph(rose, wrap = TRUE)))[last, first], 0)
 
       holes <- rose
       v <- terra::values(holes)
       v[first, ] <- NA
       terra::values(holes) <- v
-      tm <- gdistance::transitionMatrix(wind_graph(holes, wrap = TRUE))
+      tm <- gdistance::transitionMatrix(suppressWarnings(wind_graph(holes, wrap = TRUE)))
       expect_false(anyNA(tm@x))
       expect_equal(sum(tm[first, ]) + sum(tm[, first]), 0)
 })
@@ -241,4 +242,51 @@ test_that("sites and points outside the grid are handled, not misaligned", {
       expect_warning(p2 <- least_cost_paths(r, xy[1, , drop = FALSE], rbind(out, xy[2:3, ])), "outside")
       expect_equal(p2$to, p$to + 1)
       expect_equal(p2[c("step", "hours", "x", "y")], p[c("step", "hours", "x", "y")])
+})
+
+test_that("global grids wrap by default", {
+      g <- global_rose()
+      nc <- terra::ncol(g)
+      first <- 5 * nc + 1
+      last <- 6 * nc
+      expect_gt(gdistance::transitionMatrix(wind_graph(g))[last, first], 0)
+      expect_equal(gdistance::transitionMatrix(wind_graph(g, wrap = FALSE))[last, first], 0)
+      expect_error(wind_graph(g, wrap = "yes"), "TRUE, FALSE, or NULL")
+})
+
+test_that("least-cost paths split into separate trails where they cross the seam", {
+      g <- global_rose()
+      to <- cbind(c(-165, 165), c(5, 15))
+      p <- least_cost_paths(g, cbind(155, 5), to = to)
+      expect_equal(nrow(unique(p[, c("site", "to")])), 2)
+      across <- p[p$to == 1, ]
+      expect_equal(length(unique(across$trail)), 2) # one piece each side of the seam
+      expect_equal(across$x[1], 155)
+      expect_equal(across$x[nrow(across)], -165)
+      expect_true(all(tapply(across$step, across$trail, function(s) all(diff(s) == 1))))
+      expect_true(all(tapply(across$x, across$trail, function(x) all(abs(diff(x)) < 180))))
+      expect_equal(length(unique(p$trail[p$to == 2])), 1) # no crossing, one trail
+      # without wrapping, the pair across the seam is unreachable
+      expect_warning(least_cost_paths(g, cbind(155, 5), to = to, wrap = FALSE), "no path")
+})
+
+test_that("on a wrapped global grid, travel times don't depend on where the seam falls", {
+      g <- global_rose()
+      roll <- function(r, k){ # move every column k columns east, wrapping around
+            nc <- terra::ncol(r)
+            v <- terra::values(r)
+            cell <- seq_len(nrow(v))
+            src <- (cell - 1) %/% nc * nc + ((cell - 1) %% nc - k) %% nc + 1
+            out <- r
+            terra::values(out) <- v[src, ]
+            out
+      }
+      s1 <- cbind(c(155, -165, 0), c(5, 5, 20))
+      s2 <- cbind((s1[, 1] + 60 + 180) %% 360 - 180, s1[, 2]) # the same sites, 60 degrees east
+      expect_equal(pairwise_least_cost(roll(g, 6), s2, snap = TRUE),
+                   pairwise_least_cost(g, s1, snap = TRUE), tolerance = 1e-10)
+      # each seam edge appears once (raster::adjacent would also link global grids' edges)
+      tm <- gdistance::transitionMatrix(wind_graph(g))
+      inner <- gdistance::transitionMatrix(wind_graph(roll(g, 1)))
+      expect_equal(Matrix::nnzero(tm), Matrix::nnzero(inner))
 })

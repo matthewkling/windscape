@@ -154,8 +154,11 @@ least_cost <- function(rose, sites, direction = "downwind", rate = FALSE, ...){
 #' @return A data frame with one row per path vertex, ordered along each path in the direction
 #'    of travel (from the site to the point for downwind paths, and from the point to the site
 #'    for upwind paths):
-#' * `trail`: path id.
-#' * `site`, `to`: row numbers of the path's site in `sites` and point in `to`.
+#' * `trail`: line id, for drawing. Each path is one trail, unless it crosses the east-west seam
+#'    of a wrapped global grid (see `wrap` in [wind_graph()]), where a new trail starts so that
+#'    lines don't cross the map.
+#' * `site`, `to`: row numbers of the path's site in `sites` and point in `to`, which together
+#'    identify the path.
 #' * `step`: vertex number along the path, starting at 0 at its upwind end.
 #' * `hours`: cumulative travel time along the path, in hours (if `trans = 1` in
 #'    [wind_rose()] and wind speeds are in m/s). Its final value on each path equals the
@@ -272,7 +275,7 @@ least_cost_paths <- function(rose, sites, to = NULL, direction = "downwind",
             }
       }
       out <- do.call(rbind, out)
-      out$trail <- as.integer(factor(paste(out$site, out$to), levels = unique(paste(out$site, out$to))))
+      out$trail <- seam_trails(paste(out$site, out$to), out$x, raster::xmax(template) - raster::xmin(template))
       out <- out[, c("trail", "site", "to", "step", "hours", "x", "y")]
       rownames(out) <- NULL
       out

@@ -11,7 +11,7 @@ wind_trails(
   distance = NULL,
   steps = 100,
   direction = c("both", "downwind", "upwind"),
-  wrap = c("neither", "horizontal", "vertical", "both"),
+  wrap = NULL,
   sf = FALSE,
   ...
 )
@@ -37,8 +37,11 @@ accurate trails. Default 100.}
 \code{distance} upwind and half downwind), only \code{"downwind"}, or only \code{"upwind"}.}
 
 \item{wrap}{Wrap particles that leave the field across its edges back in on the opposite
-side: \code{"neither"} (the default), \code{"horizontal"} (e.g. for global fields), \code{"vertical"}, or
-\code{"both"}. Otherwise, trails end where they leave the field.}
+side: \code{"neither"}, \code{"horizontal"}, \code{"vertical"}, or \code{"both"}; \code{TRUE} and \code{FALSE} are
+shorthand for \code{"horizontal"} and \code{"neither"}. Trails end where they leave the field across
+an edge that doesn't wrap. The default, \code{NULL}, wraps horizontally if \code{x} is a global field
+spanning all 360 degrees of longitude, where -180 and 180 are the same meridian, and not
+otherwise.}
 
 \item{sf}{Logical: return trails as an \code{sf} object of linestrings instead of a data frame?
 Requires the sf package. Default \code{FALSE}.}

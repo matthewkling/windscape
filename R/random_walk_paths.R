@@ -2,8 +2,8 @@
 #'
 #' Traces the routes by which material moves in a random walk model: for a downwind walk, the
 #' paths from the source(s) to where material is deposited (or leaves the domain); for an upwind
-#' walk, the paths from where material originates to the receptor(s). The result is path data in
-#' the same layout as [least_cost_paths()], for drawing with [geom_wind_path()]. Where
+#' walk, the paths from where material originates to the receptor(s). The result is path data,
+#' like the output of [least_cost_paths()], for drawing with [geom_wind_path()]. Where
 #' [least_cost_paths()] gives the single fastest route between places, these paths show the full
 #' spread of routes, weighted by how much material uses each.
 #'
@@ -47,12 +47,14 @@
 #'    details).
 #' @param n Number of paths, when `to` is `NULL`.
 #' @param ... Further arguments passed to [random_walk()], such as `direction`, `half_life`,
-#'    `latitude_correction`, or `timescale`. The walk is always run in stream mode with flux, so
+#'    `latitude_correction`, `timescale`, or `wrap`. The walk is always run in stream mode with flux, so
 #'    `mode`, `flux`, `density`, `iter`, and `record` can't be supplied.
 #' @return A data frame with one row per point along each path, ordered from upstream to
-#'    downstream: `trail` (path ID; with `to`, the row of `to` the path was traced from),
-#'    `step` (position along the path, from 0 at its upstream end), and `x` and `y`
-#'    (coordinates). For downwind walks, each path starts at a source and
+#'    downstream: `trail` (line ID, for drawing), `path` (path ID; with `to`, the row of `to` the
+#'    path was traced from), `step` (position along the path, from 0 at its upstream end), and
+#'    `x` and `y` (coordinates). Each path is one trail, unless it crosses the east-west seam of a
+#'    wrapped global grid (see `wrap` in [random_walk()]), where a new trail starts so that lines
+#'    don't cross the map. For downwind walks, each path starts at a source and
 #'    ends where its material is deposited or leaves the domain; for upwind walks, it starts
 #'    where its material originates and ends at a receptor.
 #' @seealso [random_walk()]; [least_cost_paths()] for fastest routes; [geom_wind_path()] to draw
@@ -65,7 +67,7 @@
 #' p <- random_walk_paths(rose, site, n = 60, half_life = 48)
 #'
 #' # paths, with a dot where each path's share of material is deposited
-#' ends <- p[!duplicated(p$trail, fromLast = TRUE), ]
+#' ends <- p[!duplicated(p$path, fromLast = TRUE), ]
 #' ggplot(p, aes(x, y)) +
 #'   geom_wind_path(arrow = NULL, alpha = 0.6) +
 #'   geom_point(data = ends, size = 0.8) +
@@ -83,6 +85,7 @@ random_walk_paths <- function(rose, init, to = NULL, n = 50, ...){
       direction <- match.arg(if(is.null(dots$direction)) "downwind" else dots$direction,
                              c("downwind", "upwind"))
       dots$direction <- direction
+      wrap <- suppressWarnings(resolve_wrap(rose, dots$wrap)) # random_walk() gives any warning
       if(!is.null(to)){
             to <- as_site_matrix(to, "to")
             if(anyNA(terra::cellFromXY(rose, to))) stop("some `to` points fall outside the extent of `rose`")
@@ -109,9 +112,8 @@ random_walk_paths <- function(rose, init, to = NULL, n = 50, ...){
       # a path arrives when it enters a target cell or one of its eight neighbors (near a source,
       # the flux spreads out from the source cell, so paths converge on it without always
       # entering it); each such cell is assigned to its nearest target
-      adj <- terra::adjacent(rose, targets, directions = "queen", include = TRUE, pairs = TRUE)
-      adj <- adj[!is.na(adj[, 2]), , drop = FALSE]
-      dd <- (terra::xFromCell(rose, adj[, 2]) - terra::xFromCell(rose, adj[, 1]))^2 +
+      adj <- rw_adjacent(rose, targets, wrap)
+      dd <- (wrap_dx(terra::xFromCell(rose, adj[, 2]) - terra::xFromCell(rose, adj[, 1]), rose, wrap))^2 +
             (terra::yFromCell(rose, adj[, 2]) - terra::yFromCell(rose, adj[, 1]))^2
       adj <- adj[order(dd), , drop = FALSE]
       adj <- adj[!duplicated(adj[, 2]), , drop = FALSE]
@@ -119,7 +121,8 @@ random_walk_paths <- function(rose, init, to = NULL, n = 50, ...){
 
       # trace along the flux: backward to a source (downwind walks) or forward to a receptor.
       # Trace a quarter of the domain diagonal at a time, extending only paths that haven't yet
-      # arrived, up to three diagonals in all.
+      # arrived, up to three diagonals in all. With `wrap`, paths continue across the east-west
+      # seam; they are split into separate trails there at the end.
       e <- terra::ext(rose)
       span <- geosphere::distGeo(c(e$xmin, e$ymin), c(e$xmax, e$ymax)) / 1000
       cell_km <- mean(terra::res(rose)) * 111.32 * cos(mean(c(e$ymin, e$ymax)) * pi / 180)
@@ -132,8 +135,9 @@ random_walk_paths <- function(rose, init, to = NULL, n = 50, ...){
       for(pass in 1:12){
             if(length(active) == 0) break
             start <- do.call(rbind, lapply(xy[active], function(p) p[nrow(p), , drop = FALSE]))
-            tr <- wind_trails(w$flux, start, distance = leg, steps = steps, direction = trace_dir)
-            tr <- split(tr, tr$trail)
+            tr <- wind_trails(w$flux, start, distance = leg, steps = steps, direction = trace_dir,
+                              wrap = if(wrap) "horizontal" else "neither")
+            tr <- split(tr, tr$particle) # one particle per path, even if it wraps
             still <- integer(0)
             for(k in seq_along(active)){
                   i <- active[k]
@@ -155,11 +159,13 @@ random_walk_paths <- function(rose, init, to = NULL, n = 50, ...){
                              if(direction == "downwind") "source" else "receptor",
                              " and were dropped", call. = FALSE)
       ids <- which(!vapply(out, is.null, logical(1)))
-      if(length(ids) == 0) return(data.frame(trail = integer(0), step = integer(0),
+      if(length(ids) == 0) return(data.frame(trail = integer(0), path = integer(0), step = integer(0),
                                              x = numeric(0), y = numeric(0)))
-      # with `to`, trail IDs are rows of `to`; otherwise they number the traced paths
-      if(is.null(to)) trail_id <- seq_along(ids) else trail_id <- ids
-      out <- do.call(rbind, Map(function(d, i) cbind(trail = i, d), out[ids], trail_id))
+      # with `to`, path IDs are rows of `to`; otherwise they number the traced paths
+      if(is.null(to)) path_id <- seq_along(ids) else path_id <- ids
+      out <- do.call(rbind, Map(function(d, i) cbind(path = i, d), out[ids], path_id))
+      out$trail <- seam_trails(out$path, out$x, terra::xmax(rose) - terra::xmin(rose))
+      out <- out[, c("trail", "path", "step", "x", "y")]
       rownames(out) <- NULL
       out
 }
@@ -171,13 +177,34 @@ random_walk_paths <- function(rose, init, to = NULL, n = 50, ...){
 rw_edge_loss <- function(rose, w, dots){
       lc <- if(is.null(dots$latitude_correction)) TRUE else dots$latitude_correction
       ts <- if(is.null(dots$timescale)) 1 else dots$timescale
-      su <- rw_setup(rose, timescale = ts, latitude_correction = lc)
+      su <- suppressWarnings(rw_setup(rose, timescale = ts, latitude_correction = lc, wrap = dots$wrap))
       t <- su$t
       stay <- Matrix::rowSums(su$P)
       res <- terra::values(w$residence)[, 1]
       loss <- res * (1 - stay) / t
       loss[!is.finite(loss)] <- 0
       loss
+}
+
+# Pairs of (target cell, cell in its queen neighborhood, including itself), as a two-column
+# matrix, with the first and last columns adjacent if `wrap`
+rw_adjacent <- function(r, cells, wrap = FALSE){
+      nr <- terra::nrow(r)
+      nc <- terra::ncol(r)
+      dr <- c(0, 1, 0, -1, -1, -1, 0, 1, 1)
+      dc <- c(0, -1, -1, -1, 0, 1, 1, 1, 0)
+      nb <- vapply(1:9, function(k) neighbor_cells(nr, nc, dr[k], dc[k], wrap)[cells],
+                   numeric(length(cells)))
+      adj <- cbind(rep(cells, 9), as.vector(nb))
+      adj <- unique(adj[!is.na(adj[, 2]), , drop = FALSE])
+      adj[order(adj[, 1], adj[, 2]), , drop = FALSE]
+}
+
+# East-west coordinate differences, taking the short way around if the grid wraps
+wrap_dx <- function(dx, r, wrap = FALSE){
+      if(!wrap) return(dx)
+      w <- terra::xmax(r) - terra::xmin(r)
+      (dx + w / 2) %% w - w / 2
 }
 
 # n points placed deterministically in proportion to cell weights: one at the middle of each of

@@ -17,12 +17,9 @@ reference:
   desc: >
     Download hourly wind, and represent it as a time series (`wind_series`) or a
     single snapshot (`wind_field`).
-- subtitle: Downloading
   contents:
   - ncar_download
   - ncar_land
-- subtitle: Wind series and fields
-  contents:
   - wind_series
   - wind_times
   - subset_series
@@ -32,7 +29,7 @@ reference:
 - title: Wind roses
   desc: >
     Summarize a long time series of wind conditions as the conductance from each
-    cell to its eight neighbors: the basis of both connectivity models.
+    cell to its eight neighbors---the basis of both connectivity models.
   contents:
   - wind_rose
   - combine_roses
@@ -42,8 +39,7 @@ reference:
 
 - title: Least-cost model
   desc: >
-    Travel time along the fastest route through the wind graph: windshed maps,
-    paths, and pairwise matrices.
+    Travel time along the fastest route through the wind graph.
   contents:
   - least_cost
   - least_cost_paths
@@ -52,33 +48,23 @@ reference:
 
 - title: Random walk model
   desc: >
-    Dispersal of material spreading across the grid in proportion to the wind:
-    windshed maps, paths, and pairwise matrices.
+    Dispersal of material spreading across the grid in proportion to the wind.
   contents:
   - random_walk
   - random_walk_paths
   - pairwise_random_walk
-- subtitle: Diagnostics
-  desc: >
-    Properties of the random walk on a given rose: time steps, edge losses, and
-    self-retention.
-  contents:
   - rw_exit_prob
   - rw_self_retention
   - rw_max_step
   - iter_length
-- subtitle: Site placement and grid resolution
-  contents:
   - check_cell_distance
   - downscale
   - cell_distance
-- subtitle: Windshed summaries
-  contents:
   - ws_summarize
 
 - title: Hypothesis testing
   desc: >
-    Test hypotheses about directional connectivity using pairwise matrices of
+    Test hypotheses about wind connectivity using pairwise matrices of
     wind, gene flow, or other relationships among sites.
   contents:
   - mantel_test

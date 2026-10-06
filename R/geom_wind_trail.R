@@ -175,11 +175,11 @@ geom_wind_trail <- function(mapping = NULL, data = NULL, stat = StatWindTrail,
                             position = "identity", ..., seeds = NULL, res = 20,
                             fixed_length = FALSE, length = 1.5, hours = NULL,
                             direction = c("both", "downwind", "upwind"), steps = 20,
-                            wrap = c("neither", "horizontal", "vertical", "both"),
+                            wrap = NULL,
                             arrow = grid::arrow(length = grid::unit(0.1, "cm"), type = "closed"),
                             na.rm = FALSE, show.legend = NA, inherit.aes = TRUE){
       wind_trail_layer(mapping, data, stat, GeomWindTrail, position, seeds, res, fixed_length,
-                       length, hours, match.arg(direction), steps, match.arg(wrap), arrow,
+                       length, hours, match.arg(direction), steps, wrap, arrow,
                        na.rm, show.legend, inherit.aes, ...)
 }
 
@@ -189,11 +189,11 @@ stat_wind_trail <- function(mapping = NULL, data = NULL, geom = GeomWindTrail,
                             position = "identity", ..., seeds = NULL, res = 20,
                             fixed_length = FALSE, length = 1.5, hours = NULL,
                             direction = c("both", "downwind", "upwind"), steps = 20,
-                            wrap = c("neither", "horizontal", "vertical", "both"),
+                            wrap = NULL,
                             arrow = grid::arrow(length = grid::unit(0.1, "cm"), type = "closed"),
                             na.rm = FALSE, show.legend = NA, inherit.aes = TRUE){
       wind_trail_layer(mapping, data, StatWindTrail, geom, position, seeds, res, fixed_length,
-                       length, hours, match.arg(direction), steps, match.arg(wrap), arrow,
+                       length, hours, match.arg(direction), steps, wrap, arrow,
                        na.rm, show.legend, inherit.aes, ...)
 }
 

@@ -26,6 +26,15 @@ noisy_rose <- function(nr = 12, nc = 15, seed = 1){
       })
 }
 
+# Global lon/lat rose on 10-degree cells, spanning all 360 degrees of longitude (60 S to 60 N),
+# for wrapping across the east-west seam: noisy westerlies.
+global_rose <- function(seed = 1){
+      set.seed(seed)
+      th <- stats::runif(50, 0, 2 * pi)
+      build_rose(12, 36, function(x, y) list(u = 5 + 3 * sin(th), v = 3 * cos(th)),
+                 xmin = -180, ymin = -60, res = 10)
+}
+
 # Spatially uniform rose on a planar (square-cell) grid. Directions are spread evenly
 # around a mean wind (u, v), so the rose is smooth.
 uniform_rose <- function(nr = 21, nc = 21, u = 0, v = 0, spread = 2){

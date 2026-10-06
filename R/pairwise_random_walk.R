@@ -18,7 +18,7 @@
 #'    biased toward lower-latitude destinations even within a single analysis. Dividing by area
 #'    removes that bias, and also makes values comparable across grid resolutions (though see
 #'    Details).
-#' @param timescale,latitude_correction See [random_walk()]. Results do not depend on
+#' @param timescale,latitude_correction,wrap See [random_walk()]. Results do not depend on
 #'    `timescale`.
 #' @param chunk Number of sites to solve for at once. Larger values are faster but use more
 #'    memory.
@@ -53,7 +53,8 @@
 #' @export
 pairwise_random_walk <- function(rose, sites, half_life = NULL,
                                  value = c("deposition", "residence"), density = TRUE,
-                                 timescale = 1, latitude_correction = TRUE, chunk = 200){
+                                 timescale = 1, latitude_correction = TRUE, wrap = NULL,
+                                 chunk = 200){
       if(!inherits(rose, "wind_rose")) stop("`rose` must be a wind_rose")
       value <- match.arg(value)
       if(inherits(sites, "SpatVector")) sites <- terra::crds(sites)
@@ -63,7 +64,7 @@ pairwise_random_walk <- function(rose, sites, half_life = NULL,
             if(value == "deposition") stop("`half_life` is required for `value = \"deposition\"`")
             half_life <- Inf
       }
-      su <- rw_setup(rose, half_life, timescale, latitude_correction)
+      su <- rw_setup(rose, half_life, timescale, latitude_correction, wrap)
       rose <- su$rose
       t <- su$t
       lambda <- su$lambda

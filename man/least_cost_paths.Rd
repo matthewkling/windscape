@@ -43,8 +43,11 @@ A data frame with one row per path vertex, ordered along each path in the direct
 of travel (from the site to the point for downwind paths, and from the point to the site
 for upwind paths):
 \itemize{
-\item \code{trail}: path id.
-\item \code{site}, \code{to}: row numbers of the path's site in \code{sites} and point in \code{to}.
+\item \code{trail}: line id, for drawing. Each path is one trail, unless it crosses the east-west seam
+of a wrapped global grid (see \code{wrap} in \code{\link[=wind_graph]{wind_graph()}}), where a new trail starts so that
+lines don't cross the map.
+\item \code{site}, \code{to}: row numbers of the path's site in \code{sites} and point in \code{to}, which together
+identify the path.
 \item \code{step}: vertex number along the path, starting at 0 at its upwind end.
 \item \code{hours}: cumulative travel time along the path, in hours (if \code{trans = 1} in
 \code{\link[=wind_rose]{wind_rose()}} and wind speeds are in m/s). Its final value on each path equals the

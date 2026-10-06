@@ -795,3 +795,144 @@ test_that("random walk functions share input checks", {
       expect_error(random_walk(r, xy, mode = "stream", half_life = 24, timescale = NA), "timescale")
       expect_error(rw_self_retention(r, 24, timescale = 0), "timescale")
 })
+
+
+# pulse mode and NA cells ------------------------
+
+test_that("pulse mode follows the transition matrix around NA cells, which are NA in the output", {
+      r <- noisy_rose()
+      r[c(30, 31, 45, 46, 100)] <- NA
+      n <- terra::rast(r, nlyrs = 1, vals = 1)
+      su <- rw_setup(r)
+      n0 <- vals(n)
+      n0[!su$valid] <- 0
+      for(dir in c("downwind", "upwind")){
+            w <- quietly(random_walk(r, n, iter = 2, record = 0:2, direction = dir, density = FALSE))
+            M <- if(dir == "downwind") Matrix::t(su$P) else su$P
+            a <- terra::values(w$airborne)
+            expect_equal(colSums(is.na(a)), rep(5, 3), ignore_attr = TRUE)
+            expect_equal(a[su$valid, 3], as.vector(M %*% (M %*% n0))[su$valid], tolerance = 1e-12)
+      }
+})
+
+
+# wrap ------------------------
+
+test_that("with wrap, only the north and south edges are absorbing", {
+      r <- uniform_rose(nr = 9, nc = 12, u = 3)
+      su <- rw_setup(r, 24, wrap = TRUE)
+      L <- rw_leak(su$p, wrap = TRUE)
+      expect_equal(Matrix::rowSums(su$P) + rowSums(L), rep(1, terra::ncell(r)), tolerance = 1e-12)
+      edges <- matrix(L[, "edges"], 9, byrow = TRUE)
+      expect_true(all(edges[2:8, ] == 0))
+      expect_true(all(edges[c(1, 9), ] > 0))
+      # without wrap, the east edge leaks too
+      expect_true(all(matrix(rw_leak(su$p)[, "edges"], 9, byrow = TRUE)[2:8, 12] > 0))
+})
+
+test_that("wrapped walks are invariant to east-west translation", {
+      r <- uniform_rose(nr = 9, nc = 12, u = 3)
+      src <- function(col) point_raster(r, terra::cellFromRowCol(r, 5, col))
+      walk <- function(col) matrix(vals(quietly(random_walk(r, src(col), mode = "stream", half_life = 24,
+                                                             wrap = TRUE, density = FALSE))$residence),
+                                   9, byrow = TRUE)
+      a <- walk(3)
+      b <- walk(9)
+      expect_equal(a[, c(7:12, 1:6)], b, tolerance = 1e-12) # b is a shifted 6 columns east
+})
+
+test_that("wrapped walks carry mass across the seam", {
+      r <- uniform_rose(nr = 9, nc = 12, u = 3)
+      init <- point_raster(r, terra::cellFromRowCol(r, 5, 12))
+      p <- quietly(random_walk(r, init, iter = 3, wrap = TRUE, density = FALSE))
+      expect_equal(sum(vals(p$airborne)), 1, tolerance = 1e-12) # nothing lost at the east edge
+      w <- quietly(random_walk(r, init, mode = "stream", half_life = 24, wrap = TRUE, density = FALSE))
+      dep <- matrix(vals(w$deposition), 9, byrow = TRUE)
+      expect_gt(sum(dep[, 1:3]), sum(dep[, 9:11])) # deposition continues east of the seam
+})
+
+test_that("wrapped walks keep the mass balance, adjoint, and flux budget", {
+      r <- global_rose()
+      s <- terra::cellFromRowCol(r, 6, 35)
+      rc <- terra::cellFromRowCol(r, 7, 2) # across the seam from s
+      su <- rw_setup(r, 200, wrap = TRUE)
+
+      dn <- quietly(random_walk(r, point_raster(r, s), mode = "stream", half_life = 200, wrap = TRUE,
+                                density = FALSE, flux = TRUE))
+      n <- vals(dn$residence) / ((1 - su$lambda) * su$t)
+      loss <- (1 - su$lambda) * sum(n * (1 - Matrix::rowSums(su$P)))
+      expect_equal(sum(vals(dn$deposition)) + loss, 1, tolerance = 1e-10)
+
+      up <- quietly(random_walk(r, point_raster(r, rc), mode = "stream", half_life = 200, wrap = TRUE,
+                                density = FALSE, direction = "upwind"))
+      expect_gt(vals(dn$residence)[rc], 0)
+      expect_equal(vals(up$residence)[s], vals(dn$residence)[rc], tolerance = 1e-10)
+
+      J <- rw_edge_flows(vals(dn$residence), su$p, su$t, wrap = TRUE)
+      expect_equal(rowSums(J), vals(point_raster(r, s)) - vals(dn$deposition), tolerance = 1e-10)
+})
+
+test_that("pairwise_random_walk, rw_exit_prob, and rw_self_retention honor wrap", {
+      r <- global_rose()
+      cells <- terra::cellFromRowCol(r, c(6, 7), c(35, 2))
+      xy <- terra::xyFromCell(r, cells)
+      pw <- pairwise_random_walk(r, xy, half_life = 200, wrap = TRUE, density = FALSE)
+      w <- quietly(random_walk(r, xy[1, , drop = FALSE], mode = "stream", half_life = 200,
+                               wrap = TRUE, density = FALSE))
+      expect_equal(pw[1, 2], vals(w$deposition)[cells[2]], tolerance = 1e-10)
+      expect_gt(pw[1, 2], 10 * pairwise_random_walk(r, xy, half_life = 200, wrap = FALSE,
+                                                    density = FALSE)[1, 2])
+
+      h <- vals(rw_exit_prob(r, 200, exits = "edges", wrap = TRUE))
+      h0 <- vals(rw_exit_prob(r, 200, exits = "edges", wrap = FALSE))
+      east <- terra::cellFromRowCol(r, 6, 36)
+      expect_lt(h[east], 0.1 * h0[east])
+      # exit probability still equals stream-mode edge loss from a unit source
+      su <- rw_setup(r, 200, wrap = TRUE)
+      ws <- quietly(random_walk(r, point_raster(r, east), mode = "stream", half_life = 200,
+                                wrap = TRUE, density = FALSE))
+      n <- vals(ws$residence) / ((1 - su$lambda) * su$t)
+      expect_equal(h[east], (1 - su$lambda) * sum(n * (1 - Matrix::rowSums(su$P))), tolerance = 1e-10)
+
+      g <- rw_self_retention(r, 200, wrap = TRUE, cells = east, exact = TRUE)
+      expect_equal(g, vals(ws$residence)[east], tolerance = 1e-10)
+})
+
+test_that("wrap is validated", {
+      r <- noisy_rose()
+      xy <- terra::xyFromCell(r, 40)
+      expect_error(random_walk(r, xy, wrap = NA), "TRUE, FALSE, or NULL")
+      expect_error(pairwise_random_walk(r, xy, half_life = 24, wrap = "yes"), "TRUE, FALSE, or NULL")
+      narrow <- build_rose(4, 2, function(x, y) list(u = stats::rnorm(50), v = stats::rnorm(50)))
+      expect_error(rw_exit_prob(narrow, 24, wrap = TRUE), "three cells")
+      expect_warning(suppressMessages(random_walk(r, xy, mode = "stream", half_life = 24, wrap = TRUE)),
+                     "360")
+      expect_no_warning(suppressMessages(random_walk(global_rose(), cbind(0, 0), mode = "stream",
+                                                     half_life = 24, wrap = TRUE)))
+})
+
+test_that("by default, global grids wrap and others don't", {
+      expect_true(resolve_wrap(global_rose()))
+      expect_false(resolve_wrap(noisy_rose()))
+      expect_false(resolve_wrap(uniform_rose())) # planar
+      expect_true(resolve_wrap(uniform_rose(), TRUE)) # planar grids wrap on request, silently
+      # a lon/lat grid within half a cell of 360 degrees counts as global
+      g <- global_rose()
+      expect_true(is_global(terra::crop(g, terra::ext(-180, 175, -60, 60), snap = "out")))
+      expect_false(is_global(terra::crop(g, terra::ext(-180, 170, -60, 60))))
+      # 0 to 360 longitudes work too
+      expect_true(is_global(terra::shift(g, 180)))
+
+      r <- global_rose()
+      xy <- cbind(175, 5)
+      auto <- quietly(random_walk(r, xy, mode = "stream", half_life = 200))
+      on <- quietly(random_walk(r, xy, mode = "stream", half_life = 200, wrap = TRUE))
+      off <- quietly(random_walk(r, xy, mode = "stream", half_life = 200, wrap = FALSE))
+      expect_equal(vals(auto$deposition), vals(on$deposition))
+      expect_gt(sum(vals(auto$deposition)), 2 * sum(vals(off$deposition))) # less is lost at the east edge
+      msgs <- capture_messages(random_walk(r, xy, mode = "stream", half_life = 200))
+      expect_match(paste(msgs, collapse = ""), "wraps")
+      expect_equal(vals(rw_exit_prob(r, 200)), vals(rw_exit_prob(r, 200, wrap = TRUE)))
+      expect_equal(pairwise_random_walk(r, rbind(xy, c(-175, 5)), half_life = 200),
+                   pairwise_random_walk(r, rbind(xy, c(-175, 5)), half_life = 200, wrap = TRUE))
+})

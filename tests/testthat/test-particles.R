@@ -65,6 +65,25 @@ test_that("trails leaving the domain end, unless wrapped into new trails", {
       expect_equal(unique(trw$particle), 1)
 })
 
+test_that("global fields wrap horizontally by default", {
+      g <- terra::rast(nrows = 18, ncols = 36, xmin = -180, xmax = 180, ymin = -90, ymax = 90,
+                       crs = "EPSG:4326", nlyrs = 2, vals = 0)
+      g[[1]] <- 5
+      f <- wind_field(g)
+      seed <- cbind(175, 5)
+      auto <- wind_trails(f, seed, hours = 48, steps = 20, direction = "downwind")
+      expect_gt(length(unique(auto$trail)), 1)
+      expect_equal(max(auto$step), 20)
+      expect_equal(auto, wind_trails(f, seed, hours = 48, steps = 20, direction = "downwind",
+                                     wrap = TRUE))
+      off <- wind_trails(f, seed, hours = 48, steps = 20, direction = "downwind", wrap = FALSE)
+      expect_lt(max(off$step), 20)
+      # regional fields don't wrap by default
+      r <- field(5, 0)
+      expect_lt(max(wind_trails(r, cbind(-90.5, 35), hours = 20, steps = 10,
+                                direction = "downwind")$step), 10)
+})
+
 test_that("wind_trails validates input", {
       f <- field(5, 0)
       expect_error(wind_trails(f, cbind(-95, 35)), "exactly one")

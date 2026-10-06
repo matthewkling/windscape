@@ -58,3 +58,57 @@ check_grid <- function(x){
                  call. = FALSE)
       invisible(TRUE)
 }
+
+
+# Does a longitude/latitude grid span all 360 degrees of longitude (within half a cell), so
+# that its east and west edges meet? Always FALSE for projected grids.
+is_global <- function(x){
+      if(!isTRUE(terra::is.lonlat(x, perhaps = TRUE, warn = FALSE))) return(FALSE)
+      width <- terra::xmax(x) - terra::xmin(x)
+      abs(width - 360) <= terra::res(x)[1] / 2
+}
+
+# Resolve a `wrap` argument to TRUE or FALSE for grid `x`. NULL (the default everywhere) wraps
+# exactly when the grid is global. TRUE on a lon/lat grid that isn't global gets a warning,
+# since joining its edges isn't physically meaningful; planar grids can wrap freely (e.g. for
+# periodic test domains). Wrapping needs at least three columns: with fewer, a cell's east and
+# west neighbors coincide.
+resolve_wrap <- function(x, wrap = NULL){
+      if(is.null(wrap)) return(is_global(x) && terra::ncol(x) >= 3)
+      if(!(is.logical(wrap) && length(wrap) == 1 && !is.na(wrap)))
+            stop("`wrap` must be TRUE, FALSE, or NULL (to wrap global grids)", call. = FALSE)
+      if(!wrap) return(FALSE)
+      if(terra::ncol(x) < 3) stop("`wrap = TRUE` requires a grid at least three cells wide", call. = FALSE)
+      if(isTRUE(terra::is.lonlat(x, perhaps = TRUE, warn = FALSE)) && !is_global(x)){
+            warning("`wrap = TRUE` joins the east and west edges of the grid, but it spans ",
+                    signif(terra::xmax(x) - terra::xmin(x), 4), " degrees of longitude rather than 360",
+                    call. = FALSE)
+      }
+      TRUE
+}
+
+# Trail numbers for path data whose paths may cross a wrapped grid's east-west seam: a new trail
+# starts with each new path (a change in `id`) and wherever x jumps by more than half the grid's
+# `width` between consecutive points, so that no line is drawn across the map. Rows must be
+# ordered along each path.
+seam_trails <- function(id, x, width){
+      n <- length(x)
+      if(n == 0) return(integer(0))
+      new <- c(TRUE, id[-1] != id[-n] | abs(diff(x)) > width / 2)
+      cumsum(new)
+}
+
+
+# Cell number of the neighbor at row offset `dr` and column offset `dc` from every cell of an
+# nr x nc grid, in terra cell order; NA where the neighbor is off the grid. With `wrap`, columns
+# wrap around, so the first and last columns are neighbors.
+neighbor_cells <- function(nr, nc, dr, dc, wrap = FALSE){
+      row <- rep(seq_len(nr), each = nc)
+      col <- rep(seq_len(nc), times = nr)
+      r2 <- row + dr
+      c2 <- col + dc
+      if(wrap) c2 <- (c2 - 1) %% nc + 1
+      j <- (r2 - 1) * nc + c2
+      j[r2 < 1 | r2 > nr | c2 < 1 | c2 > nc] <- NA
+      j
+}

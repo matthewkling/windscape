@@ -20,8 +20,11 @@
 #' @param direction Trace trails `"both"` ways from each seed (the default; half of `hours` or
 #'    `distance` upwind and half downwind), only `"downwind"`, or only `"upwind"`.
 #' @param wrap Wrap particles that leave the field across its edges back in on the opposite
-#'    side: `"neither"` (the default), `"horizontal"` (e.g. for global fields), `"vertical"`, or
-#'    `"both"`. Otherwise, trails end where they leave the field.
+#'    side: `"neither"`, `"horizontal"`, `"vertical"`, or `"both"`; `TRUE` and `FALSE` are
+#'    shorthand for `"horizontal"` and `"neither"`. Trails end where they leave the field across
+#'    an edge that doesn't wrap. The default, `NULL`, wraps horizontally if `x` is a global field
+#'    spanning all 360 degrees of longitude, where -180 and 180 are the same meridian, and not
+#'    otherwise.
 #' @param sf Logical: return trails as an `sf` object of linestrings instead of a data frame?
 #'    Requires the sf package. Default `FALSE`.
 #' @param ... Further arguments to [generate_particles()], used only if `seeds` is an integer.
@@ -55,11 +58,15 @@
 #' @export
 wind_trails <- function(x, seeds, hours = NULL, distance = NULL, steps = 100,
                         direction = c("both", "downwind", "upwind"),
-                        wrap = c("neither", "horizontal", "vertical", "both"), sf = FALSE, ...){
+                        wrap = NULL, sf = FALSE, ...){
 
       if(!inherits(x, "wind_field")) stop("`x` must be a `wind_field` object.")
       direction <- match.arg(direction)
-      wrap <- match.arg(wrap)
+      wrap <- if(is.null(wrap) || is.logical(wrap)){
+            if(resolve_wrap(x, wrap)) "horizontal" else "neither"
+      }else{
+            match.arg(wrap, c("neither", "horizontal", "vertical", "both"))
+      }
       if(is.null(hours) == is.null(distance)) stop("supply exactly one of `hours` or `distance`")
       total <- if(is.null(hours)) distance else hours
       if(length(total) != 1 || !is.finite(total) || total <= 0)

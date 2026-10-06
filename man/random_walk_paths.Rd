@@ -22,22 +22,24 @@ details).}
 \item{n}{Number of paths, when \code{to} is \code{NULL}.}
 
 \item{...}{Further arguments passed to \code{\link[=random_walk]{random_walk()}}, such as \code{direction}, \code{half_life},
-\code{latitude_correction}, or \code{timescale}. The walk is always run in stream mode with flux, so
+\code{latitude_correction}, \code{timescale}, or \code{wrap}. The walk is always run in stream mode with flux, so
 \code{mode}, \code{flux}, \code{density}, \code{iter}, and \code{record} can't be supplied.}
 }
 \value{
 A data frame with one row per point along each path, ordered from upstream to
-downstream: \code{trail} (path ID; with \code{to}, the row of \code{to} the path was traced from),
-\code{step} (position along the path, from 0 at its upstream end), and \code{x} and \code{y}
-(coordinates). For downwind walks, each path starts at a source and
+downstream: \code{trail} (line ID, for drawing), \code{path} (path ID; with \code{to}, the row of \code{to} the
+path was traced from), \code{step} (position along the path, from 0 at its upstream end), and
+\code{x} and \code{y} (coordinates). Each path is one trail, unless it crosses the east-west seam of a
+wrapped global grid (see \code{wrap} in \code{\link[=random_walk]{random_walk()}}), where a new trail starts so that lines
+don't cross the map. For downwind walks, each path starts at a source and
 ends where its material is deposited or leaves the domain; for upwind walks, it starts
 where its material originates and ends at a receptor.
 }
 \description{
 Traces the routes by which material moves in a random walk model: for a downwind walk, the
 paths from the source(s) to where material is deposited (or leaves the domain); for an upwind
-walk, the paths from where material originates to the receptor(s). The result is path data in
-the same layout as \code{\link[=least_cost_paths]{least_cost_paths()}}, for drawing with \code{\link[=geom_wind_path]{geom_wind_path()}}. Where
+walk, the paths from where material originates to the receptor(s). The result is path data,
+like the output of \code{\link[=least_cost_paths]{least_cost_paths()}}, for drawing with \code{\link[=geom_wind_path]{geom_wind_path()}}. Where
 \code{\link[=least_cost_paths]{least_cost_paths()}} gives the single fastest route between places, these paths show the full
 spread of routes, weighted by how much material uses each.
 }
@@ -79,7 +81,7 @@ site <- cbind(-105, 40)
 p <- random_walk_paths(rose, site, n = 60, half_life = 48)
 
 # paths, with a dot where each path's share of material is deposited
-ends <- p[!duplicated(p$trail, fromLast = TRUE), ]
+ends <- p[!duplicated(p$path, fromLast = TRUE), ]
 ggplot(p, aes(x, y)) +
   geom_wind_path(arrow = NULL, alpha = 0.6) +
   geom_point(data = ends, size = 0.8) +

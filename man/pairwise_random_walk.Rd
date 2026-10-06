@@ -12,6 +12,7 @@ pairwise_random_walk(
   density = TRUE,
   timescale = 1,
   latitude_correction = TRUE,
+  wrap = NULL,
   chunk = 200
 )
 }
@@ -34,7 +35,7 @@ biased toward lower-latitude destinations even within a single analysis. Dividin
 removes that bias, and also makes values comparable across grid resolutions (though see
 Details).}
 
-\item{timescale, latitude_correction}{See \code{\link[=random_walk]{random_walk()}}. Results do not depend on
+\item{timescale, latitude_correction, wrap}{See \code{\link[=random_walk]{random_walk()}}. Results do not depend on
 \code{timescale}.}
 
 \item{chunk}{Number of sites to solve for at once. Larger values are faster but use more

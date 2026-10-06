@@ -1,12 +1,13 @@
 Package: windscape
 Type: Package
 Title: Landscape connectivity by wind
-Version: 1.1.0
+Version: 1.1.0.9000
 Authors@R: person("Matthew", "Kling", email = "mattkling@berkeley.edu",
                   role = c("aut", "cre", "cph"))
-Description: Import and visualize wind data, model landscape connectivity by
-    wind dispersal, and test statistical relationships between wind and 
-    ecological data.
+Description: Analyze the geography wind regimes across your study area. 
+    Import and visualize wind data, model landscape connectivity by wind 
+    dispersal using random walk or least-cost path algorithms, and test 
+    statistical relationships between wind and ecological data.
 Encoding: UTF-8
 LazyData: true
 LazyDataCompression: xz

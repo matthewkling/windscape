@@ -21,9 +21,10 @@ setClass("wind_graph",
 #' @param x A `wind_rose`.
 #' @param direction Either `"downwind"` (the default) or `"upwind"`: whether links follow the
 #'    wind, or run against it.
-#' @param wrap Should the left and right edges of the raster be connected? Default is FALSE. Set
-#'    to TRUE if, for example, `x` is a global raster where -180 and 180 are equivalent
-#'    longitudes.
+#' @param wrap Logical: join the east and west edges of the grid, linking cells across them? The
+#'    default, `NULL`, does so if `x` is a global grid spanning all 360 degrees of longitude,
+#'    where -180 and 180 are the same meridian, and not otherwise. `TRUE` or `FALSE` overrides
+#'    this; `TRUE` on a longitude/latitude grid that isn't global gives a warning.
 #' @return A `wind_graph`: a gdistance \link[gdistance]{Transition-class} object, with its
 #'    direction recorded.
 #' @examples
@@ -33,9 +34,10 @@ setClass("wind_graph",
 #' pairwise_least_cost(graph, sites)
 #' @export
 #' @aliases build_wind_graph
-wind_graph <- function(x, direction = "downwind", wrap = FALSE){
+wind_graph <- function(x, direction = "downwind", wrap = NULL){
       if(!inherits(x, "wind_rose")) stop("`x` must be a wind_rose")
       direction <- match.arg(direction, c("downwind", "upwind"))
+      wrap <- resolve_wrap(x, wrap)
       g <- as(wind_transition(x, direction = direction, wrap = wrap), "wind_graph")
       g@p <- g@p
       g@direction <- direction
@@ -77,16 +79,16 @@ wind_transition <- function(x, direction = "downwind", wrap = FALSE){
                 extent = raster::extent(template), crs = raster::projection(template, asText = FALSE),
                 transitionMatrix = Matrix::Matrix(0, n, n), transitionCells = 1:n)
 
+      # edges from each non-NA cell to its eight non-NA neighbors, built directly rather than with
+      # raster::adjacent(), which joins the east and west edges of global grids on its own
       cells <- which(!is.na(v[, 1]))
-      adj <- raster::adjacent(template, cells = cells, pairs = TRUE, target = cells, directions = 8)
-      if(wrap){
-            id <- matrix(seq_len(n), nr, nc, byrow = TRUE)
-            s <- rbind(cbind(id[, 1], id[, nc]),                       # horizontal
-                       cbind(id[2:nr, 1], id[1:(nr - 1), nc]),         # diagonal
-                       cbind(id[1:(nr - 1), 1], id[2:nr, nc]))         # diagonal
-            s <- s[s[, 1] %in% cells & s[, 2] %in% cells, , drop = FALSE]
-            adj <- rbind(adj, s, s[, 2:1])
-      }
+      dr <- c(1, 0, -1, -1, -1, 0, 1, 1)
+      dc <- c(-1, -1, -1, 0, 1, 1, 1, 0)
+      adj <- do.call(rbind, lapply(1:8, function(k){
+            j <- neighbor_cells(nr, nc, dr[k], dc[k], wrap)[cells]
+            ok <- !is.na(j) & !is.na(v[j, 1])
+            cbind(cells[ok], j[ok])
+      }))
 
       from <- adj[, 1]
       to <- adj[, 2]

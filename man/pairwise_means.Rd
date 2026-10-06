@@ -2,7 +2,7 @@
 % Please edit documentation in R/pairwise_matrices.R
 \name{pairwise_means}
 \alias{pairwise_means}
-\title{Convert asymmetric pairwise matrix to symmetrical matrix of pairwise means}
+\title{Convert asymmetric pairwise matrix to symmetrical pairwise means}
 \usage{
 pairwise_means(x)
 }
@@ -13,8 +13,8 @@ pairwise_means(x)
 A symmetrical square matrix the same size as \code{x}, with values representing the pairwise means of directional flows in \code{x}.
 }
 \description{
-This function produces a symmetrical matrix with values representing the pairwise means of directional flows in an asymmetric in put matrix.
-The output can be used in tests about the strength of direction-agnostic connectivity among nodes in a data set (e.g. the "isolation" hypothesis; Kling and Ackerly (2021)).
+This function produces a symmetrical matrix with values representing the pairwise means of directional flows in an asymmetric input matrix.
+The output can be used in tests about the \strong{strength} of direction-agnostic connectivity among nodes in a data set (e.g. the "isolation" hypothesis; Kling and Ackerly (2021)).
 }
 \references{
 Kling and Ackerly (2021). Global wind patterns shape genetic differentiation, asymmetric gene flow, and genetic diversity in trees. Proceedings of the National Academy of Sciences. https://doi.org/10.1073/pnas.2017317118

@@ -35,6 +35,12 @@
 #'    conductance to east and west edges without changing drift, which shortens the time step
 #'    (pulse mode needs about 1.3 times as many iterations at 45 degrees, 1.9 at 60). Has no effect
 #'    on projected rasters. See Details.
+#' @param wrap Logical: join the east and west edges of the grid, so that mass leaving one
+#'    re-enters on the opposite side, and only the north and south edges absorb mass? The
+#'    default, `NULL`, does so if `rose` is a global grid spanning all 360 degrees of longitude,
+#'    where -180 and 180 are the same meridian, and not otherwise. `TRUE` or `FALSE` overrides
+#'    this; `TRUE` on a longitude/latitude grid that isn't global gives a warning. As for `wrap`
+#'    in [wind_graph()], for the least-cost model.
 #' @param density Logical: express results per km^2 rather than per grid cell? Default
 #'    `TRUE`, matching [pairwise_random_walk()]. On a longitude/latitude grid, cell area shrinks
 #'    toward the poles, so per-cell values are biased toward lower latitudes; per-km^2 values
@@ -196,7 +202,8 @@
 #'
 #' Domain edges are absorbing: mass that disperses off the grid, or into NA cells, is lost and
 #' never returns. Values near edges are therefore biased low, because they receive no inflow
-#' from beyond the edge. In stream mode with finite `half_life`, the fraction of released mass
+#' from beyond the edge. On a global grid, the east and west edges are joined by default (see
+#' `wrap`), leaving only the north and south edges absorbing. In stream mode with finite `half_life`, the fraction of released mass
 #' lost across edges is reported as a message; the domain should be buffered by several decay
 #' lengths beyond the area of interest, until this fraction is small or the bias in the area of
 #' interest is acceptable. With `half_life = Inf`, edges are the only place stream-mode mass can
@@ -251,7 +258,7 @@
 #' }
 #' @export
 random_walk <- function(rose, init, mode = c("pulse", "stream"), direction = c("downwind", "upwind"),
-                        half_life = Inf, timescale = 1, latitude_correction = TRUE,
+                        half_life = Inf, timescale = 1, latitude_correction = TRUE, wrap = NULL,
                         density = TRUE, iter = 100, record = iter,
                         method = c("auto", "solve", "iterate"), tol = 1e-8, max_iter = 1e5,
                         flux = FALSE, source = NULL, progress = FALSE){
@@ -259,48 +266,7 @@ random_walk <- function(rose, init, mode = c("pulse", "stream"), direction = c("
       mode <- match.arg(mode)
       direction <- match.arg(direction)
       method <- match.arg(method)
-      su <- rw_setup(rose, half_life, timescale, latitude_correction)
-
-      disperse <- function(n, p){
-            a <- p
-            for(k in 1:9) a[,,k] <- n * a[,,k]
-            da <- dim(a)
-            x0 <- rep(0, da[1])
-            y0 <- rep(0, da[2])
-            x1 <- rep(0, da[1]-1)
-            a[,,2] <- rbind(y0, cbind(a[1:(da[1]-1), 2:(da[2]), 2], x1)) # SW
-            a[,,3] <- cbind(a[1:(da[1]), 2:(da[2]), 3], x0) # W
-            a[,,4] <- rbind(cbind(a[2:(da[1]), 2:(da[2]), 4], x1), y0) # NW
-            a[,,5] <- rbind(a[2:(da[1]), 1:(da[2]), 5], y0) # N
-            a[,,6] <- rbind(cbind(x1, a[2:(da[1]), 1:(da[2]-1), 6]), y0) # NE
-            a[,,7] <- cbind(x0, a[1:(da[1]), 1:(da[2]-1), 7]) # E
-            a[,,8] <- rbind(y0, cbind(x1, a[1:(da[1]-1), 1:(da[2]-1), 8])) # SE
-            a[,,9] <- rbind(y0, a[1:(da[1]-1), 1:(da[2]), 9]) # S
-            apply(a, c(1, 2), sum)
-      }
-
-      diffuse <- function(n, p, i, rec = i, lambda = 0){
-            rec <- sort(rec)
-            air <- terra::as.array(rast(n, nlyrs = length(rec), vals = 0))
-            dep <- air
-            n <- matrix(n, nrow(n), byrow = T)
-            d <- n * 0
-            if(0 %in% rec) air[,,1] <- n
-            p <- terra::as.array(p)
-            if(progress) pb <- txtProgressBar(min = 0, max = i, initial = 0, style = 3)
-            for(j in 1:i){
-                  d <- d + lambda * n # airborne mass deposits in place, before dispersing
-                  n <- (1 - lambda) * disperse(n, p)
-                  if(j %in% rec){
-                        k <- match(j, rec)
-                        air[,,k] <- n
-                        dep[,,k] <- d
-                  }
-                  if(progress) setTxtProgressBar(pb, j)
-            }
-            if(progress) close(pb)
-            list(air = air, dep = dep)
-      }
+      su <- rw_setup(rose, half_life, timescale, latitude_correction, wrap)
 
       if(!is.null(source) && !(mode == "stream" && direction == "upwind"))
             stop("`source` is only used by upwind stream walks")
@@ -335,12 +301,13 @@ random_walk <- function(rose, init, mode = c("pulse", "stream"), direction = c("
       record <- sort(unique(record))
       message("\titeration timestep: ~", signif(t, 3),
               "\n\tsimulation duration: ~", signif(t * iter, 3),
+              if(su$wrap) "\n\tdomain wraps across its east and west edges",
               if(lambda > 0) paste0("\n\tdecay per step (lambda): ~", signif(lambda, 3)),
               "\n(these values are in hours, IF trans == 1 and wind_field units are m/s)")
       n <- rw_init(rose, init)
 
-      out <- if(direction == "downwind") diffuse(n, su$p, iter, record, lambda) else
-            diffuse_upwind(n, su$P, iter, record, lambda, progress)
+      M <- if(direction == "downwind") Matrix::t(su$P) else su$P
+      out <- rw_pulse(n, M, su$valid, iter, record, lambda, progress)
       walk <- function(a){
             x <- rast(n, nlyrs = length(record), vals = a)
             names(x) <- paste0("iter", record)
@@ -417,8 +384,8 @@ rw_max_step <- function(rose){
 #'    stream-mode walk; see [random_walk()].
 #' @param timescale Time step scaling factor; see [random_walk()]. Affects only the approximate
 #'    values; exact values are independent of `timescale`.
-#' @param latitude_correction Logical. Must match the value used for the stream-mode walk; see
-#'    [random_walk()].
+#' @param latitude_correction,wrap Logical. Must match the values used for the stream-mode walk;
+#'    see [random_walk()].
 #' @param cells Cell numbers, or a two-column matrix of coordinates, at which to compute
 #'    `G_cc`. Optional for the approximation (which defaults to every cell); required if
 #'    `exact = TRUE`.
@@ -434,8 +401,8 @@ rw_max_step <- function(rose){
 #'    [random_walk()] and `init` values at the source cells.
 #' @export
 rw_self_retention <- function(rose, half_life = Inf, timescale = 1, latitude_correction = TRUE,
-                              cells = NULL, exact = FALSE, chunk = 200){
-      su <- rw_setup(rose, half_life, timescale, latitude_correction)
+                              wrap = NULL, cells = NULL, exact = FALSE, chunk = 200){
+      su <- rw_setup(rose, half_life, timescale, latitude_correction, wrap)
       t <- su$t
       lambda <- su$lambda
       p <- su$p
@@ -486,9 +453,11 @@ rw_self_retention <- function(rose, half_life = Inf, timescale = 1, latitude_cor
 #'    `"edges"` counts only mass leaving across the outer edges of the grid, and `"na"` only mass
 #'    entering NA cells, e.g. to separate truncation of the domain from loss to a deliberately
 #'    masked area. Both kinds of exit remain absorbing in every case: `"edges"` and `"na"` give
-#'    the probability that mass is lost by that route, and they sum to `"all"`.
-#' @param latitude_correction Logical. Should match the value used for the random walk being
-#'    assessed; see [random_walk()].
+#'    the probability that mass is lost by that route, and they sum to `"all"`. When the grid
+#'    wraps (see `wrap`), its east and west edges are joined, so only the north and south edges
+#'    count.
+#' @param latitude_correction,wrap Logical. Should match the values used for the random walk
+#'    being assessed; see [random_walk()].
 #' @param iter Number of pulse-mode iterations (time steps) over which to count exits. The
 #'    default `NULL` gives the probability of ever exiting, which applies to stream-mode results
 #'    and does not depend on `timescale`. An integer gives the probability of exiting within
@@ -555,18 +524,18 @@ rw_self_retention <- function(rose, half_life = Inf, timescale = 1, latitude_cor
 #' }
 #' @export
 rw_exit_prob <- function(rose, half_life = Inf, exits = c("all", "edges", "na"),
-                         latitude_correction = TRUE, iter = NULL, timescale = 1){
+                         latitude_correction = TRUE, wrap = NULL, iter = NULL, timescale = 1){
       exits <- match.arg(exits)
       if(!is.null(iter) && !(length(iter) == 1 && is.numeric(iter) && iter >= 0 && iter == round(iter)))
             stop("`iter` must be NULL or a single non-negative integer")
       rw_check_timescale(timescale)
       if(is.null(iter)) timescale <- 1 # results don't depend on the step length
-      su <- rw_setup(rose, half_life, timescale, latitude_correction)
+      su <- rw_setup(rose, half_life, timescale, latitude_correction, wrap)
       rose <- su$rose
       lambda <- su$lambda
       P <- su$P
       valid <- su$valid
-      L <- rw_leak(su$p)
+      L <- rw_leak(su$p, su$wrap)
       l <- switch(exits, all = rowSums(L), edges = L[, "edges"], na = L[, "na"])
       l[!valid] <- 0
 
@@ -599,15 +568,16 @@ rw_exit_prob <- function(rose, half_life = Inf, exits = c("all", "edges", "na"),
 # per-step deposition fraction `lambda`, the 9-layer transition probabilities `p` (from
 # rw_prob()), the sparse transition matrix `P` (from rw_matrix()), and the valid (non-NA) cells.
 # `rose` in the result is the corrected rose, whose geometry matches the input.
-rw_setup <- function(rose, half_life = Inf, timescale = 1, latitude_correction = TRUE){
+rw_setup <- function(rose, half_life = Inf, timescale = 1, latitude_correction = TRUE, wrap = NULL){
       if(!inherits(rose, "wind_rose")) stop("`rose` must be a wind_rose")
       rw_check_timescale(timescale)
+      wrap <- resolve_wrap(rose, wrap)
       if(latitude_correction) rose <- rw_latitude_correction(rose)
       t <- rw_max_step(rose) * timescale
       lambda <- rw_decay(half_life, t)
       p <- rw_prob(rose, t)
-      P <- rw_matrix(p)
-      list(rose = rose, t = t, lambda = lambda, p = p, P = P, valid = attr(P, "valid"))
+      P <- rw_matrix(p, wrap)
+      list(rose = rose, t = t, lambda = lambda, p = p, P = P, valid = attr(P, "valid"), wrap = wrap)
 }
 
 rw_check_timescale <- function(timescale){
@@ -700,23 +670,20 @@ rw_per_area <- function(out, area, direction){
 # NA cells count as outflow only. If `h` is given (the probability, from each cell, of eventual
 # deposition at a receptor), flows are restricted to material destined for the receptor:
 # res_c * p_ck * h_k / t minus res_k * p_kc * h_c / t, and nothing destined leaves the domain.
-rw_edge_flows <- function(res, p, t, h = NULL){
+# With `wrap`, the first and last columns are neighbors, as in rw_matrix().
+rw_edge_flows <- function(res, p, t, h = NULL, wrap = FALSE){
       nr <- terra::nrow(p)
       nc <- terra::ncol(p)
       v <- terra::values(p)
       valid <- stats::complete.cases(v)
       v[!valid, ] <- 0
-      row <- rep(seq_len(nr), each = nc)
-      col <- rep(seq_len(nc), times = nr)
       dr <- c(1, 0, -1, -1, -1, 0, 1, 1)  # SW, W, NW, N, NE, E, SE, S
       dc <- c(-1, -1, -1, 0, 1, 1, 1, 0)
       opposite <- c(5, 6, 7, 8, 1, 2, 3, 4)
       J <- matrix(0, nr * nc, 8)
       for(k in 1:8){
-            r2 <- row + dr[k]
-            c2 <- col + dc[k]
-            inside <- r2 >= 1 & r2 <= nr & c2 >= 1 & c2 <= nc
-            j <- (r2 - 1) * nc + c2
+            j <- neighbor_cells(nr, nc, dr[k], dc[k], wrap)
+            inside <- !is.na(j)
             ok <- inside & valid
             ok[ok] <- valid[j[ok]]
             back <- numeric(nr * nc)
@@ -760,23 +727,30 @@ rw_cell_displacements <- function(rose){
 }
 
 
-# Upwind (adjoint) pulse: n <- (1 - lambda) P n, with lambda * n deposited each step, recording
-# the iterations in `rec`, given the transition matrix P from rw_setup(). Returns arrays
-# matching diffuse() in random_walk().
-diffuse_upwind <- function(n, P, i, rec = i, lambda = 0, progress = FALSE){
+# Pulse-mode walk, n <- (1 - lambda) M n, with lambda * n deposited in place each step before
+# dispersing, recording the iterations in `rec`. M is t(P) for a downwind walk, or P for the
+# upwind (adjoint) walk, where P is the transition matrix from rw_setup(). Returns arrays of
+# airborne and deposited mass, [row, col, recorded iteration], NA in cells outside the domain.
+rw_pulse <- function(n, M, valid, i, rec = i, lambda = 0, progress = FALSE){
       rec <- sort(rec)
       nr <- terra::nrow(n)
       nc <- terra::ncol(n)
       v <- terra::values(n)[, 1]
-      v[is.na(v) | !attr(P, "valid")] <- 0
+      v[is.na(v) | !valid] <- 0
       d <- v * 0
       air <- dep <- array(0, c(nr, nc, length(rec)))
-      as_grid <- function(z) matrix(z, nr, nc, byrow = TRUE)
-      if(0 %in% rec) air[, , 1] <- as_grid(v)
+      as_grid <- function(z){
+            z[!valid] <- NA
+            matrix(z, nr, nc, byrow = TRUE)
+      }
+      if(0 %in% rec){
+            air[, , 1] <- as_grid(v)
+            dep[, , 1] <- as_grid(d)
+      }
       if(progress) pb <- txtProgressBar(min = 0, max = i, initial = 0, style = 3)
       for(j in seq_len(i)){
             d <- d + lambda * v
-            v <- (1 - lambda) * as.vector(P %*% v)
+            v <- (1 - lambda) * as.vector(M %*% v)
             if(j %in% rec){
                   k <- match(j, rec)
                   air[, , k] <- as_grid(v)
@@ -821,25 +795,23 @@ rw_decay <- function(half_life, t){
 
 # Sparse row-stochastic (substochastic at edges) transition matrix, P[from, to], in terra
 # cell order. Built from the 9-layer simplex returned by rw_prob() (stay, SW, W, NW, N, NE,
-# E, SE, S), using the same neighbor offsets as disperse() in random_walk(). Cells with NA
-# in any layer are treated as outside the domain: they neither release nor receive mass.
-rw_matrix <- function(p){
+# E, SE, S). Cells with NA in any layer are treated as outside the domain: they neither
+# release nor receive mass. With `wrap`, mass leaving the east or west edge enters the opposite
+# column, so only the north and south edges are absorbing.
+rw_matrix <- function(p, wrap = FALSE){
       nr <- terra::nrow(p)
       nc <- terra::ncol(p)
       N <- nr * nc
       v <- terra::values(p)
       valid <- stats::complete.cases(v)
       v[!valid, ] <- 0
-      row <- rep(seq_len(nr), each = nc)
-      col <- rep(seq_len(nc), times = nr)
       dr <- c(0,  1,  0, -1, -1, -1, 0, 1, 1)  # stay, SW, W, NW, N, NE, E, SE, S
       dc <- c(0, -1, -1, -1,  0,  1, 1, 1, 0)
       ii <- jj <- xx <- vector("list", 9)
       for(k in 1:9){
-            r2 <- row + dr[k]
-            c2 <- col + dc[k]
-            from <- which(valid & v[, k] > 0 & r2 >= 1 & r2 <= nr & c2 >= 1 & c2 <= nc)
-            to <- (r2[from] - 1) * nc + c2[from]
+            j <- neighbor_cells(nr, nc, dr[k], dc[k], wrap)
+            from <- which(valid & v[, k] > 0 & !is.na(j))
+            to <- j[from]
             keep <- valid[to]
             ii[[k]] <- from[keep]
             jj[[k]] <- to[keep]
@@ -880,25 +852,22 @@ rw_drains <- function(P){
 # Per-step probability of leaving the domain from each cell, split by where mass goes: off
 # the grid (`edges`) or into an NA cell (`na`). A two-column matrix in terra cell order, from
 # the 9-layer simplex returned by rw_prob(), using the same neighbor offsets as rw_matrix().
-# For valid cells, the row sums equal 1 - rowSums(rw_matrix(p)); NA cells leak nothing.
-rw_leak <- function(p){
+# For valid cells, the row sums equal 1 - rowSums(rw_matrix(p, wrap)); NA cells leak nothing.
+rw_leak <- function(p, wrap = FALSE){
       nr <- terra::nrow(p)
       nc <- terra::ncol(p)
       v <- terra::values(p)
       valid <- stats::complete.cases(v)
       v[!valid, ] <- 0
-      row <- rep(seq_len(nr), each = nc)
-      col <- rep(seq_len(nc), times = nr)
       dr <- c(0,  1,  0, -1, -1, -1, 0, 1, 1)  # stay, SW, W, NW, N, NE, E, SE, S
       dc <- c(0, -1, -1, -1,  0,  1, 1, 1, 0)
       edges <- na <- numeric(nr * nc)
       for(k in 2:9){
-            r2 <- row + dr[k]
-            c2 <- col + dc[k]
-            inside <- r2 >= 1 & r2 <= nr & c2 >= 1 & c2 <= nc
+            j <- neighbor_cells(nr, nc, dr[k], dc[k], wrap)
+            inside <- !is.na(j)
             edges[!inside] <- edges[!inside] + v[!inside, k]
             to_na <- inside
-            to_na[inside] <- !valid[((r2 - 1) * nc + c2)[inside]]
+            to_na[inside] <- !valid[j[inside]]
             na[to_na] <- na[to_na] + v[to_na, k]
       }
       cbind(edges = edges, na = na)
@@ -927,6 +896,7 @@ rw_stream <- function(su, init, method = "auto", tol = 1e-8, max_iter = 1e5,
 
       message("\titeration timestep: ~", signif(t, 3),
               "\n\tdecay per step (lambda): ~", signif(lambda, 3),
+              if(su$wrap) "\n\tdomain wraps across its east and west edges",
               "\n(timestep and half_life are in hours IF trans == 1 and wind_field units are m/s)")
 
       # downwind: n = n0 + (1 - lambda) P' n. Upwind (the adjoint): n = n0 + (1 - lambda) P n.
@@ -1017,7 +987,7 @@ rw_stream <- function(su, init, method = "auto", tol = 1e-8, max_iter = 1e5,
             res <- n * (1 - lambda) * t
             res[!valid] <- 0
             if(direction == "downwind"){
-                  J <- rw_edge_flows(res, su$p, t)
+                  J <- rw_edge_flows(res, su$p, t, wrap = su$wrap)
             }else{
                   # transport of material released per `source` (uniform per km^2 by default) that
                   # is eventually deposited at the receptor: mass from a downwind solve with that
@@ -1027,7 +997,7 @@ rw_stream <- function(su, init, method = "auto", tol = 1e-8, max_iter = 1e5,
                   m <- suppressMessages(rw_stream(su, release, method, tol, max_iter, "downwind"))
                   m <- terra::values(m$residence)[, 1]
                   m[!valid] <- 0
-                  J <- rw_edge_flows(m, su$p, t, h = h)
+                  J <- rw_edge_flows(m, su$p, t, h = h, wrap = su$wrap)
             }
             fv <- rw_flux_vectors(J, rose)
             fv[!valid, ] <- NA

@@ -9,6 +9,7 @@ rw_exit_prob(
   half_life = Inf,
   exits = c("all", "edges", "na"),
   latitude_correction = TRUE,
+  wrap = NULL,
   iter = NULL,
   timescale = 1
 )
@@ -26,10 +27,12 @@ edges or into NA cells, matching the edge-loss fraction reported by \code{\link[
 \code{"edges"} counts only mass leaving across the outer edges of the grid, and \code{"na"} only mass
 entering NA cells, e.g. to separate truncation of the domain from loss to a deliberately
 masked area. Both kinds of exit remain absorbing in every case: \code{"edges"} and \code{"na"} give
-the probability that mass is lost by that route, and they sum to \code{"all"}.}
+the probability that mass is lost by that route, and they sum to \code{"all"}. When the grid
+wraps (see \code{wrap}), its east and west edges are joined, so only the north and south edges
+count.}
 
-\item{latitude_correction}{Logical. Should match the value used for the random walk being
-assessed; see \code{\link[=random_walk]{random_walk()}}.}
+\item{latitude_correction, wrap}{Logical. Should match the values used for the random walk
+being assessed; see \code{\link[=random_walk]{random_walk()}}.}
 
 \item{iter}{Number of pulse-mode iterations (time steps) over which to count exits. The
 default \code{NULL} gives the probability of ever exiting, which applies to stream-mode results
