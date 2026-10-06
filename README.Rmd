@@ -161,3 +161,21 @@ pairwise_random_walk(rose, sites, half_life = 100) |> signif(2) # deposition den
 ```
 
 These matrices can be compared with ecological data, such as genetic differentiation or gene flow, to test whether wind shapes ecological patterns. `pairwise_means()` and `pairwise_ratios()` derive matrices for testing hypotheses about the strength and the directionality of wind connectivity, and `mantel_test()` tests their relationships with other pairwise data. The package includes `birch`, a landscape genetic data set for silver birch, for trying these out.
+
+
+## Learn more
+
+The [package website](https://matthewkling.github.io/windscape/) includes a more detailed
+[**getting started**](https://matthewkling.github.io/windscape/articles/windscape.html) vignette, 
+and articles on each part of the workflow in more depth:
+
+- [**Wind data**](https://matthewkling.github.io/windscape/articles/wind-data.html): choosing,
+  downloading, and preparing wind data, and building wind roses from long records.
+- [**Windsheds**](https://matthewkling.github.io/windscape/articles/windsheds.html): mapping and
+  comparing site-to-landscape connectivity with least-cost and random walk models.
+- [**Pairwise connectivity**](https://matthewkling.github.io/windscape/articles/pairwise-connectivity.html):
+  estimating connectivity among sites and testing hypotheses about the role of wind in
+  ecological patterns.
+- [**Connectivity models in depth**](https://matthewkling.github.io/windscape/articles/connectivity-models.html):
+  how least-cost and random walk models work, their settings and limitations, and how to choose
+  between them.
