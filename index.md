@@ -8,25 +8,24 @@ of spatial ecology. But the variation in wind strength and direction
 over space and time makes it challenging to study wind’s role in
 landscape connectivity. The **windscape** package provides a toolset for
 modeling the effects of time-integrated wind regimes in spatial ecology,
-landscape genetics, and related fields. Use it to:
-
-- **download** and summarize wind data in the form of raster time series
-- **model windsheds** representing a site’s upwind catchment and
-  downwind deposition shadow, which often differ substantially
-- **model pairwise connectivity** among sets of sites to generate
-  asymmetric matrices of directional wind connectivity between site
-  pairs using either *least cost path* or *random walk* approaches
-- **test statistical hypotheses** about spatial relationships between
-  wind and ecological outcomes
-- **visualize** spatial wind patterns—including instantaneous wind
-  fields, time-integrated wind regimes, and windsheds—in ggplot2
+landscape genetics, and related fields.
 
 While **windscape** can be used to map air flow patterns at a single
 moment, its core connectivity models summarize long time series of wind
 data into wind regimes, describing the expected connectivity averaged
 over many dispersal events. It is thus designed for analyzing processes
 that accumulate over time, such as gene flow, colonization, and range
-expansion.
+expansion. The package offers the following functionality:
+
+| Task | Description | Functions |
+|:---|:---|:---|
+| Get wind data | Download and import wind data rasters | [`ncar_download()`](https://matthewkling.github.io/windscape/reference/ncar_download.md), [`ncar_land()`](https://matthewkling.github.io/windscape/reference/ncar_land.md), [`wind_series()`](https://matthewkling.github.io/windscape/reference/wind_series.md), [`windscape_example()`](https://matthewkling.github.io/windscape/reference/windscape_example.md) |
+| Model wind regimes | Summarize wind time series into | [`wind_rose()`](https://matthewkling.github.io/windscape/reference/wind_rose.md), [`combine_roses()`](https://matthewkling.github.io/windscape/reference/combine_roses.md), [`weight_conductance()`](https://matthewkling.github.io/windscape/reference/weight_conductance.md), [`downscale()`](https://matthewkling.github.io/windscape/reference/downscale.md) |
+| Map windsheds | Model a site’s upwind catchment area and downwind deposition shadow using *least cost path* or *random walk* approaches | [`least_cost()`](https://matthewkling.github.io/windscape/reference/least_cost.md), [`least_cost_paths()`](https://matthewkling.github.io/windscape/reference/least_cost_paths.md), [`random_walk()`](https://matthewkling.github.io/windscape/reference/random_walk.md), [`ws_summarize()`](https://matthewkling.github.io/windscape/reference/ws_summarize.md) |
+| Compute pairwise connectivity | Model directional connectivity among sets of sites | [`pairwise_least_cost()`](https://matthewkling.github.io/windscape/reference/pairwise_least_cost.md), [`pairwise_random_walk()`](https://matthewkling.github.io/windscape/reference/pairwise_random_walk.md), [`check_cell_distance()`](https://matthewkling.github.io/windscape/reference/check_cell_distance.md) |
+| Test hypotheses | Run statistical significance tests about spatial relationships between wind and ecological outcomes | [`pairwise_ratios()`](https://matthewkling.github.io/windscape/reference/pairwise_ratios.md), [`pairwise_means()`](https://matthewkling.github.io/windscape/reference/pairwise_means.md), [`mantel_test()`](https://matthewkling.github.io/windscape/reference/mantel_test.md) |
+| Trace airflow |  | [`wind_trails()`](https://matthewkling.github.io/windscape/reference/wind_trails.md) |
+| Visualize | Map spatial wind patterns in ggplot2, including instantaneous wind fields, time-integrated wind regimes, and windsheds | [`geom_wind_rose()`](https://matthewkling.github.io/windscape/reference/geom_wind_rose.md), [`geom_wind_arrow()`](https://matthewkling.github.io/windscape/reference/geom_wind_arrow.md), [`geom_wind_trail()`](https://matthewkling.github.io/windscape/reference/geom_wind_trail.md), [`geom_wind_path()`](https://matthewkling.github.io/windscape/reference/geom_wind_path.md), [`scale_fill_bearing()`](https://matthewkling.github.io/windscape/reference/scale_fill_bearing.md) |
 
 ## Installation
 
@@ -37,18 +36,6 @@ Install the development version from GitHub:
 # install.packages("remotes")
 remotes::install_github("matthewkling/windscape")
 ```
-
-## Overview
-
-| Task | Functions |
-|:---|:---|
-| Get wind data | [`ncar_download()`](https://matthewkling.github.io/windscape/reference/ncar_download.md), [`ncar_land()`](https://matthewkling.github.io/windscape/reference/ncar_land.md), `read_wind_series()`, [`windscape_example()`](https://matthewkling.github.io/windscape/reference/windscape_example.md) |
-| Summarize a wind regime | [`wind_rose()`](https://matthewkling.github.io/windscape/reference/wind_rose.md), [`combine_roses()`](https://matthewkling.github.io/windscape/reference/combine_roses.md), [`weight_conductance()`](https://matthewkling.github.io/windscape/reference/weight_conductance.md), [`downscale()`](https://matthewkling.github.io/windscape/reference/downscale.md) |
-| Map windsheds | [`least_cost_surface()`](https://matthewkling.github.io/windscape/reference/least_cost_surface.md), [`least_cost_paths()`](https://matthewkling.github.io/windscape/reference/least_cost_paths.md), [`random_walk()`](https://matthewkling.github.io/windscape/reference/random_walk.md), [`ws_summarize()`](https://matthewkling.github.io/windscape/reference/ws_summarize.md) |
-| Connectivity among sites | [`pairwise_least_cost()`](https://matthewkling.github.io/windscape/reference/pairwise_least_cost.md), [`pairwise_random_walk()`](https://matthewkling.github.io/windscape/reference/pairwise_random_walk.md), [`check_cell_distance()`](https://matthewkling.github.io/windscape/reference/check_cell_distance.md) |
-| Test hypotheses | [`pairwise_ratios()`](https://matthewkling.github.io/windscape/reference/pairwise_ratios.md), [`pairwise_means()`](https://matthewkling.github.io/windscape/reference/pairwise_means.md), [`mantel_test()`](https://matthewkling.github.io/windscape/reference/mantel_test.md) |
-| Trace airflow | [`wind_trails()`](https://matthewkling.github.io/windscape/reference/wind_trails.md) |
-| Visualize | [`geom_wind_rose()`](https://matthewkling.github.io/windscape/reference/geom_wind_rose.md), [`geom_wind_arrow()`](https://matthewkling.github.io/windscape/reference/geom_wind_arrow.md), [`geom_wind_trail()`](https://matthewkling.github.io/windscape/reference/geom_wind_trail.md), [`geom_wind_path()`](https://matthewkling.github.io/windscape/reference/geom_wind_path.md), [`scale_fill_bearing()`](https://matthewkling.github.io/windscape/reference/scale_fill_bearing.md) |
 
 ## Get wind data
 
@@ -106,15 +93,14 @@ A **wind rose** summarizes a time series of wind fields into a model of
 the wind regime: for each grid cell, the average conductance of wind
 toward each of its eight neighbors.
 [`wind_rose()`](https://matthewkling.github.io/windscape/reference/wind_rose.md)
-can build one from a set of files a month at a time, so long records
-needn’t fit in memory. The `trans` argument sets how wind speed
-translates into conductance so the rose reflects the winds that matter
-for dispersal, for example to model propagules that are only released in
-strong winds.
+builds one from a long series in chunks, so long records needn’t fit in
+memory. The `trans` argument sets how wind speed translates into
+conductance so the rose reflects the winds that matter for dispersal,
+for example to model propagules that are only released in strong winds.
 
 ``` r
 
-rose <- wind_rose(files, trans = 1)
+rose <- wind_rose(wind_series(files), trans = 1)
 ```
 
 The examples below use a small `wind_rose` object that ships with the
@@ -154,7 +140,7 @@ connectivity, both of which use a `wind_rose` as input.
 Least-cost path models find the fastest route between places, giving
 wind travel times in hours of effective wind transport along the best
 route under the long-run wind regime.
-[`least_cost_surface()`](https://matthewkling.github.io/windscape/reference/least_cost_surface.md)
+[`least_cost()`](https://matthewkling.github.io/windscape/reference/least_cost.md)
 maps travel time from a site, and
 [`least_cost_paths()`](https://matthewkling.github.io/windscape/reference/least_cost_paths.md)
 traces a set of individual routes. Here we use them together to model
@@ -163,11 +149,8 @@ traces a set of individual routes. Here we use them together to model
 ``` r
 
 site <- cbind(-105, 40)
-destinations <- generate_particles(rose, 500, "grid")
-
-graph <- wind_graph(rose, direction = "downwind")
-hours <- least_cost_surface(graph, site)
-paths <- least_cost_paths(graph, site, destinations)
+hours <- least_cost(rose, site, direction = "downwind")
+paths <- least_cost_paths(rose, site, direction = "downwind", n = 500)
 
 ggplot(as.data.frame(hours, xy = TRUE), aes(x, y)) +
       geom_raster(aes(fill = pmax(hours, 10))) + # floor at 10 hours for the log scale
@@ -241,7 +224,7 @@ reports how much that distorts distances among closely spaced sites.
 
 sites <- cbind(lon = c(-110, -105, -100, -95), lat = c(40, 42, 38, 44))
 
-pairwise_least_cost(graph, sites) |> round() # travel time, in hours
+pairwise_least_cost(rose, sites) |> round() # travel time, in hours
 ```
 
 ``` R

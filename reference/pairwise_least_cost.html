@@ -49,19 +49,23 @@ walk counterpart, see <code><a href="pairwise_random_walk.html">pairwise_random_
 
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">pairwise_least_cost</span><span class="op">(</span><span class="va">graph</span>, <span class="va">sites</span>, snap <span class="op">=</span> <span class="cn">FALSE</span>, rate <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">pairwise_least_cost</span><span class="op">(</span><span class="va">rose</span>, <span class="va">sites</span>, snap <span class="op">=</span> <span class="cn">FALSE</span>, rate <span class="op">=</span> <span class="cn">FALSE</span>, <span class="va">...</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
     <h2 id="arguments">Arguments<a class="anchor" aria-label="anchor" href="#arguments"></a></h2>
 
 
-<dl><dt id="arg-graph">graph<a class="anchor" aria-label="anchor" href="#arg-graph"></a></dt>
-<dd><p>A <a href="wind_graph.html">wind_graph</a>.</p></dd>
+<dl><dt id="arg-rose">rose<a class="anchor" aria-label="anchor" href="#arg-rose"></a></dt>
+<dd><p>A <code><a href="wind_rose.html">wind_rose()</a></code>. The least-cost functions build a <code><a href="wind_graph.html">wind_graph()</a></code> from it
+internally. Alternatively, a <code>wind_graph</code> built in advance, to save rebuilding it when
+making many calls on a large grid; its direction must match the analysis (always
+<code>"downwind"</code> here).</p></dd>
 
 
 <dt id="arg-sites">sites<a class="anchor" aria-label="anchor" href="#arg-sites"></a></dt>
-<dd><p>A two-column matrix of point coordinates.</p></dd>
+<dd><p>A two-column matrix (or data frame) of point coordinates, or a <code>SpatVector</code> of
+points.</p></dd>
 
 
 <dt id="arg-snap">snap<a class="anchor" aria-label="anchor" href="#arg-snap"></a></dt>
@@ -73,14 +77,19 @@ places sites at their actual locations within cells; see details.</p></dd>
 <dd><p>Whether to return values as "rates" instead of the default "cost distances". Rates
 are the inverse of cost distances, representing flow rather than travel time.</p></dd>
 
+
+<dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
+<dd><p>Further arguments passed to <code><a href="wind_graph.html">wind_graph()</a></code>, such as <code>wrap</code>. Not allowed when
+<code>rose</code> is already a <code>wind_graph</code>.</p></dd>
+
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>A square matrix with one row and column per site: the least-cost travel time (or,
 with <code>rate = TRUE</code>, its inverse) from the row's site to the column's site, in hours if
 <code>trans = 1</code> in <code><a href="wind_rose.html">wind_rose()</a></code> and wind speeds are in m/s. Small travel times mean strong
-connectivity. Because wind graphs are directed, the matrix is generally asymmetric. The
-diagonal is zero. Sites outside the graph's extent get <code>NA</code>, with a warning.</p>
+connectivity. Because wind is directional, the matrix is generally asymmetric. The
+diagonal is zero. Sites outside the grid get <code>NA</code>, with a warning.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
@@ -108,8 +117,23 @@ about 8 percent (routes 22.5 degrees off a grid axis). On a longitude/latitude g
 narrow east-west toward the poles and neighbor bearings become uneven, so the maximum error
 grows with latitude, to roughly 18 percent at 60 degrees. Site edges have the same
 directional bias, so that it is consistent across distances.</p>
+<p>Unlike <code><a href="least_cost.html">least_cost()</a></code> and <code><a href="least_cost_paths.html">least_cost_paths()</a></code>, this function has no <code>direction</code> argument:
+the matrix holds travel in both directions between every pair of sites. Row <code>i</code> gives travel
+downwind from site <code>i</code>, and column <code>j</code> gives travel upwind of site <code>j</code>.</p>
     </div>
 
+    <div class="section level2">
+    <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="va">rose</span> <span class="op">&lt;-</span> <span class="fu"><a href="windscape_example.html">windscape_example</a></span><span class="op">(</span><span class="st">"wind_rose"</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">sites</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">cbind</a></span><span class="op">(</span>lon <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">110</span>, <span class="op">-</span><span class="fl">105</span>, <span class="op">-</span><span class="fl">100</span>, <span class="op">-</span><span class="fl">95</span><span class="op">)</span>, lat <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">40</span>, <span class="fl">42</span>, <span class="fl">38</span>, <span class="fl">44</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu">pairwise_least_cost</span><span class="op">(</span><span class="va">rose</span>, <span class="va">sites</span><span class="op">)</span> <span class="co"># travel time from row site to column site, in hours</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>           [,1]     [,2]     [,3]     [,4]</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1,]    0.0000 121.4736 378.6623 568.0911</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [2,]  823.9064   0.0000 276.9367 459.2603</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [3,] 1081.1963 361.8028   0.0000 308.7967</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [4,] 1220.5612 537.7939 502.7565   0.0000</span>
+</code></pre></div>
+    </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside></div>
 

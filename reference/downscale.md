@@ -55,7 +55,7 @@ downscaling changes its results little: typically by a few percent,
 reflecting the smoother interpolated wind field. Downscaling does reduce
 error for nearby sites when sites are snapped to cell centers, as in
 `pairwise_least_cost(snap = TRUE)`,
-[`least_cost_surface()`](https://matthewkling.github.io/windscape/reference/least_cost_surface.md),
+[`least_cost()`](https://matthewkling.github.io/windscape/reference/least_cost.md),
 and
 [`least_cost_paths()`](https://matthewkling.github.io/windscape/reference/least_cost_paths.md).
 

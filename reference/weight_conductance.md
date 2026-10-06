@@ -1,9 +1,8 @@
-# Weight a windrose conductance raster
+# Weight a wind rose's conductances
 
-This function adjusts the conductance values in a windrose raster,
-multiplying them by the values of a secondary raster data set `w`, which
-can be used to integrate non-wind factors into a wind connectivity
-analysis.
+This function adjusts the conductance values in a wind rose, multiplying
+them by the values of a secondary raster data set `w`, which can be used
+to integrate non-wind factors into a wind connectivity analysis.
 
 ## Usage
 
@@ -15,17 +14,16 @@ weight_conductance(rose, w)
 
 - rose:
 
-  A raster stack created using
-  [`windrose_rasters()`](https://matthewkling.github.io/windscape/reference/wind_rose.md).
+  A `wind_rose`.
 
 - w:
 
-  A raster layer with values to be multiplied by `rose`. This layer must
-  have the same spatial properties as the windrose raster.
+  A single-layer `SpatRaster` with values to be multiplied by `rose`, on
+  the same grid as `rose`.
 
 ## Value
 
-A version of `rose`, with conductance values weighted by `w`.
+A `wind_rose`, with conductance values weighted by `w`.
 
 ## Details
 

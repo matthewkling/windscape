@@ -8,19 +8,25 @@ cost path algorithm. For the random walk counterpart, see
 ## Usage
 
 ``` r
-pairwise_least_cost(graph, sites, snap = FALSE, rate = FALSE)
+pairwise_least_cost(rose, sites, snap = FALSE, rate = FALSE, ...)
 ```
 
 ## Arguments
 
-- graph:
+- rose:
 
   A
-  [wind_graph](https://matthewkling.github.io/windscape/reference/wind_graph.md).
+  [`wind_rose()`](https://matthewkling.github.io/windscape/reference/wind_rose.md).
+  The least-cost functions build a
+  [`wind_graph()`](https://matthewkling.github.io/windscape/reference/wind_graph.md)
+  from it internally. Alternatively, a `wind_graph` built in advance, to
+  save rebuilding it when making many calls on a large grid; its
+  direction must match the analysis (always `"downwind"` here).
 
 - sites:
 
-  A two-column matrix of point coordinates.
+  A two-column matrix (or data frame) of point coordinates, or a
+  `SpatVector` of points.
 
 - snap:
 
@@ -34,6 +40,12 @@ pairwise_least_cost(graph, sites, snap = FALSE, rate = FALSE)
   distances". Rates are the inverse of cost distances, representing flow
   rather than travel time.
 
+- ...:
+
+  Further arguments passed to
+  [`wind_graph()`](https://matthewkling.github.io/windscape/reference/wind_graph.md),
+  such as `wrap`. Not allowed when `rose` is already a `wind_graph`.
+
 ## Value
 
 A square matrix with one row and column per site: the least-cost travel
@@ -41,9 +53,8 @@ time (or, with `rate = TRUE`, its inverse) from the row's site to the
 column's site, in hours if `trans = 1` in
 [`wind_rose()`](https://matthewkling.github.io/windscape/reference/wind_rose.md)
 and wind speeds are in m/s. Small travel times mean strong connectivity.
-Because wind graphs are directed, the matrix is generally asymmetric.
-The diagonal is zero. Sites outside the graph's extent get `NA`, with a
-warning.
+Because wind is directional, the matrix is generally asymmetric. The
+diagonal is zero. Sites outside the grid get `NA`, with a warning.
 
 ## Details
 
@@ -82,3 +93,24 @@ east-west toward the poles and neighbor bearings become uneven, so the
 maximum error grows with latitude, to roughly 18 percent at 60 degrees.
 Site edges have the same directional bias, so that it is consistent
 across distances.
+
+Unlike
+[`least_cost()`](https://matthewkling.github.io/windscape/reference/least_cost.md)
+and
+[`least_cost_paths()`](https://matthewkling.github.io/windscape/reference/least_cost_paths.md),
+this function has no `direction` argument: the matrix holds travel in
+both directions between every pair of sites. Row `i` gives travel
+downwind from site `i`, and column `j` gives travel upwind of site `j`.
+
+## Examples
+
+``` r
+rose <- windscape_example("wind_rose")
+sites <- cbind(lon = c(-110, -105, -100, -95), lat = c(40, 42, 38, 44))
+pairwise_least_cost(rose, sites) # travel time from row site to column site, in hours
+#>           [,1]     [,2]     [,3]     [,4]
+#> [1,]    0.0000 121.4736 378.6623 568.0911
+#> [2,]  823.9064   0.0000 276.9367 459.2603
+#> [3,] 1081.1963 361.8028   0.0000 308.7967
+#> [4,] 1220.5612 537.7939 502.7565   0.0000
+```

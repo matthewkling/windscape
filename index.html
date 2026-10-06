@@ -58,20 +58,69 @@
 <!-- badges: start -->
 <!-- badges: end -->
 <p>’</p>
-<p>Because wind disperses particles ranging from pollen, seeds, and spores to insects, pathogens, and pollutants, wind patterns shape many aspects of spatial ecology. But the variation in wind strength and direction over space and time makes it challenging to study wind’s role in landscape connectivity. The <strong>windscape</strong> package provides a toolset for modeling the effects of time-integrated wind regimes in spatial ecology, landscape genetics, and related fields. Use it to:</p>
-<ul>
-<li>
-<strong>download</strong> and summarize wind data in the form of raster time series</li>
-<li>
-<strong>model windsheds</strong> representing a site’s upwind catchment and downwind deposition shadow, which often differ substantially</li>
-<li>
-<strong>model pairwise connectivity</strong> among sets of sites to generate asymmetric matrices of directional wind connectivity between site pairs using either <em>least cost path</em> or <em>random walk</em> approaches</li>
-<li>
-<strong>test statistical hypotheses</strong> about spatial relationships between wind and ecological outcomes</li>
-<li>
-<strong>visualize</strong> spatial wind patterns—including instantaneous wind fields, time-integrated wind regimes, and windsheds—in ggplot2</li>
-</ul>
-<p>While <strong>windscape</strong> can be used to map air flow patterns at a single moment, its core connectivity models summarize long time series of wind data into wind regimes, describing the expected connectivity averaged over many dispersal events. It is thus designed for analyzing processes that accumulate over time, such as gene flow, colonization, and range expansion.</p>
+<p>Because wind disperses particles ranging from pollen, seeds, and spores to insects, pathogens, and pollutants, wind patterns shape many aspects of spatial ecology. But the variation in wind strength and direction over space and time makes it challenging to study wind’s role in landscape connectivity. The <strong>windscape</strong> package provides a toolset for modeling the effects of time-integrated wind regimes in spatial ecology, landscape genetics, and related fields.</p>
+<p>While <strong>windscape</strong> can be used to map air flow patterns at a single moment, its core connectivity models summarize long time series of wind data into wind regimes, describing the expected connectivity averaged over many dispersal events. It is thus designed for analyzing processes that accumulate over time, such as gene flow, colonization, and range expansion. The package offers the following functionality:</p>
+<table class="table">
+<colgroup>
+<col width="33%">
+<col width="33%">
+<col width="33%">
+</colgroup>
+<thead><tr>
+<th align="left">Task</th>
+<th align="left">Description</th>
+<th align="left">Functions</th>
+</tr></thead>
+<tbody>
+<tr>
+<td align="left">Get wind data</td>
+<td align="left">Download and import wind data rasters</td>
+<td align="left">
+<code><a href="reference/ncar_download.html">ncar_download()</a></code>, <code><a href="reference/ncar_land.html">ncar_land()</a></code>, <code><a href="reference/wind_series.html">wind_series()</a></code>, <code><a href="reference/windscape_example.html">windscape_example()</a></code>
+</td>
+</tr>
+<tr>
+<td align="left">Model wind regimes</td>
+<td align="left">Summarize wind time series into</td>
+<td align="left">
+<code><a href="reference/wind_rose.html">wind_rose()</a></code>, <code><a href="reference/combine_roses.html">combine_roses()</a></code>, <code><a href="reference/weight_conductance.html">weight_conductance()</a></code>, <code><a href="reference/downscale.html">downscale()</a></code>
+</td>
+</tr>
+<tr>
+<td align="left">Map windsheds</td>
+<td align="left">Model a site’s upwind catchment area and downwind deposition shadow using <em>least cost path</em> or <em>random walk</em> approaches</td>
+<td align="left">
+<code><a href="reference/least_cost.html">least_cost()</a></code>, <code><a href="reference/least_cost_paths.html">least_cost_paths()</a></code>, <code><a href="reference/random_walk.html">random_walk()</a></code>, <code><a href="reference/ws_summarize.html">ws_summarize()</a></code>
+</td>
+</tr>
+<tr>
+<td align="left">Compute pairwise connectivity</td>
+<td align="left">Model directional connectivity among sets of sites</td>
+<td align="left">
+<code><a href="reference/pairwise_least_cost.html">pairwise_least_cost()</a></code>, <code><a href="reference/pairwise_random_walk.html">pairwise_random_walk()</a></code>, <code><a href="reference/check_cell_distance.html">check_cell_distance()</a></code>
+</td>
+</tr>
+<tr>
+<td align="left">Test hypotheses</td>
+<td align="left">Run statistical significance tests about spatial relationships between wind and ecological outcomes</td>
+<td align="left">
+<code><a href="reference/pairwise_ratios.html">pairwise_ratios()</a></code>, <code><a href="reference/pairwise_means.html">pairwise_means()</a></code>, <code><a href="reference/mantel_test.html">mantel_test()</a></code>
+</td>
+</tr>
+<tr>
+<td align="left">Trace airflow</td>
+<td align="left"></td>
+<td align="left"><code><a href="reference/wind_trails.html">wind_trails()</a></code></td>
+</tr>
+<tr>
+<td align="left">Visualize</td>
+<td align="left">Map spatial wind patterns in ggplot2, including instantaneous wind fields, time-integrated wind regimes, and windsheds</td>
+<td align="left">
+<code><a href="reference/geom_wind_rose.html">geom_wind_rose()</a></code>, <code><a href="reference/geom_wind_arrow.html">geom_wind_arrow()</a></code>, <code><a href="reference/geom_wind_trail.html">geom_wind_trail()</a></code>, <code><a href="reference/geom_wind_path.html">geom_wind_path()</a></code>, <code><a href="reference/scale_fill_bearing.html">scale_fill_bearing()</a></code>
+</td>
+</tr>
+</tbody>
+</table>
 <div class="section level2">
 <h2 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
 </h2>
@@ -79,62 +128,6 @@
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># install.packages("remotes")</span></span>
 <span><span class="fu">remotes</span><span class="fu">::</span><span class="fu">install_github</span><span class="op">(</span><span class="st">"matthewkling/windscape"</span><span class="op">)</span></span></code></pre></div>
-</div>
-<div class="section level2">
-<h2 id="overview">Overview<a class="anchor" aria-label="anchor" href="#overview"></a>
-</h2>
-<table class="table">
-<colgroup>
-<col width="50%">
-<col width="50%">
-</colgroup>
-<thead><tr>
-<th align="left">Task</th>
-<th align="left">Functions</th>
-</tr></thead>
-<tbody>
-<tr>
-<td align="left">Get wind data</td>
-<td align="left">
-<code><a href="reference/ncar_download.html">ncar_download()</a></code>, <code><a href="reference/ncar_land.html">ncar_land()</a></code>, <code>read_wind_series()</code>, <code><a href="reference/windscape_example.html">windscape_example()</a></code>
-</td>
-</tr>
-<tr>
-<td align="left">Summarize a wind regime</td>
-<td align="left">
-<code><a href="reference/wind_rose.html">wind_rose()</a></code>, <code><a href="reference/combine_roses.html">combine_roses()</a></code>, <code><a href="reference/weight_conductance.html">weight_conductance()</a></code>, <code><a href="reference/downscale.html">downscale()</a></code>
-</td>
-</tr>
-<tr>
-<td align="left">Map windsheds</td>
-<td align="left">
-<code><a href="reference/least_cost_surface.html">least_cost_surface()</a></code>, <code><a href="reference/least_cost_paths.html">least_cost_paths()</a></code>, <code><a href="reference/random_walk.html">random_walk()</a></code>, <code><a href="reference/ws_summarize.html">ws_summarize()</a></code>
-</td>
-</tr>
-<tr>
-<td align="left">Connectivity among sites</td>
-<td align="left">
-<code><a href="reference/pairwise_least_cost.html">pairwise_least_cost()</a></code>, <code><a href="reference/pairwise_random_walk.html">pairwise_random_walk()</a></code>, <code><a href="reference/check_cell_distance.html">check_cell_distance()</a></code>
-</td>
-</tr>
-<tr>
-<td align="left">Test hypotheses</td>
-<td align="left">
-<code><a href="reference/pairwise_ratios.html">pairwise_ratios()</a></code>, <code><a href="reference/pairwise_means.html">pairwise_means()</a></code>, <code><a href="reference/mantel_test.html">mantel_test()</a></code>
-</td>
-</tr>
-<tr>
-<td align="left">Trace airflow</td>
-<td align="left"><code><a href="reference/wind_trails.html">wind_trails()</a></code></td>
-</tr>
-<tr>
-<td align="left">Visualize</td>
-<td align="left">
-<code><a href="reference/geom_wind_rose.html">geom_wind_rose()</a></code>, <code><a href="reference/geom_wind_arrow.html">geom_wind_arrow()</a></code>, <code><a href="reference/geom_wind_trail.html">geom_wind_trail()</a></code>, <code><a href="reference/geom_wind_path.html">geom_wind_path()</a></code>, <code><a href="reference/scale_fill_bearing.html">scale_fill_bearing()</a></code>
-</td>
-</tr>
-</tbody>
-</table>
 </div>
 <div class="section level2">
 <h2 id="get-wind-data">Get wind data<a class="anchor" aria-label="anchor" href="#get-wind-data"></a>
@@ -169,9 +162,9 @@
 <div class="section level3">
 <h3 id="summarize-wind-regimes">Summarize wind regimes<a class="anchor" aria-label="anchor" href="#summarize-wind-regimes"></a>
 </h3>
-<p>A <strong>wind rose</strong> summarizes a time series of wind fields into a model of the wind regime: for each grid cell, the average conductance of wind toward each of its eight neighbors. <code><a href="reference/wind_rose.html">wind_rose()</a></code> can build one from a set of files a month at a time, so long records needn’t fit in memory. The <code>trans</code> argument sets how wind speed translates into conductance so the rose reflects the winds that matter for dispersal, for example to model propagules that are only released in strong winds.</p>
+<p>A <strong>wind rose</strong> summarizes a time series of wind fields into a model of the wind regime: for each grid cell, the average conductance of wind toward each of its eight neighbors. <code><a href="reference/wind_rose.html">wind_rose()</a></code> builds one from a long series in chunks, so long records needn’t fit in memory. The <code>trans</code> argument sets how wind speed translates into conductance so the rose reflects the winds that matter for dispersal, for example to model propagules that are only released in strong winds.</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">rose</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/wind_rose.html">wind_rose</a></span><span class="op">(</span><span class="va">files</span>, trans <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="va">rose</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/wind_rose.html">wind_rose</a></span><span class="op">(</span><span class="fu"><a href="reference/wind_series.html">wind_series</a></span><span class="op">(</span><span class="va">files</span><span class="op">)</span>, trans <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span></code></pre></div>
 <p>The examples below use a small <code>wind_rose</code> object that ships with the package, built from the same region as the data downloaded above. <code><a href="reference/geom_wind_rose.html">geom_wind_rose()</a></code> maps it as a field of glyphs, each showing the distribution of flow directions in a block of cells, colored by the direction of net flow:</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">rose</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/windscape_example.html">windscape_example</a></span><span class="op">(</span><span class="st">"wind_rose"</span><span class="op">)</span></span>
@@ -194,14 +187,11 @@
 <div class="section level3">
 <h3 id="least-cost-paths">Least-cost paths<a class="anchor" aria-label="anchor" href="#least-cost-paths"></a>
 </h3>
-<p>Least-cost path models find the fastest route between places, giving wind travel times in hours of effective wind transport along the best route under the long-run wind regime. <code><a href="reference/least_cost_surface.html">least_cost_surface()</a></code> maps travel time from a site, and <code><a href="reference/least_cost_paths.html">least_cost_paths()</a></code> traces a set of individual routes. Here we use them together to model <em>downwind</em> connectivity from a site in the center of the landscape.</p>
+<p>Least-cost path models find the fastest route between places, giving wind travel times in hours of effective wind transport along the best route under the long-run wind regime. <code><a href="reference/least_cost.html">least_cost()</a></code> maps travel time from a site, and <code><a href="reference/least_cost_paths.html">least_cost_paths()</a></code> traces a set of individual routes. Here we use them together to model <em>downwind</em> connectivity from a site in the center of the landscape.</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">site</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">cbind</a></span><span class="op">(</span><span class="op">-</span><span class="fl">105</span>, <span class="fl">40</span><span class="op">)</span></span>
-<span><span class="va">destinations</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/generate_particles.html">generate_particles</a></span><span class="op">(</span><span class="va">rose</span>, <span class="fl">500</span>, <span class="st">"grid"</span><span class="op">)</span></span>
-<span></span>
-<span><span class="va">graph</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/wind_graph.html">wind_graph</a></span><span class="op">(</span><span class="va">rose</span>, direction <span class="op">=</span> <span class="st">"downwind"</span><span class="op">)</span></span>
-<span><span class="va">hours</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/least_cost_surface.html">least_cost_surface</a></span><span class="op">(</span><span class="va">graph</span>, <span class="va">site</span><span class="op">)</span></span>
-<span><span class="va">paths</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/least_cost_paths.html">least_cost_paths</a></span><span class="op">(</span><span class="va">graph</span>, <span class="va">site</span>, <span class="va">destinations</span><span class="op">)</span></span>
+<span><span class="va">hours</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/least_cost.html">least_cost</a></span><span class="op">(</span><span class="va">rose</span>, <span class="va">site</span>, direction <span class="op">=</span> <span class="st">"downwind"</span><span class="op">)</span></span>
+<span><span class="va">paths</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/least_cost_paths.html">least_cost_paths</a></span><span class="op">(</span><span class="va">rose</span>, <span class="va">site</span>, direction <span class="op">=</span> <span class="st">"downwind"</span>, n <span class="op">=</span> <span class="fl">500</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/as.data.frame.html" class="external-link">as.data.frame</a></span><span class="op">(</span><span class="va">hours</span>, xy <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">y</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
 <span>      <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_tile.html" class="external-link">geom_raster</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>fill <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">pmax</a></span><span class="op">(</span><span class="va">hours</span>, <span class="fl">10</span><span class="op">)</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span> <span class="co"># floor at 10 hours for the log scale</span></span>
@@ -249,7 +239,7 @@
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">sites</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">cbind</a></span><span class="op">(</span>lon <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">110</span>, <span class="op">-</span><span class="fl">105</span>, <span class="op">-</span><span class="fl">100</span>, <span class="op">-</span><span class="fl">95</span><span class="op">)</span>, lat <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">40</span>, <span class="fl">42</span>, <span class="fl">38</span>, <span class="fl">44</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
-<span><span class="fu"><a href="reference/pairwise_least_cost.html">pairwise_least_cost</a></span><span class="op">(</span><span class="va">graph</span>, <span class="va">sites</span><span class="op">)</span> <span class="op">|&gt;</span> <span class="fu"><a href="https://rspatial.github.io/terra/reference/math-generics.html" class="external-link">round</a></span><span class="op">(</span><span class="op">)</span> <span class="co"># travel time, in hours</span></span></code></pre></div>
+<span><span class="fu"><a href="reference/pairwise_least_cost.html">pairwise_least_cost</a></span><span class="op">(</span><span class="va">rose</span>, <span class="va">sites</span><span class="op">)</span> <span class="op">|&gt;</span> <span class="fu"><a href="https://rspatial.github.io/terra/reference/math-generics.html" class="external-link">round</a></span><span class="op">(</span><span class="op">)</span> <span class="co"># travel time, in hours</span></span></code></pre></div>
 <div class="sourceCode" id="cb9"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" tabindex="-1"></a><span class="do">##      [,1] [,2] [,3] [,4]</span></span>
 <span id="cb9-2"><a href="#cb9-2" tabindex="-1"></a><span class="do">## [1,]    0  121  379  568</span></span>
 <span id="cb9-3"><a href="#cb9-3" tabindex="-1"></a><span class="do">## [2,]  824    0  277  459</span></span>

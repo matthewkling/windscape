@@ -92,6 +92,10 @@ connectivity between a site and the whole landscape, or estimating
 <strong>pairwise connectivity</strong> among a set of sites, for
 comparison with ecological data.</li>
 </ol>
+<p>The diagram below maps how windscape’s main objects (teal) and
+functions connect, along with the ggplot2 layers for drawing each object
+(purple):</p>
+<p><img src="workflow.svg" class="r-plt" alt="Diagram of the windscape workflow: wind data become a wind_series, which yields wind fields and a wind rose; the wind rose feeds least-cost and random walk models, which produce path data, windshed maps, and pairwise matrices for hypothesis tests." width="100%"></p>
 <p>This vignette walks through each step using small example data sets
 that ship with the package. For more details on specific topics, see the
 articles on wind data, random walk models, least cost models, and
@@ -270,22 +274,23 @@ arrive.</p>
 <p><code><a href="../reference/wind_graph.html">wind_graph()</a></code> builds the network, in one of two
 directions. A <code>"downwind"</code> graph measures travel from the
 site to other places, and an <code>"upwind"</code> graph measures travel
-from other places to the site. <code><a href="../reference/least_cost_surface.html">least_cost_surface()</a></code> maps
-travel times between a site and every grid cell:</p>
+from other places to the site. <code><a href="../reference/least_cost.html">least_cost()</a></code> maps travel
+times between a site and every grid cell across the landscape:</p>
 <div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">down</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/least_cost_surface.html">least_cost_surface</a></span><span class="op">(</span><span class="fu"><a href="../reference/wind_graph.html">wind_graph</a></span><span class="op">(</span><span class="va">rose</span>, direction <span class="op">=</span> <span class="st">"downwind"</span><span class="op">)</span>, <span class="va">site</span><span class="op">)</span></span>
-<span><span class="va">up</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/least_cost_surface.html">least_cost_surface</a></span><span class="op">(</span><span class="fu"><a href="../reference/wind_graph.html">wind_graph</a></span><span class="op">(</span><span class="va">rose</span>, direction <span class="op">=</span> <span class="st">"upwind"</span><span class="op">)</span>, <span class="va">site</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="va">down</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/least_cost.html">least_cost</a></span><span class="op">(</span><span class="va">rose</span>, <span class="va">site</span>, <span class="st">"downwind"</span><span class="op">)</span></span>
+<span><span class="va">up</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/least_cost.html">least_cost</a></span><span class="op">(</span><span class="va">rose</span>, <span class="va">site</span>, <span class="st">"upwind"</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">d</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">rbind</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/as.data.frame.html" class="external-link">as.data.frame</a></span><span class="op">(</span><span class="va">down</span>, xy <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>, direction <span class="op">=</span> <span class="st">"downwind: from the site"</span><span class="op">)</span>,</span>
-<span>           <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/as.data.frame.html" class="external-link">as.data.frame</a></span><span class="op">(</span><span class="va">up</span>, xy <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>, direction <span class="op">=</span> <span class="st">"upwind: to the site"</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">d</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">rbind</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/as.data.frame.html" class="external-link">as.data.frame</a></span><span class="op">(</span><span class="va">down</span>, xy <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>, direction <span class="op">=</span> <span class="st">"downwind: travel time from the site"</span><span class="op">)</span>,</span>
+<span>           <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/as.data.frame.html" class="external-link">as.data.frame</a></span><span class="op">(</span><span class="va">up</span>, xy <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>, direction <span class="op">=</span> <span class="st">"upwind: travel time to the site"</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">d</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">y</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
 <span>      <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_tile.html" class="external-link">geom_raster</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>fill <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">pmax</a></span><span class="op">(</span><span class="va">hours</span>, <span class="fl">10</span><span class="op">)</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span> <span class="co"># floor at 10 hours for the log scale</span></span>
 <span>      <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_path.html" class="external-link">geom_path</a></span><span class="op">(</span>data <span class="op">=</span> <span class="va">states</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span><span class="va">long</span>, <span class="va">lat</span>, group <span class="op">=</span> <span class="va">group</span><span class="op">)</span>, color <span class="op">=</span> <span class="st">"white"</span>, linewidth <span class="op">=</span> <span class="fl">0.15</span><span class="op">)</span> <span class="op">+</span></span>
-<span>      <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_contour.html" class="external-link">geom_contour</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>z <span class="op">=</span> <span class="va">hours</span><span class="op">)</span>, color <span class="op">=</span> <span class="st">"red"</span>, breaks <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">100</span>, <span class="fl">200</span>, <span class="fl">500</span>, <span class="fl">1000</span><span class="op">)</span>, linewidth <span class="op">=</span> <span class="fl">0.15</span><span class="op">)</span> <span class="op">+</span></span>
-<span>      <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/annotate.html" class="external-link">annotate</a></span><span class="op">(</span><span class="st">"point"</span>, <span class="va">site</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span>, <span class="va">site</span><span class="op">[</span><span class="fl">2</span><span class="op">]</span>, color <span class="op">=</span> <span class="st">"red"</span>, size <span class="op">=</span> <span class="fl">1.5</span><span class="op">)</span> <span class="op">+</span></span>
+<span>      <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_contour.html" class="external-link">geom_contour</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>z <span class="op">=</span> <span class="va">hours</span><span class="op">)</span>, color <span class="op">=</span> <span class="st">"black"</span>, breaks <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">100</span>, <span class="fl">200</span>, <span class="fl">500</span>, <span class="fl">1000</span><span class="op">)</span>, linewidth <span class="op">=</span> <span class="fl">0.15</span><span class="op">)</span> <span class="op">+</span></span>
+<span>      <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/annotate.html" class="external-link">annotate</a></span><span class="op">(</span><span class="st">"point"</span>, <span class="va">site</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span>, <span class="va">site</span><span class="op">[</span><span class="fl">2</span><span class="op">]</span>, color <span class="op">=</span> <span class="st">"black"</span>, size <span class="op">=</span> <span class="fl">1.5</span><span class="op">)</span> <span class="op">+</span></span>
 <span>      <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/facet_wrap.html" class="external-link">facet_wrap</a></span><span class="op">(</span><span class="op">~</span><span class="va">direction</span><span class="op">)</span> <span class="op">+</span></span>
-<span>      <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_viridis.html" class="external-link">scale_fill_viridis_c</a></span><span class="op">(</span>name <span class="op">=</span> <span class="st">"hours"</span>, trans <span class="op">=</span> <span class="st">"log10"</span>, direction <span class="op">=</span> <span class="op">-</span><span class="fl">1</span><span class="op">)</span> <span class="op">+</span></span>
+<span>      <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_gradient.html" class="external-link">scale_fill_gradientn</a></span><span class="op">(</span>name <span class="op">=</span> <span class="st">"hours"</span>, trans <span class="op">=</span> <span class="st">"log10"</span>, values <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">.5</span>, <span class="fl">.7</span>, <span class="fl">.85</span>, <span class="fl">1</span><span class="op">)</span>,</span>
+<span>                           colors <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"cyan"</span>, <span class="st">"dodgerblue"</span>, <span class="st">"purple"</span>, <span class="st">"red"</span>, <span class="st">"orange"</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
 <span>      <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/coord_map.html" class="external-link">coord_quickmap</a></span><span class="op">(</span>xlim <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">120</span>, <span class="op">-</span><span class="fl">90</span><span class="op">)</span>, ylim <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">30</span>, <span class="fl">50</span><span class="op">)</span>, expand <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span> <span class="op">+</span></span>
 <span>      <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_void</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
 <span>      <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/theme.html" class="external-link">theme</a></span><span class="op">(</span>strip.text <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/element.html" class="external-link">element_text</a></span><span class="op">(</span>margin <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/element.html" class="external-link">margin</a></span><span class="op">(</span><span class="fl">4</span>, <span class="fl">0</span>, <span class="fl">4</span>, <span class="fl">0</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
@@ -464,20 +469,21 @@ directional ecological flow, such as gene flow? Compare the matrices
 directly.</li>
 <li>
 <strong>Isolation</strong>: are sites with weaker wind connectivity
-in both directions more different, for example genetically?
+in both directions more differentiated, for example genetically?
 <code><a href="../reference/pairwise_means.html">pairwise_means()</a></code> converts an asymmetric matrix into a
 symmetric one by averaging the two directions.</li>
 <li>
-<strong>Asymmetry</strong>: are imbalances in wind connectivity
-related to imbalances in ecological flow? <code><a href="../reference/pairwise_ratios.html">pairwise_ratios()</a></code>
-converts a matrix into log ratios of the two directions.</li>
+<strong>Asymmetry</strong>: are directional imbalances in wind
+connectivity related to imbalances in ecological flow?
+<code><a href="../reference/pairwise_ratios.html">pairwise_ratios()</a></code> converts a matrix into log ratios of the
+two directions.</li>
 </ul>
 <p><code><a href="../reference/mantel_test.html">mantel_test()</a></code> tests these relationships with Mantel
-tests, which assess significance by permutation, since the values in a
-pairwise matrix aren’t independent. Unlike most implementations, it
-handles asymmetric matrices and multiple control variables. Here we run
-each test against simulated random data, using geographic distance as a
-control variable for the flow and isolation tests:</p>
+tests, which assess significance by permutation since the values in a
+pairwise matrix aren’t independent. Unlike most Mantel implementations,
+it handles asymmetric matrices and multiple control variables. Here we
+run each test against simulated random data, using geographic distance
+as a control variable for the flow and isolation tests:</p>
 <div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">1</span><span class="op">)</span></span>
 <span><span class="va">distance</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/point_distance.html">point_distance</a></span><span class="op">(</span><span class="va">sites</span><span class="op">)</span></span>
@@ -493,9 +499,9 @@ control variable for the flow and isolation tests:</p>
 <span><span class="co">#&gt;           flow isolation asymmetry</span></span>
 <span><span class="co">#&gt; stat    -0.103     0.045     0.154</span></span>
 <span><span class="co">#&gt; p.value  0.358     0.757     0.280</span></span></code></pre></div>
-<p>As expected for random data, none of the relationships are
+<p>As expected for random data, none of the relationships here are
 significant. With only ten sites, these tests also have little power;
-real analyses generally need more sites.</p>
+real analyses often need more sites.</p>
 </div>
 </div>
 <div class="section level2">

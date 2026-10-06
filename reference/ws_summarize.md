@@ -20,7 +20,7 @@ ws_summarize(x, origin, radius = NULL)
   indicating greater accessibility. (For example, this could be the
   output of
   [`random_walk()`](https://matthewkling.github.io/windscape/reference/random_walk.md),
-  or `least_cost_surface(..., rate = TRUE)`.)
+  or `least_cost(..., rate = TRUE)`.)
 
 - origin:
 

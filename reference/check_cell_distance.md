@@ -7,7 +7,7 @@ center of its cell: the random walk functions
 ([`random_walk()`](https://matthewkling.github.io/windscape/reference/random_walk.md),
 [`pairwise_random_walk()`](https://matthewkling.github.io/windscape/reference/pairwise_random_walk.md)),
 and the least-cost functions when sites are snapped to cell centers
-([`least_cost_surface()`](https://matthewkling.github.io/windscape/reference/least_cost_surface.md),
+([`least_cost()`](https://matthewkling.github.io/windscape/reference/least_cost.md),
 [`least_cost_paths()`](https://matthewkling.github.io/windscape/reference/least_cost_paths.md),
 and `pairwise_least_cost(snap = TRUE)`). For these, sites separated by
 only a few cells have distorted distances and directions, and sites in

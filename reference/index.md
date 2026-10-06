@@ -34,10 +34,10 @@
   : Wind trails and streamlines
 - [`iter_length()`](https://matthewkling.github.io/windscape/reference/iter_length.md)
   : Iteration step length of a random walk
+- [`least_cost()`](https://matthewkling.github.io/windscape/reference/least_cost.md)
+  : Least-cost travel time surface
 - [`least_cost_paths()`](https://matthewkling.github.io/windscape/reference/least_cost_paths.md)
-  : Least-cost paths through a wind graph
-- [`least_cost_surface()`](https://matthewkling.github.io/windscape/reference/least_cost_surface.md)
-  : Accumulated wind cost surface
+  : Least-cost paths
 - [`mantel_test()`](https://matthewkling.github.io/windscape/reference/mantel_test.md)
   : Mantel test
 - [`mean(`*`<wind_series>`*`)`](https://matthewkling.github.io/windscape/reference/mean-wind_series-method.md)
@@ -61,6 +61,8 @@
   : Pairwise distances between points
 - [`random_walk()`](https://matthewkling.github.io/windscape/reference/random_walk.md)
   : Simulate wind dispersal by random walk
+- [`random_walk_paths()`](https://matthewkling.github.io/windscape/reference/random_walk_paths.md)
+  : Paths of material through a random walk
 - [`rose()`](https://matthewkling.github.io/windscape/reference/rose.md)
   : Calculate 8-neighbor edge loadings from a time series of u and v
   windspeeds
@@ -79,7 +81,7 @@
 - [`tesselate()`](https://matthewkling.github.io/windscape/reference/tesselate.md)
   : Extend a global raster with copies of itself
 - [`weight_conductance()`](https://matthewkling.github.io/windscape/reference/weight_conductance.md)
-  : Weight a windrose conductance raster
+  : Weight a wind rose's conductances
 - [`wind_field-class`](https://matthewkling.github.io/windscape/reference/wind_field-class.md)
   : An S4 object class representing a wind field
 - [`wind_field()`](https://matthewkling.github.io/windscape/reference/wind_field.md)

@@ -1,92 +1,126 @@
-# Least-cost paths through a wind graph
+# Least-cost paths
 
-Traces the least-cost (fastest) paths between sites through a wind
-graph, as sequences of grid cell centers. The result has the same
-structure as
+Traces the least-cost (fastest) wind paths between sites, as sequences
+of grid cell centers. The result has the same structure as
 [`wind_trails()`](https://matthewkling.github.io/windscape/reference/wind_trails.md)
 output, so it can be drawn with
-[`geom_wind_trail()`](https://matthewkling.github.io/windscape/reference/geom_wind_trail.md).
+[`geom_wind_path()`](https://matthewkling.github.io/windscape/reference/geom_wind_path.md).
+Paths run between `sites` and the points in `to`: downwind, from the
+sites to the points, or upwind, from the points to the sites. Without
+`to`, the points are a regular grid across the domain, so the paths show
+the network of fastest routes downwind (or upwind) of the sites.
 
 ## Usage
 
 ``` r
-least_cost_paths(graph, from, to, pairs = c("all", "nearest", "matched"))
+least_cost_paths(
+  rose,
+  sites,
+  to = NULL,
+  direction = "downwind",
+  pairs = c("all", "nearest", "matched"),
+  n = 50,
+  ...
+)
 ```
 
 ## Arguments
 
-- graph:
+- rose:
 
-  A `wind_graph`, created with
-  [`wind_graph()`](https://matthewkling.github.io/windscape/reference/wind_graph.md).
+  A
+  [`wind_rose()`](https://matthewkling.github.io/windscape/reference/wind_rose.md),
+  or a `wind_graph` built in advance whose direction matches
+  `direction`; see
+  [`pairwise_least_cost()`](https://matthewkling.github.io/windscape/reference/pairwise_least_cost.md).
 
-- from, to:
+- sites, to:
 
-  Origin and destination sites: two-column matrices (or data frames) of
-  longitude and latitude, or `SpatVector`s of points.
+  Sites, and the points to trace paths to (downwind) or from (upwind):
+  two-column matrices (or data frames) of longitude and latitude, or
+  `SpatVector`s of points. If `to` is `NULL` (the default), the points
+  are about `n` points on a regular grid across the domain, and points
+  that can't be reached are dropped silently.
+
+- direction:
+
+  Either `"downwind"` (the default), for paths from `sites` to `to`, or
+  `"upwind"`, for paths from `to` to `sites`. With explicit `to` points,
+  the two give the same paths for swapped arguments; `direction` matters
+  most with the grid of points and with `pairs = "nearest"`.
 
 - pairs:
 
-  Which origin-destination pairs to trace: `"all"` (the default) traces
-  a path from every origin to every destination; `"nearest"` traces one
-  path from each origin, to the destination it can reach at the lowest
-  cost; `"matched"` pairs `from` and `to` row by row, which requires
-  them to have the same number of sites.
+  Which pairs to trace: `"all"` (the default) traces a path between
+  every site and every point in `to`; `"nearest"` traces one path for
+  each site, to or from the point in `to` with the lowest travel time;
+  `"matched"` pairs `sites` and `to` row by row, which requires them to
+  have the same number of rows; it isn't available without `to`.
+
+- n:
+
+  Approximate number of grid points, when `to` is `NULL`.
+
+- ...:
+
+  Further arguments passed to
+  [`wind_graph()`](https://matthewkling.github.io/windscape/reference/wind_graph.md),
+  such as `wrap`. Not allowed when `rose` is already a `wind_graph`.
 
 ## Value
 
-A data frame with one row per path vertex, ordered from origin to
-destination along each path:
+A data frame with one row per path vertex, ordered along each path in
+the direction of travel (from the site to the point for downwind paths,
+and from the point to the site for upwind paths):
 
 - `trail`: path id.
 
-- `from`, `to`: row numbers of the path's origin in `from` and
-  destination in `to`.
+- `site`, `to`: row numbers of the path's site in `sites` and point in
+  `to`.
 
-- `step`: vertex number along the path, starting at 0 at the origin.
+- `step`: vertex number along the path, starting at 0 at its upwind end.
 
-- `hours`: cumulative travel cost from the origin, in hours (if
+- `hours`: cumulative travel time along the path, in hours (if
   `trans = 1` in
   [`wind_rose()`](https://matthewkling.github.io/windscape/reference/wind_rose.md)
   and wind speeds are in m/s). Its final value on each path equals the
-  pair's
+  pair's travel time from
   [`pairwise_least_cost()`](https://matthewkling.github.io/windscape/reference/pairwise_least_cost.md)
   (with `snap = TRUE`).
 
 - `x`, `y`: longitude and latitude of the grid cell center.
 
-Pairs with no path (where the destination can't be reached, e.g. because
-wind never blows toward it) are omitted with a warning. Pairs whose
-origin and destination fall in the same grid cell are omitted, since
-their path has no length.
+Pairs with no path (e.g. because wind never blows from one toward the
+other), and sites and points outside the grid, are omitted with a
+warning. Pairs whose site and point fall in the same grid cell are
+omitted, since their path has no length.
 
 ## Details
 
 Paths are computed with
 [`gdistance::shortestPath()`](https://AgrDataSci.github.io/gdistance/reference/shortestPath.html).
-They follow the graph's direction: with a downwind graph (the default in
-[`wind_graph()`](https://matthewkling.github.io/windscape/reference/wind_graph.md)),
-a path from `from` to `to` is the fastest downwind route. With an upwind
-graph, it is the fastest downwind route from `to` to `from`, traced in
-reverse. Because wind graphs are directed, the path from A to B
-generally differs from the path from B to A.
+Because wind is directional, the fastest path from A to B generally
+differs from the fastest path from B to A.
 
 Paths move between neighboring grid cells, in eight directions, so they
 appear as segments at 45-degree angles, including occasional staircase
 patterns where the optimal route lies between two neighbor directions.
 This reflects the model's structure rather than the plot. Paths from one
-origin often share segments, showing the main transport corridors.
+site form a tree: once two paths meet, they share the rest of their
+route back to the site, so shared segments show the main transport
+corridors. Because diagonal steps between cell centers can cross without
+passing through a common cell, two branches of the tree occasionally
+appear to cross.
 
 ## Examples
 
 ``` r
 rose <- windscape_example("wind_rose")
-graph <- wind_graph(rose)
 site <- cbind(-105, 40)
 destinations <- cbind(c(-95, -115, -100, -110), c(45, 35, 32, 48))
-paths <- least_cost_paths(graph, site, destinations)
+paths <- least_cost_paths(rose, site, destinations)
 head(paths)
-#>   trail from to step    hours         x        y
+#>   trail site to step    hours         x        y
 #> 1     1    1  1    0  0.00000 -105.1579 39.84127
 #> 2     1    1  1    1  6.39227 -104.8421 39.84127
 #> 3     1    1  1    2 27.63580 -104.5263 40.15873
@@ -96,10 +130,16 @@ head(paths)
 
 library(ggplot2)
 ggplot(paths, aes(x, y)) +
-  geom_wind_trail(aes(color = hours)) +
+  geom_wind_path(aes(color = hours)) +
   coord_quickmap()
-#> Error in wind_trail_layer(mapping, data, stat, GeomWindTrail, position,     seeds, res, fixed_length, length, hours, match.arg(direction),     steps, match.arg(wrap), arrow, na.rm, show.legend, inherit.aes,     ...): Problem while computing aesthetics.
-#> ℹ Error occurred in the 1st layer.
-#> Caused by error:
-#> ! object 'u' not found
+
+
+# the network of fastest routes from the site, and to it
+down <- least_cost_paths(rose, site, n = 200)
+up <- least_cost_paths(rose, site, n = 200, direction = "upwind")
+ggplot(rbind(cbind(down, direction = "downwind"), cbind(up, direction = "upwind")),
+       aes(x, y)) +
+  geom_wind_path(aes(color = hours), arrow = NULL) +
+  facet_wrap(~direction) +
+  coord_quickmap()
 ```

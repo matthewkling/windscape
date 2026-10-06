@@ -22,8 +22,8 @@
 <url><loc>https://matthewkling.github.io/windscape/reference/geom_wind_trail.html</loc></url>
 <url><loc>https://matthewkling.github.io/windscape/reference/index.html</loc></url>
 <url><loc>https://matthewkling.github.io/windscape/reference/iter_length.html</loc></url>
+<url><loc>https://matthewkling.github.io/windscape/reference/least_cost.html</loc></url>
 <url><loc>https://matthewkling.github.io/windscape/reference/least_cost_paths.html</loc></url>
-<url><loc>https://matthewkling.github.io/windscape/reference/least_cost_surface.html</loc></url>
 <url><loc>https://matthewkling.github.io/windscape/reference/mantel_test.html</loc></url>
 <url><loc>https://matthewkling.github.io/windscape/reference/mean-wind_series-method.html</loc></url>
 <url><loc>https://matthewkling.github.io/windscape/reference/ncar_download.html</loc></url>
@@ -35,6 +35,7 @@
 <url><loc>https://matthewkling.github.io/windscape/reference/pairwise_ratios.html</loc></url>
 <url><loc>https://matthewkling.github.io/windscape/reference/point_distance.html</loc></url>
 <url><loc>https://matthewkling.github.io/windscape/reference/random_walk.html</loc></url>
+<url><loc>https://matthewkling.github.io/windscape/reference/random_walk_paths.html</loc></url>
 <url><loc>https://matthewkling.github.io/windscape/reference/rose.html</loc></url>
 <url><loc>https://matthewkling.github.io/windscape/reference/rw_exit_prob.html</loc></url>
 <url><loc>https://matthewkling.github.io/windscape/reference/rw_max_step.html</loc></url>

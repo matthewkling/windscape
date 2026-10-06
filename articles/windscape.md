@@ -23,6 +23,14 @@ A windscape analysis follows a few steps:
     and the whole landscape, or estimating **pairwise connectivity**
     among a set of sites, for comparison with ecological data.
 
+The diagram below maps how windscape’s main objects (teal) and functions
+connect, along with the ggplot2 layers for drawing each object (purple):
+
+![Diagram of the windscape workflow: wind data become a wind_series,
+which yields wind fields and a wind rose; the wind rose feeds least-cost
+and random walk models, which produce path data, windshed maps, and
+pairwise matrices for hypothesis tests.](workflow.svg)
+
 This vignette walks through each step using small example data sets that
 ship with the package. For more details on specific topics, see the
 articles on wind data, random walk models, least cost models, and
@@ -245,24 +253,26 @@ most analyses need, but they don’t predict when real particles arrive.
 builds the network, in one of two directions. A `"downwind"` graph
 measures travel from the site to other places, and an `"upwind"` graph
 measures travel from other places to the site.
-[`least_cost_surface()`](https://matthewkling.github.io/windscape/reference/least_cost_surface.md)
-maps travel times between a site and every grid cell:
+[`least_cost()`](https://matthewkling.github.io/windscape/reference/least_cost.md)
+maps travel times between a site and every grid cell across the
+landscape:
 
 ``` r
 
-down <- least_cost_surface(wind_graph(rose, direction = "downwind"), site)
-up <- least_cost_surface(wind_graph(rose, direction = "upwind"), site)
+down <- least_cost(rose, site, "downwind")
+up <- least_cost(rose, site, "upwind")
 
-d <- rbind(data.frame(as.data.frame(down, xy = TRUE), direction = "downwind: from the site"),
-           data.frame(as.data.frame(up, xy = TRUE), direction = "upwind: to the site"))
+d <- rbind(data.frame(as.data.frame(down, xy = TRUE), direction = "downwind: travel time from the site"),
+           data.frame(as.data.frame(up, xy = TRUE), direction = "upwind: travel time to the site"))
 
 ggplot(d, aes(x, y)) +
       geom_raster(aes(fill = pmax(hours, 10))) + # floor at 10 hours for the log scale
       geom_path(data = states, aes(long, lat, group = group), color = "white", linewidth = 0.15) +
-      geom_contour(aes(z = hours), color = "red", breaks = c(100, 200, 500, 1000), linewidth = 0.15) +
-      annotate("point", site[1], site[2], color = "red", size = 1.5) +
+      geom_contour(aes(z = hours), color = "black", breaks = c(100, 200, 500, 1000), linewidth = 0.15) +
+      annotate("point", site[1], site[2], color = "black", size = 1.5) +
       facet_wrap(~direction) +
-      scale_fill_viridis_c(name = "hours", trans = "log10", direction = -1) +
+      scale_fill_gradientn(name = "hours", trans = "log10", values = c(0, .5, .7, .85, 1),
+                           colors = c("cyan", "dodgerblue", "purple", "red", "orange")) +
       coord_quickmap(xlim = c(-120, -90), ylim = c(30, 50), expand = FALSE) +
       theme_void() +
       theme(strip.text = element_text(margin = margin(4, 0, 4, 0)))
@@ -476,20 +486,20 @@ kinds of hypotheses (see Kling and Ackerly 2021 for examples):
 - **Flow**: is directional wind connectivity related to directional
   ecological flow, such as gene flow? Compare the matrices directly.
 - **Isolation**: are sites with weaker wind connectivity in both
-  directions more different, for example genetically?
+  directions more differentiated, for example genetically?
   [`pairwise_means()`](https://matthewkling.github.io/windscape/reference/pairwise_means.md)
   converts an asymmetric matrix into a symmetric one by averaging the
   two directions.
-- **Asymmetry**: are imbalances in wind connectivity related to
-  imbalances in ecological flow?
+- **Asymmetry**: are directional imbalances in wind connectivity related
+  to imbalances in ecological flow?
   [`pairwise_ratios()`](https://matthewkling.github.io/windscape/reference/pairwise_ratios.md)
   converts a matrix into log ratios of the two directions.
 
 [`mantel_test()`](https://matthewkling.github.io/windscape/reference/mantel_test.md)
 tests these relationships with Mantel tests, which assess significance
-by permutation, since the values in a pairwise matrix aren’t
-independent. Unlike most implementations, it handles asymmetric matrices
-and multiple control variables. Here we run each test against simulated
+by permutation since the values in a pairwise matrix aren’t independent.
+Unlike most Mantel implementations, it handles asymmetric matrices and
+multiple control variables. Here we run each test against simulated
 random data, using geographic distance as a control variable for the
 flow and isolation tests:
 
@@ -511,9 +521,9 @@ sapply(list(flow = flow, isolation = isolation, asymmetry = asymmetry),
 #> p.value  0.358     0.757     0.280
 ```
 
-As expected for random data, none of the relationships are significant.
-With only ten sites, these tests also have little power; real analyses
-generally need more sites.
+As expected for random data, none of the relationships here are
+significant. With only ten sites, these tests also have little power;
+real analyses often need more sites.
 
 ## Learn more
 
