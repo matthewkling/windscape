@@ -9,7 +9,7 @@ knitr::opts_chunk$set(collapse = TRUE, comment = "#>", message = FALSE, warning 
 
 windscape models wind connectivity from a wind rose in two ways. A **least-cost model** finds
 the fastest route between places. A **random walk model** follows particles as they spread along
-all routes and settle out of the air. The [windsheds](windsheds.html) and
+all routes and (potentially) settle out of the air. The [windsheds](windsheds.html) and
 [pairwise connectivity](pairwise-connectivity.html) articles use both; this article explains how
 they work, what their settings do, and what their limitations are, as a reference for choosing
 between them and setting them up.
@@ -28,9 +28,9 @@ us <- coord_quickmap(xlim = c(-120, -90), ylim = c(30, 50), expand = FALSE)
 facets <- theme(strip.text = element_text(margin = margin(4, 0, 4, 0)))
 ```
 
-Both models start from the same quantity: the wind rose's **conductance** from each grid cell
-toward each of its eight neighbors, the average rate at which wind moves material from the cell
-to that neighbor. With `trans = 1` in `wind_rose()` and winds in m/s, conductance is in units of
+Both models start from the same quantity: the `wind_rose`'s **conductance** from each grid cell
+toward each of its eight neighbors, giving the average rate at which wind moves material from the cell
+to that neighbor. With the default `trans = 1` in `wind_rose()` and winds in m/s, conductance is in units of
 1/hour, and the models' times are in hours. With other choices of `trans`, they are in relative
 units, which still compare across places and directions.
 
@@ -61,7 +61,7 @@ particles take to arrive. Each link's conductance is a long-run average, includi
 the time the wind spends blowing other ways. A travel time is therefore the time to follow the
 best route, including the time spent waiting, in effect, for the wind to blow roughly in the
 direction of travel. Real particles riding a single favorable wind event can arrive much faster,
-and most particles never arrive at all.
+but most particles never arrive at all.
 
 What travel times do capture well is the relative ease of wind transport between places, in
 consistent units that compare across places and directions. This makes them well suited to
@@ -190,9 +190,9 @@ question, where particles arriving at a site come from, and is computed with the
 downwind process rather than by reversing the wind. The two are exactly consistent: the upwind
 value at a source equals the downwind value at the receptor, for any source and receptor.
 
-Upwind stream walks with a finite half-life return an `origin` layer alongside `deposition`.
-Upwind `deposition` describes how likely a particle released in each cell is to be deposited at
-the site; `origin` is the share of particles deposited at the site that came from each cell, which also depends on how much each
+Upwind stream walks with a finite half-life return **two** layers. `deposition` describes how 
+likely a particle released in each cell is to be deposited at the site. `origin` give the share 
+of particles deposited at the site that came from each cell, which also depends on how much each
 cell releases (`source`). The [windsheds](windsheds.html) article compares them.
 
 ### Latitude correction
@@ -212,8 +212,9 @@ section of `?random_walk` for details and limits.
 
 ### Resolution
 
-The same effect makes random walk results depend on grid resolution: part of a walk's spread
-comes from the hops between cells, so walks on coarser grids spread more. Downscaling a rose with
+The same effect makes random walk results depend on grid resolution: a walk's spread comes from
+the hops between cells, and its rate is proportional to hop length, so walks on coarser grids
+spread more (see [turbulence](#turbulence) below). Downscaling a rose with
 `downscale()` narrows the spread (by 30 to 50 percent, in one test, for a factor of 4), so it
 changes the model as well as the grid. Results at different resolutions aren't directly
 comparable, so choose one resolution for an analysis and treat it as part of the model. Least-cost
@@ -305,6 +306,45 @@ rw_self_retention(rose, half_life = 48, cells = site, exact = TRUE)
 For a release raster `init`, the leave-one-out residence is `residence - init * G`, where `G` is
 the self-retention at each source (with `density = FALSE`, so that both are per cell), and
 leave-one-out deposition is `log(2) / half_life` times that; see `?rw_self_retention`.
+
+
+## Turbulence
+
+The air is always turbulent, but windscape models only the resolved wind: the mean flow within
+each grid cell and time step of the wind data, summarized over time in the wind rose. The two
+models use it differently.
+
+A **least-cost model** is purely advective. It traces the single most favorable route through
+the wind rose, with no dispersion at all, so turbulence has no natural place in it.
+
+A **random walk** spreads material, but it's worth being precise about where that spread comes
+from. Each hop, a particle moves to a neighboring cell in a direction drawn from the cell's
+conductances, independently of its previous hops. The wind rose's mix of directions sets the
+shape of the spread: which directions it favors, and how elongated it is. But its magnitude is
+set by the length of the hops. A walk's effective diffusivity is about half the wind speed times
+the hop length, so it scales with cell size. Even in perfectly steady wind, where the resolved
+flow alone would carry particles together without spreading, a walk spreads them: for a steady 5 m/s wind on the
+example grid, with cells about 30 km across, the walk's along-wind diffusivity is about
+90,000 m^2/s, and halves each time the cell size halves. For the example rose's real winds at the
+site used above, it's about 17,000 to 43,000 m^2/s, depending on direction, and also halves with
+cell size.
+
+How does this compare with the real atmosphere? At the scale of reanalysis grid cells, the
+walk's diffusivity is comparable to or larger than typical estimates of horizontal dispersion by
+small-scale turbulence, so adding that turbulence explicitly would change results little.
+Large-scale variability is a different matter. Real winds persist, often for hours to days,
+carrying particles far in one direction before turning, whereas the wind rose keeps the mix of
+directions but discards their sequence, and the walk redraws its direction every hop. So the
+spread of a single release in real weather can be much broader than the walk's. The random walk
+is best read as a model of average connectivity under the wind regime, at a resolution that is
+part of the model, rather than as a simulation of individual dispersal events.
+
+Vertical turbulence isn't represented either. Updrafts that lift particles high into the
+atmosphere drive much long-distance dispersal, and the chance of uplift depends on a particle's
+settling velocity relative to the strength of turbulence. In windscape, deposition is a constant
+rate set by `half_life`, the same everywhere and in every wind. Choosing wind data from a height
+that matches where dispersal happens (see the [wind data](wind-data.html) article) is the main
+way to account for the vertical dimension.
 
 
 ## Choosing a model
