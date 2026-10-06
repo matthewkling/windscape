@@ -63,16 +63,15 @@ pairwise_random_walk <- function(rose, sites, half_life = NULL,
             if(value == "deposition") stop("`half_life` is required for `value = \"deposition\"`")
             half_life <- Inf
       }
-      if(!(timescale > 0 && timescale <= 1)) stop("'timescale' must be greater than 0 and less than or equal to 1.")
-
-      if(latitude_correction) rose <- rw_latitude_correction(rose)
-      t <- rw_max_step(rose) * timescale
-      lambda <- rw_decay(half_life, t)
+      su <- rw_setup(rose, half_life, timescale, latitude_correction)
+      rose <- su$rose
+      t <- su$t
+      lambda <- su$lambda
       if(value == "deposition" && lambda == 0) stop("`value = \"deposition\"` requires a finite `half_life`")
       cells <- terra::cellFromXY(rose, sites)
       if(anyNA(cells)) stop("some `sites` fall outside the extent of `rose`")
-      P <- rw_matrix(rw_prob(rose, t))
-      valid <- attr(P, "valid")
+      P <- su$P
+      valid <- su$valid
       if(any(!valid[cells])) stop("some `sites` fall in grid cells that are NA in `rose`")
       if(lambda == 0) rw_check_drainage(P)
 

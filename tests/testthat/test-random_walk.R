@@ -783,3 +783,15 @@ test_that("pulse mode shows a progress bar only when asked", {
             expect_true(any(grepl("100%", bar)))
       }
 })
+
+test_that("random walk functions share input checks", {
+      r <- noisy_rose()
+      xy <- terra::xyFromCell(r, 40)
+      plain <- methods::as(r, "SpatRaster")
+      expect_error(random_walk(plain, xy, mode = "stream", half_life = 24), "wind_rose")
+      expect_error(pairwise_random_walk(plain, xy, half_life = 24), "wind_rose")
+      expect_error(rw_exit_prob(plain, 24), "wind_rose")
+      expect_error(rw_self_retention(plain, 24), "wind_rose")
+      expect_error(random_walk(r, xy, mode = "stream", half_life = 24, timescale = NA), "timescale")
+      expect_error(rw_self_retention(r, 24, timescale = 0), "timescale")
+})

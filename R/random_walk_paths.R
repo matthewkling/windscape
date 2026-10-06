@@ -171,9 +171,9 @@ random_walk_paths <- function(rose, init, to = NULL, n = 50, ...){
 rw_edge_loss <- function(rose, w, dots){
       lc <- if(is.null(dots$latitude_correction)) TRUE else dots$latitude_correction
       ts <- if(is.null(dots$timescale)) 1 else dots$timescale
-      r <- if(lc) rw_latitude_correction(rose) else rose
-      t <- rw_max_step(r) * ts
-      stay <- Matrix::rowSums(rw_matrix(rw_prob(r, t)))
+      su <- rw_setup(rose, timescale = ts, latitude_correction = lc)
+      t <- su$t
+      stay <- Matrix::rowSums(su$P)
       res <- terra::values(w$residence)[, 1]
       loss <- res * (1 - stay) / t
       loss[!is.finite(loss)] <- 0

@@ -259,6 +259,7 @@ random_walk <- function(rose, init, mode = c("pulse", "stream"), direction = c("
       mode <- match.arg(mode)
       direction <- match.arg(direction)
       method <- match.arg(method)
+      su <- rw_setup(rose, half_life, timescale, latitude_correction)
 
       disperse <- function(n, p){
             a <- p
@@ -301,7 +302,6 @@ random_walk <- function(rose, init, mode = c("pulse", "stream"), direction = c("
             list(air = air, dep = dep)
       }
 
-      if(!(timescale > 0 && timescale <= 1)) stop("'timescale' must be greater than 0 and less than or equal to 1.")
       if(!is.null(source) && !(mode == "stream" && direction == "upwind"))
             stop("`source` is only used by upwind stream walks")
       raw_init <- NULL
@@ -312,9 +312,9 @@ random_walk <- function(rose, init, mode = c("pulse", "stream"), direction = c("
             # area (each receptor's own), via the receptor weights; exact by linearity
             if(direction == "upwind") init <- rw_init(rose, init) / area
       }
-      if(latitude_correction) rose <- rw_latitude_correction(rose)
-      t <- rw_max_step(rose) * timescale
-      lambda <- rw_decay(half_life, t)
+      rose <- su$rose
+      t <- su$t
+      lambda <- su$lambda
       if(isTRUE(flux) && mode != "stream") stop("`flux = TRUE` is only available in stream mode")
       if(isTRUE(flux) && direction == "upwind" && lambda == 0)
             stop("`flux = TRUE` for upwind walks requires a finite `half_life`: it traces material ",
@@ -324,7 +324,7 @@ random_walk <- function(rose, init, mode = c("pulse", "stream"), direction = c("
                   source <- rw_init(rose, source)
                   if(any(terra::values(source) < 0, na.rm = TRUE)) stop("`source` values must be non-negative")
             }
-            out <- rw_stream(rose, init, t, lambda, method, tol, max_iter, direction,
+            out <- rw_stream(su, init, method, tol, max_iter, direction,
                              flux = isTRUE(flux), source = source, raw_init = raw_init)
             if(density) out <- rw_per_area(out, area, direction)
             return(out)
@@ -337,12 +337,10 @@ random_walk <- function(rose, init, mode = c("pulse", "stream"), direction = c("
               "\n\tsimulation duration: ~", signif(t * iter, 3),
               if(lambda > 0) paste0("\n\tdecay per step (lambda): ~", signif(lambda, 3)),
               "\n(these values are in hours, IF trans == 1 and wind_field units are m/s)")
-      p <- rw_prob(rose, t)
-
       n <- rw_init(rose, init)
 
-      out <- if(direction == "downwind") diffuse(n, p, iter, record, lambda) else
-            diffuse_upwind(n, p, iter, record, lambda, progress)
+      out <- if(direction == "downwind") diffuse(n, su$p, iter, record, lambda) else
+            diffuse_upwind(n, su$P, iter, record, lambda, progress)
       walk <- function(a){
             x <- rast(n, nlyrs = length(record), vals = a)
             names(x) <- paste0("iter", record)
@@ -437,11 +435,10 @@ rw_max_step <- function(rose){
 #' @export
 rw_self_retention <- function(rose, half_life = Inf, timescale = 1, latitude_correction = TRUE,
                               cells = NULL, exact = FALSE, chunk = 200){
-      if(!(timescale > 0 && timescale <= 1)) stop("'timescale' must be greater than 0 and less than or equal to 1.")
-      if(latitude_correction) rose <- rw_latitude_correction(rose)
-      t <- rw_max_step(rose) * timescale
-      lambda <- rw_decay(half_life, t)
-      p <- rw_prob(rose, t)
+      su <- rw_setup(rose, half_life, timescale, latitude_correction)
+      t <- su$t
+      lambda <- su$lambda
+      p <- su$p
       if(inherits(cells, "matrix")) cells <- terra::cellFromXY(rose, cells)
 
       scale <- (1 - lambda) * t # converts per-step airborne mass to residence time
@@ -454,7 +451,7 @@ rw_self_retention <- function(rose, half_life = Inf, timescale = 1, latitude_cor
 
       if(is.null(cells)) stop("`cells` must be supplied when `exact = TRUE`")
       if(anyNA(cells)) stop("some `cells` are NA or outside the extent of `rose`")
-      P <- rw_matrix(p)
+      P <- su$P
       if(lambda == 0) rw_check_drainage(P)
       N <- nrow(P)
       A <- Matrix::Diagonal(N) - (1 - lambda) * Matrix::t(P)
@@ -466,7 +463,7 @@ rw_self_retention <- function(rose, half_life = Inf, timescale = 1, latitude_cor
             g[s] <- X[cbind(cells[s], seq_along(s))]
       }
       g <- g * scale
-      g[!attr(P, "valid")[cells]] <- NA
+      g[!su$valid[cells]] <- NA
       g
 }
 
@@ -560,17 +557,16 @@ rw_self_retention <- function(rose, half_life = Inf, timescale = 1, latitude_cor
 rw_exit_prob <- function(rose, half_life = Inf, exits = c("all", "edges", "na"),
                          latitude_correction = TRUE, iter = NULL, timescale = 1){
       exits <- match.arg(exits)
-      if(!(timescale > 0 && timescale <= 1)) stop("'timescale' must be greater than 0 and less than or equal to 1.")
       if(!is.null(iter) && !(length(iter) == 1 && is.numeric(iter) && iter >= 0 && iter == round(iter)))
             stop("`iter` must be NULL or a single non-negative integer")
-      if(latitude_correction) rose <- rw_latitude_correction(rose)
+      rw_check_timescale(timescale)
       if(is.null(iter)) timescale <- 1 # results don't depend on the step length
-      t <- rw_max_step(rose) * timescale
-      lambda <- rw_decay(half_life, t)
-      p <- rw_prob(rose, t)
-      P <- rw_matrix(p)
-      valid <- attr(P, "valid")
-      L <- rw_leak(p)
+      su <- rw_setup(rose, half_life, timescale, latitude_correction)
+      rose <- su$rose
+      lambda <- su$lambda
+      P <- su$P
+      valid <- su$valid
+      L <- rw_leak(su$p)
       l <- switch(exits, all = rowSums(L), edges = L[, "edges"], na = L[, "na"])
       l[!valid] <- 0
 
@@ -597,6 +593,29 @@ rw_exit_prob <- function(rose, half_life = Inf, exits = c("all", "edges", "na"),
 }
 
 # Internal helpers ---------------------
+
+# Shared setup for the random walk functions: checks the inputs, applies the latitude
+# correction, and derives the step length `t` (hours, if trans = 1 and winds are in m/s), the
+# per-step deposition fraction `lambda`, the 9-layer transition probabilities `p` (from
+# rw_prob()), the sparse transition matrix `P` (from rw_matrix()), and the valid (non-NA) cells.
+# `rose` in the result is the corrected rose, whose geometry matches the input.
+rw_setup <- function(rose, half_life = Inf, timescale = 1, latitude_correction = TRUE){
+      if(!inherits(rose, "wind_rose")) stop("`rose` must be a wind_rose")
+      rw_check_timescale(timescale)
+      if(latitude_correction) rose <- rw_latitude_correction(rose)
+      t <- rw_max_step(rose) * timescale
+      lambda <- rw_decay(half_life, t)
+      p <- rw_prob(rose, t)
+      P <- rw_matrix(p)
+      list(rose = rose, t = t, lambda = lambda, p = p, P = P, valid = attr(P, "valid"))
+}
+
+rw_check_timescale <- function(timescale){
+      if(!(is.numeric(timescale) && length(timescale) == 1 && !is.na(timescale) &&
+           timescale > 0 && timescale <= 1)){
+            stop("`timescale` must be greater than 0 and less than or equal to 1")
+      }
+}
 
 rw_prob <- function(x, t){
       p <- sum(x)
@@ -742,12 +761,12 @@ rw_cell_displacements <- function(rose){
 
 
 # Upwind (adjoint) pulse: n <- (1 - lambda) P n, with lambda * n deposited each step, recording
-# the iterations in `rec`. Returns arrays matching diffuse() in random_walk().
-diffuse_upwind <- function(n, p, i, rec = i, lambda = 0, progress = FALSE){
+# the iterations in `rec`, given the transition matrix P from rw_setup(). Returns arrays
+# matching diffuse() in random_walk().
+diffuse_upwind <- function(n, P, i, rec = i, lambda = 0, progress = FALSE){
       rec <- sort(rec)
       nr <- terra::nrow(n)
       nc <- terra::ncol(n)
-      P <- rw_matrix(p)
       v <- terra::values(n)[, 1]
       v[is.na(v) | !attr(P, "valid")] <- 0
       d <- v * 0
@@ -886,17 +905,21 @@ rw_leak <- function(p){
 }
 
 
-# Steady-state airborne mass under constant per-step release with per-step decay.
-rw_stream <- function(rose, init, t, lambda, method = "auto", tol = 1e-8, max_iter = 1e5,
+# Steady-state airborne mass under constant per-step release with per-step decay, for the walk
+# set up by rw_setup() (`su`).
+rw_stream <- function(su, init, method = "auto", tol = 1e-8, max_iter = 1e5,
                       direction = "downwind", flux = FALSE, source = NULL, raw_init = NULL){
+      rose <- su$rose
+      t <- su$t
+      lambda <- su$lambda
 
       n0r <- rw_init(rose, init)
       n0 <- terra::values(n0r)[, 1]
       n0[is.na(n0)] <- 0
       if(any(n0 < 0)) stop("`init` values must be non-negative")
 
-      P <- rw_matrix(rw_prob(rose, t))
-      valid <- attr(P, "valid")
+      P <- su$P
+      valid <- su$valid
       n0[!valid] <- 0
       N <- length(n0)
       if(method == "auto") method <- if(N <= 5e5) "solve" else "iterate"
@@ -973,7 +996,7 @@ rw_stream <- function(rose, init, t, lambda, method = "auto", tol = 1e-8, max_it
                   h <- n * lambda
             }else{
                   h <- terra::values(suppressMessages(
-                        rw_stream(rose, raw_init, t, lambda, method, tol, max_iter, "upwind"))$deposition)[, 1]
+                        rw_stream(su, raw_init, method, tol, max_iter, "upwind"))$deposition)[, 1]
             }
             h[!valid] <- 0
             # release per cell: `source`, or uniform per km^2 by default
@@ -994,18 +1017,17 @@ rw_stream <- function(rose, init, t, lambda, method = "auto", tol = 1e-8, max_it
             res <- n * (1 - lambda) * t
             res[!valid] <- 0
             if(direction == "downwind"){
-                  J <- rw_edge_flows(res, rw_prob(rose, t), t)
+                  J <- rw_edge_flows(res, su$p, t)
             }else{
                   # transport of material released per `source` (uniform per km^2 by default) that
                   # is eventually deposited at the receptor: mass from a downwind solve with that
                   # release, times the probability of deposition at the receptor
                   release <- terra::rast(rose, nlyrs = 1)
                   terra::values(release) <- q
-                  m <- suppressMessages(rw_stream(rose, release, t, lambda, method, tol, max_iter,
-                                                  "downwind"))
+                  m <- suppressMessages(rw_stream(su, release, method, tol, max_iter, "downwind"))
                   m <- terra::values(m$residence)[, 1]
                   m[!valid] <- 0
-                  J <- rw_edge_flows(m, rw_prob(rose, t), t, h = h)
+                  J <- rw_edge_flows(m, su$p, t, h = h)
             }
             fv <- rw_flux_vectors(J, rose)
             fv[!valid, ] <- NA
