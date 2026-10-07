@@ -96,9 +96,9 @@ connectivity between a site and the whole landscape, or estimating
 comparison with ecological data.</li>
 </ol>
 <p>The diagram below maps how windscape’s main objects (teal) and
-functions connect, along with the ggplot2 layers for drawing each object
-(purple):</p>
-<p><img src="workflow.svg" class="r-plt" alt="Diagram of the windscape workflow: wind data become a wind_series, which yields wind fields and a wind rose; the wind rose feeds least-cost and random walk models, which produce path data, windshed maps, and pairwise matrices for hypothesis tests." width="100%"></p>
+functions connect, starting from online data sources (dashed), along
+with the ggplot2 layers for drawing each object (purple):</p>
+<p><img src="workflow.svg" class="r-plt" alt="Diagram of the windscape workflow: hourly wind data downloaded from NCAR (or your own files) become a wind_series, which yields wind fields and a wind rose; pre-built wind roses can instead be downloaded directly. The wind rose feeds least-cost and random walk models, which produce path data, windshed maps, and pairwise matrices for hypothesis tests." width="100%"></p>
 <p>This vignette walks through each step using small example data sets
 that ship with the package. For more depth, the <a href="https://matthewkling.github.io/windscape/">package website</a> has
 articles on <a href="https://matthewkling.github.io/windscape/articles/wind-data.html">wind

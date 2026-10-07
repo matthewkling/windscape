@@ -24,12 +24,15 @@ A windscape analysis follows a few steps:
     among a set of sites, for comparison with ecological data.
 
 The diagram below maps how windscape’s main objects (teal) and functions
-connect, along with the ggplot2 layers for drawing each object (purple):
+connect, starting from online data sources (dashed), along with the
+ggplot2 layers for drawing each object (purple):
 
-![Diagram of the windscape workflow: wind data become a wind_series,
-which yields wind fields and a wind rose; the wind rose feeds least-cost
-and random walk models, which produce path data, windshed maps, and
-pairwise matrices for hypothesis tests.](workflow.svg)
+![Diagram of the windscape workflow: hourly wind data downloaded from
+NCAR (or your own files) become a wind_series, which yields wind fields
+and a wind rose; pre-built wind roses can instead be downloaded
+directly. The wind rose feeds least-cost and random walk models, which
+produce path data, windshed maps, and pairwise matrices for hypothesis
+tests.](workflow.svg)
 
 This vignette walks through each step using small example data sets that
 ship with the package. For more depth, the [package
