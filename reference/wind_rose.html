@@ -52,7 +52,13 @@ given a raster or file holding a saved wind rose, it loads it.</p>
 
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">wind_rose</span><span class="op">(</span><span class="va">x</span>, trans <span class="op">=</span> <span class="fl">1</span>, n_steps <span class="op">=</span> <span class="cn">NA_integer_</span>, <span class="va">...</span><span class="op">)</span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">wind_rose</span><span class="op">(</span></span>
+<span>  <span class="va">x</span>,</span>
+<span>  trans <span class="op">=</span> <span class="fl">1</span>,</span>
+<span>  n_steps <span class="op">=</span> <span class="cn">NA_integer_</span>,</span>
+<span>  filename <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  overwrite <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -68,9 +74,11 @@ that order.</p></dd>
 
 
 <dt id="arg-trans">trans<a class="anchor" aria-label="anchor" href="#arg-trans"></a></dt>
-<dd><p>Either a function, or a positive number indicating the power to raise wind
-speeds to; see details. When loading a saved rose, give the <code>trans</code> it was built with,
-which is recorded with the rose (e.g. for <code><a href="combine_roses.html">combine_roses()</a></code>).</p></dd>
+<dd><p>Either a non-negative number indicating the power to raise wind speeds to, or
+an elementwise function of wind speed (it may be applied to many cells and time steps at
+once, so its result for each speed must not depend on the others); see details. When
+loading a saved rose, give the <code>trans</code> it was built with, which is recorded with the rose
+(e.g. for <code><a href="combine_roses.html">combine_roses()</a></code>).</p></dd>
 
 
 <dt id="arg-n-steps">n_steps<a class="anchor" aria-label="anchor" href="#arg-n-steps"></a></dt>
@@ -79,16 +87,21 @@ combine it with other roses using <code><a href="combine_roses.html">combine_ros
 records its number of time steps automatically.</p></dd>
 
 
-<dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
-<dd><p>When building a rose, additional arguments passed to <code><a href="https://rspatial.github.io/terra/reference/app.html" class="external-link">terra::app()</a></code>, such as
-<code>cores</code>. A <code>filename</code> (with optional <code>overwrite</code>) writes the result to a file.</p></dd>
+<dt id="arg-filename">filename<a class="anchor" aria-label="anchor" href="#arg-filename"></a></dt>
+<dd><p>When building a rose, an optional file path to write the result to, as a
+raster file (e.g. a GeoTIFF).</p></dd>
+
+
+<dt id="arg-overwrite">overwrite<a class="anchor" aria-label="anchor" href="#arg-overwrite"></a></dt>
+<dd><p>Logical. Whether to overwrite an existing <code>filename</code>.</p></dd>
 
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>A <code>wind_rose</code> object. This is an 8-layer raster stack, where each layer is wind
 conductance from the focal cell to one of its neighbors (clockwise starting in the SW).
-If input windspeeds are in m/s and <code>trans = 1</code>, values are in (1 / hours)</p>
+If input windspeeds are in m/s and <code>trans = 1</code>, values are in (1 / hours). When building
+a rose, cells missing wind data at any time step are <code>NA</code> in all eight layers.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
@@ -99,16 +112,17 @@ neighbor; conductance is then averaged over all time steps. Long series are proc
 chunks of time steps, so a series spanning many files (see <code><a href="wind_series.html">wind_series()</a></code>) can be summarized
 without loading it all into memory; the result is identical to processing it at once. To
 build a rose from selected time steps, such as a season or time of day, select them first
-with <code><a href="subset_series.html">subset_series()</a></code>.</p>
+with <code><a href="subset_series.html">subset_series()</a></code>. To build many roses (e.g. one per month), run separate
+<code>wind_rose()</code> calls in parallel processes, e.g. with <code><a href="https://rdrr.io/r/parallel/mclapply.html" class="external-link">parallel::mclapply()</a></code>.</p>
 <p>The <code>trans</code> parameter defines the transformation function used to convert wind speed
 into conductance. If a numeric value is supplied, the function speed^trans is used.
 A value of trans = 0 will ignore speed, assigning weights based on direction only;
 trans = 1 assumes conductance is proportional to windspeed, trans = 2 assumes it's
 proportional to aerodynamic drag, and trans = 3 assumes it's proportional to force.
-Any intermediate value can also be used. Any function that transforms a numeric
-vector can also be supplied; for example, to model seed dispersal for a species
-that only releases seeds when winds exceed 10 m/s, we could specify a threshold
-function <code>trans = function(x){x[x &lt; 10] &lt;- 0; return(x)}</code>.</p>
+Any intermediate value can also be used. Any elementwise function, transforming each
+speed independently of the others, can also be supplied; for example, to model seed
+dispersal for a species that only releases seeds when winds exceed 10 m/s, we could specify
+a threshold function <code>trans = function(x){x[x &lt; 10] &lt;- 0; return(x)}</code>.</p>
 <p>Grid geometry: windscape works on longitude/latitude grids with square cells. Distances
 and bearings to each cell's neighbors are computed on the ellipsoid at that cell's latitude,
 so conductance accounts for the narrowing of cells toward the poles. Projected grids are not

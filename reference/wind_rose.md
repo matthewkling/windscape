@@ -8,7 +8,13 @@ holding a saved wind rose, it loads it.
 ## Usage
 
 ``` r
-wind_rose(x, trans = 1, n_steps = NA_integer_, ...)
+wind_rose(
+  x,
+  trans = 1,
+  n_steps = NA_integer_,
+  filename = NULL,
+  overwrite = FALSE
+)
 ```
 
 ## Arguments
@@ -25,9 +31,12 @@ wind_rose(x, trans = 1, n_steps = NA_integer_, ...)
 
 - trans:
 
-  Either a function, or a positive number indicating the power to raise
-  wind speeds to; see details. When loading a saved rose, give the
-  `trans` it was built with, which is recorded with the rose (e.g. for
+  Either a non-negative number indicating the power to raise wind speeds
+  to, or an elementwise function of wind speed (it may be applied to
+  many cells and time steps at once, so its result for each speed must
+  not depend on the others); see details. When loading a saved rose,
+  give the `trans` it was built with, which is recorded with the rose
+  (e.g. for
   [`combine_roses()`](https://matthewkling.github.io/windscape/reference/combine_roses.md)).
 
 - n_steps:
@@ -38,19 +47,22 @@ wind_rose(x, trans = 1, n_steps = NA_integer_, ...)
   Ignored when building a rose, which records its number of time steps
   automatically.
 
-- ...:
+- filename:
 
-  When building a rose, additional arguments passed to
-  [`terra::app()`](https://rspatial.github.io/terra/reference/app.html),
-  such as `cores`. A `filename` (with optional `overwrite`) writes the
-  result to a file.
+  When building a rose, an optional file path to write the result to, as
+  a raster file (e.g. a GeoTIFF).
+
+- overwrite:
+
+  Logical. Whether to overwrite an existing `filename`.
 
 ## Value
 
 A `wind_rose` object. This is an 8-layer raster stack, where each layer
 is wind conductance from the focal cell to one of its neighbors
 (clockwise starting in the SW). If input windspeeds are in m/s and
-`trans = 1`, values are in (1 / hours)
+`trans = 1`, values are in (1 / hours). When building a rose, cells
+missing wind data at any time step are `NA` in all eight layers.
 
 ## Details
 
@@ -65,6 +77,9 @@ can be summarized without loading it all into memory; the result is
 identical to processing it at once. To build a rose from selected time
 steps, such as a season or time of day, select them first with
 [`subset_series()`](https://matthewkling.github.io/windscape/reference/subset_series.md).
+To build many roses (e.g. one per month), run separate `wind_rose()`
+calls in parallel processes, e.g. with
+[`parallel::mclapply()`](https://rdrr.io/r/parallel/mclapply.html).
 
 The `trans` parameter defines the transformation function used to
 convert wind speed into conductance. If a numeric value is supplied, the
@@ -72,11 +87,11 @@ function speed^trans is used. A value of trans = 0 will ignore speed,
 assigning weights based on direction only; trans = 1 assumes conductance
 is proportional to windspeed, trans = 2 assumes it's proportional to
 aerodynamic drag, and trans = 3 assumes it's proportional to force. Any
-intermediate value can also be used. Any function that transforms a
-numeric vector can also be supplied; for example, to model seed
-dispersal for a species that only releases seeds when winds exceed 10
-m/s, we could specify a threshold function
-`trans = function(x){x[x < 10] <- 0; return(x)}`.
+intermediate value can also be used. Any elementwise function,
+transforming each speed independently of the others, can also be
+supplied; for example, to model seed dispersal for a species that only
+releases seeds when winds exceed 10 m/s, we could specify a threshold
+function `trans = function(x){x[x < 10] <- 0; return(x)}`.
 
 Grid geometry: windscape works on longitude/latitude grids with square
 cells. Distances and bearings to each cell's neighbors are computed on
