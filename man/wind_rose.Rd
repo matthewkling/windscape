@@ -5,7 +5,13 @@
 \alias{windrose_rasters}
 \title{Build or load a wind rose}
 \usage{
-wind_rose(x, trans = 1, n_steps = NA_integer_, ...)
+wind_rose(
+  x,
+  trans = 1,
+  n_steps = NA_integer_,
+  filename = NULL,
+  overwrite = FALSE
+)
 }
 \arguments{
 \item{x}{A \code{wind_series}, to build a wind rose from; or a saved wind rose to load, as an
@@ -14,21 +20,26 @@ wind_rose(x, trans = 1, n_steps = NA_integer_, ...)
 southwest, west, northwest, north, northeast, east, southeast, and south neighbors, in
 that order.}
 
-\item{trans}{Either a function, or a positive number indicating the power to raise wind
-speeds to; see details. When loading a saved rose, give the \code{trans} it was built with,
-which is recorded with the rose (e.g. for \code{\link[=combine_roses]{combine_roses()}}).}
+\item{trans}{Either a non-negative number indicating the power to raise wind speeds to, or
+an elementwise function of wind speed (it may be applied to many cells and time steps at
+once, so its result for each speed must not depend on the others); see details. When
+loading a saved rose, give the \code{trans} it was built with, which is recorded with the rose
+(e.g. for \code{\link[=combine_roses]{combine_roses()}}).}
 
 \item{n_steps}{When loading a saved rose, the number of time steps it summarizes, needed to
 combine it with other roses using \code{\link[=combine_roses]{combine_roses()}}. Ignored when building a rose, which
 records its number of time steps automatically.}
 
-\item{...}{When building a rose, additional arguments passed to \code{terra::app()}, such as
-\code{cores}. A \code{filename} (with optional \code{overwrite}) writes the result to a file.}
+\item{filename}{When building a rose, an optional file path to write the result to, as a
+raster file (e.g. a GeoTIFF).}
+
+\item{overwrite}{Logical. Whether to overwrite an existing \code{filename}.}
 }
 \value{
 A \code{wind_rose} object. This is an 8-layer raster stack, where each layer is wind
 conductance from the focal cell to one of its neighbors (clockwise starting in the SW).
-If input windspeeds are in m/s and \code{trans = 1}, values are in (1 / hours)
+If input windspeeds are in m/s and \code{trans = 1}, values are in (1 / hours). When building
+a rose, cells missing wind data at any time step are \code{NA} in all eight layers.
 }
 \description{
 A wind rose summarizes a time series of wind fields as the average wind conductance from each
@@ -43,17 +54,18 @@ neighbor; conductance is then averaged over all time steps. Long series are proc
 chunks of time steps, so a series spanning many files (see \code{\link[=wind_series]{wind_series()}}) can be summarized
 without loading it all into memory; the result is identical to processing it at once. To
 build a rose from selected time steps, such as a season or time of day, select them first
-with \code{\link[=subset_series]{subset_series()}}.
+with \code{\link[=subset_series]{subset_series()}}. To build many roses (e.g. one per month), run separate
+\code{wind_rose()} calls in parallel processes, e.g. with \code{parallel::mclapply()}.
 
 The \code{trans} parameter defines the transformation function used to convert wind speed
 into conductance. If a numeric value is supplied, the function speed^trans is used.
 A value of trans = 0 will ignore speed, assigning weights based on direction only;
 trans = 1 assumes conductance is proportional to windspeed, trans = 2 assumes it's
 proportional to aerodynamic drag, and trans = 3 assumes it's proportional to force.
-Any intermediate value can also be used. Any function that transforms a numeric
-vector can also be supplied; for example, to model seed dispersal for a species
-that only releases seeds when winds exceed 10 m/s, we could specify a threshold
-function \code{trans = function(x){x[x < 10] <- 0; return(x)}}.
+Any intermediate value can also be used. Any elementwise function, transforming each
+speed independently of the others, can also be supplied; for example, to model seed
+dispersal for a species that only releases seeds when winds exceed 10 m/s, we could specify
+a threshold function \code{trans = function(x){x[x < 10] <- 0; return(x)}}.
 
 Grid geometry: windscape works on longitude/latitude grids with square cells. Distances
 and bearings to each cell's neighbors are computed on the ellipsoid at that cell's latitude,

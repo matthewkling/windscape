@@ -69,6 +69,38 @@ test_that("wind_rose builds in chunks with the same result as all at once", {
       expect_equal(chunked@trans(3), 9)
 })
 
+test_that("wind_rose matches per-cell roses", {
+      series <- windscape_example("wind_series")
+      r <- wind_rose(series, trans = 2)
+      v <- terra::values(series)
+      lat <- terra::crds(series, na.rm = FALSE)[, 2]
+      res <- mean(terra::res(series))
+      set.seed(5)
+      for(i in sample(terra::ncell(series), 25)){
+            expect_equal(as.vector(terra::values(r)[i, ]),
+                         rose_reference(c(lat[i], res, v[i, ]), function(s) s^2),
+                         tolerance = 1e-10)
+      }
+})
+
+test_that("wind_rose sets cells with missing data to NA in all layers", {
+      r <- uv_raster(nr = 3, nc = 3, n_steps = 4)
+      v <- terra::values(r)
+      v[5, 2] <- NA                  # one u value in the center cell
+      terra::values(r) <- v
+      w <- terra::values(wind_rose(wind_series(r)))
+      expect_true(all(is.na(w[5, ])))
+      expect_false(anyNA(w[-5, ]))
+})
+
+test_that("wind_rose validates trans", {
+      series <- windscape_example("wind_series")
+      expect_error(wind_rose(series, trans = -1), "non-negative")
+      expect_error(wind_rose(series, trans = c(1, 2)), "single")
+      expect_error(wind_rose(series, trans = "1"), "number or a function")
+      expect_error(wind_rose(series, trans = function(s) s[1]), "elementwise")
+})
+
 test_that("wind_rose loads saved roses from rasters and files", {
       r <- wind_rose(windscape_example("wind_series"), trans = 2)
       f <- withr::local_tempfile(fileext = ".tif")

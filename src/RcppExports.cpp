@@ -23,9 +23,39 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// wind_speeds
+NumericMatrix wind_speeds(NumericMatrix m, int k);
+RcppExport SEXP _windscape_wind_speeds(SEXP mSEXP, SEXP kSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericMatrix >::type m(mSEXP);
+    Rcpp::traits::input_parameter< int >::type k(kSEXP);
+    rcpp_result_gen = Rcpp::wrap(wind_speeds(m, k));
+    return rcpp_result_gen;
+END_RCPP
+}
+// rose_accumulate
+void rose_accumulate(NumericMatrix m, int k, NumericMatrix w, double p, NumericMatrix nb, IntegerVector row, NumericMatrix acc);
+RcppExport SEXP _windscape_rose_accumulate(SEXP mSEXP, SEXP kSEXP, SEXP wSEXP, SEXP pSEXP, SEXP nbSEXP, SEXP rowSEXP, SEXP accSEXP) {
+BEGIN_RCPP
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericMatrix >::type m(mSEXP);
+    Rcpp::traits::input_parameter< int >::type k(kSEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type w(wSEXP);
+    Rcpp::traits::input_parameter< double >::type p(pSEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type nb(nbSEXP);
+    Rcpp::traits::input_parameter< IntegerVector >::type row(rowSEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type acc(accSEXP);
+    rose_accumulate(m, k, w, p, nb, row, acc);
+    return R_NilValue;
+END_RCPP
+}
 
 static const R_CallMethodDef CallEntries[] = {
     {"_windscape_edge_loadings", (DL_FUNC) &_windscape_edge_loadings, 3},
+    {"_windscape_wind_speeds", (DL_FUNC) &_windscape_wind_speeds, 2},
+    {"_windscape_rose_accumulate", (DL_FUNC) &_windscape_rose_accumulate, 7},
     {NULL, NULL, 0}
 };
 

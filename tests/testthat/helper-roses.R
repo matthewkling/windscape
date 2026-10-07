@@ -91,3 +91,30 @@ rose_input <- function(lat, toward, speed = 5, res = 1){
       th <- toward * pi / 180
       c(lat, res, speed * sin(th), speed * cos(th))
 }
+
+# Independent reference for rose(): a plain-R, one-time-step-at-a-time version of the original
+# per-cell algorithm (before the computation moved to rose_accumulate()). Same input and output
+# as rose().
+rose_reference <- function(x, trans = identity){
+      lat <- x[1]
+      res <- x[2]
+      uv <- matrix(x[-(1:2)], ncol = 2)
+      w <- trans(sqrt(uv[, 1]^2 + uv[, 2]^2))
+      dir <- atan2(uv[, 2], -uv[, 1]) * 180 / pi - 90
+      dir[dir < -180] <- dir[dir < -180] + 360
+      dir[dir < 0] <- dir[dir < 0] + 360
+      dir[dir == 0] <- 360
+      nc <- cbind(c(0, res, res, res, 0, -res, -res, -res),
+                  pmax(pmin(c(res, res, 0, -res, -res, -res, 0, res) + lat, 90), -90))
+      nb <- c(geosphere::bearingRhumb(c(0, lat), nc), 360)
+      l <- numeric(9)
+      for(i in seq_along(dir)){
+            j <- max(which(dir[i] > nb))
+            prop <- (dir[i] - nb[j]) / (nb[j + 1] - nb[j])
+            l[j] <- l[j] + (1 - prop) * w[i]
+            l[j + 1] <- l[j + 1] + prop * w[i]
+      }
+      l <- c(l[1] + l[9], l[2:8])
+      l <- l * 3600 / geosphere::distGeo(c(0, lat), nc) / nrow(uv)
+      l[c(6:8, 1:5)]
+}

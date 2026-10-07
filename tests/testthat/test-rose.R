@@ -1,4 +1,4 @@
-# rose() and the edge_loadings() C++ routine ------------------------
+# rose() and the rose_accumulate() C++ routine ------------------------
 
 layers <- c("SW", "W", "NW", "N", "NE", "E", "SE", "S")
 
@@ -60,4 +60,30 @@ test_that("reversing the wind reverses the rose at the equator", {
 
 test_that("calm wind gives zero conductance", {
       expect_true(all(rose(c(40, 1, rep(0, 5), rep(0, 5))) == 0))
+})
+
+test_that("rose() matches an independent per-time-step reference implementation", {
+      set.seed(3)
+      for(lat in c(-89.5, -45, 0, 12.3, 60, 89.8)){
+            x <- c(lat, 0.5, stats::rnorm(40, 0, 6), stats::rnorm(40, 0, 6))
+            for(tr in list(identity, function(s) s^2, function(s) s^0)){
+                  expect_equal(rose(x, tr), rose_reference(x, tr), tolerance = 1e-12)
+            }
+      }
+      # winds exactly toward each neighbor's bearing, and due north (the 0/360 seam)
+      x <- c(30, 1, rose_input(30, c(0, 90, 180, 270, 360, 45), 4)[-(1:2)])
+      expect_equal(rose(x), rose_reference(x), tolerance = 1e-12)
+})
+
+test_that("a numeric trans gives the same result as the equivalent function", {
+      set.seed(4)
+      x <- c(40, 0.25, stats::rnorm(30, 0, 5), stats::rnorm(30, 0, 5))
+      expect_equal(rose(x, 1), rose(x, identity), tolerance = 1e-12)
+      expect_equal(rose(x, 2.5), rose(x, function(s) s^2.5), tolerance = 1e-12)
+      expect_equal(rose(x, 0), rose(x, function(s) s^0), tolerance = 1e-12)
+})
+
+test_that("a trans that isn't elementwise is rejected", {
+      x <- rose_input(20, 45, speed = 1:3)
+      expect_error(rose(x, trans = function(s) mean(s)), "elementwise")
 })

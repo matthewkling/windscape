@@ -5,3 +5,11 @@ edge_loadings <- function(b, w, nb) {
     .Call(`_windscape_edge_loadings`, b, w, nb)
 }
 
+wind_speeds <- function(m, k) {
+    .Call(`_windscape_wind_speeds`, m, k)
+}
+
+rose_accumulate <- function(m, k, w, p, nb, row, acc) {
+    invisible(.Call(`_windscape_rose_accumulate`, m, k, w, p, nb, row, acc))
+}
+
