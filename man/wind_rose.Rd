@@ -23,12 +23,14 @@ that order.}
 \item{trans}{Either a non-negative number indicating the power to raise wind speeds to, or
 an elementwise function of wind speed (it may be applied to many cells and time steps at
 once, so its result for each speed must not depend on the others); see details. When
-loading a saved rose, give the \code{trans} it was built with, which is recorded with the rose
-(e.g. for \code{\link[=combine_roses]{combine_roses()}}).}
+loading a saved rose, the \code{trans} it was built with, which is recorded with the rose (e.g.
+for \code{\link[=combine_roses]{combine_roses()}}); if not given, it is read from the file's metadata where recorded
+there (as in files from \code{\link[=download_wind_rose]{download_wind_rose()}}), and otherwise defaults to 1.}
 
 \item{n_steps}{When loading a saved rose, the number of time steps it summarizes, needed to
-combine it with other roses using \code{\link[=combine_roses]{combine_roses()}}. Ignored when building a rose, which
-records its number of time steps automatically.}
+combine it with other roses using \code{\link[=combine_roses]{combine_roses()}}; if not given, it is read from the
+file's metadata where recorded there. Ignored when building a rose, which records its
+number of time steps automatically.}
 
 \item{filename}{When building a rose, an optional file path to write the result to, as a
 raster file (e.g. a GeoTIFF).}

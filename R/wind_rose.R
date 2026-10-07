@@ -65,11 +65,13 @@ as_wind_rose <- function(x, trans, n_steps = NA_integer_){
 #' @param trans Either a non-negative number indicating the power to raise wind speeds to, or
 #'    an elementwise function of wind speed (it may be applied to many cells and time steps at
 #'    once, so its result for each speed must not depend on the others); see details. When
-#'    loading a saved rose, give the `trans` it was built with, which is recorded with the rose
-#'    (e.g. for [combine_roses()]).
+#'    loading a saved rose, the `trans` it was built with, which is recorded with the rose (e.g.
+#'    for [combine_roses()]); if not given, it is read from the file's metadata where recorded
+#'    there (as in files from [download_wind_rose()]), and otherwise defaults to 1.
 #' @param n_steps When loading a saved rose, the number of time steps it summarizes, needed to
-#'    combine it with other roses using [combine_roses()]. Ignored when building a rose, which
-#'    records its number of time steps automatically.
+#'    combine it with other roses using [combine_roses()]; if not given, it is read from the
+#'    file's metadata where recorded there. Ignored when building a rose, which records its
+#'    number of time steps automatically.
 #' @param filename When building a rose, an optional file path to write the result to, as a
 #'    raster file (e.g. a GeoTIFF).
 #' @param overwrite Logical. Whether to overwrite an existing `filename`.
@@ -96,7 +98,7 @@ wind_rose <- function(x, trans = 1, n_steps = NA_integer_, filename = NULL, over
             if(is.character(x)){
                   if(length(x) != 1) stop("`x` must be a single file path to load a saved wind rose; ",
                                           "to build a rose from files of wind data, use wind_series() first")
-                  if(!file.exists(x)) stop("file not found: ", x)
+                  if(!startsWith(x, "/vsi") && !file.exists(x)) stop("file not found: ", x)
                   x <- terra::rast(x)
             }
             if(!inherits(x, "SpatRaster"))
@@ -105,6 +107,19 @@ wind_rose <- function(x, trans = 1, n_steps = NA_integer_, filename = NULL, over
                   stop("`x` looks like wind data (layer names begin with u or v), not a saved wind rose; ",
                        "use wind_series() first")
             if(terra::nlyr(x) != 8) stop("a saved wind rose must have 8 layers; `x` has ", terra::nlyr(x))
+            meta <- rose_metadata(x)
+            if(!is.null(meta$trans)){
+                  if(missing(trans)) trans <- meta$trans
+                  else if(!same_trans(trans, meta$trans))
+                        warning("`trans` differs from the value recorded in the file (", meta$trans,
+                                "); using the `trans` given", call. = FALSE)
+            }
+            if(!is.null(meta$n_steps)){
+                  if(missing(n_steps)) n_steps <- meta$n_steps
+                  else if(!isTRUE(all.equal(n_steps, meta$n_steps)))
+                        warning("`n_steps` differs from the value recorded in the file (",
+                                meta$n_steps, "); using the `n_steps` given", call. = FALSE)
+            }
             return(as_wind_rose(x, trans = trans, n_steps = n_steps))
       }
 
@@ -143,6 +158,40 @@ wind_rose <- function(x, trans = 1, n_steps = NA_integer_, filename = NULL, over
       terra::values(out) <- rose_finish(acc, n, geo$nd, row)
       if(!is.null(filename)) out <- terra::writeRaster(out, filename, overwrite = overwrite)
       as_wind_rose(out, trans = trn, n_steps = n)
+}
+
+
+
+# Version of the windscape_* file metadata this package can read (see data-raw/cfsr_roses.R)
+rose_format_version <- 1
+
+# windscape_* metadata recorded in a saved rose's file (GDAL dataset metadata), as a list with
+# elements `n_steps` and `trans` where present. Empty for rasters not from a single file.
+rose_metadata <- function(x){
+      src <- terra::sources(x)
+      if(length(src) != 1 || !nzchar(src)) return(list())
+      m <- tryCatch(terra::describe(src, meta = TRUE), error = function(e) character())
+      m <- m[startsWith(m, "windscape_")]
+      if(length(m) == 0) return(list())
+      key <- sub("=.*$", "", sub("^windscape_", "", m))
+      val <- sub("^[^=]*=", "", m)
+      num <- function(k) if(k %in% key) suppressWarnings(as.numeric(val[match(k, key)])) else NA
+      fmt <- num("rose_format")
+      if(!is.na(fmt) && fmt > rose_format_version)
+            stop("this wind rose file was written in a newer format (", fmt, ") than this ",
+                 "version of windscape can read (", rose_format_version, "); update windscape",
+                 call. = FALSE)
+      out <- list()
+      if(!is.na(num("n_steps"))) out$n_steps <- num("n_steps")
+      if(!is.na(num("trans"))) out$trans <- num("trans")
+      out
+}
+
+# Do two `trans` specifications (numbers or functions) give the same transformation?
+same_trans <- function(a, b){
+      f <- function(t) if(is.numeric(t)) function(x) x^t else t
+      probe <- c(0, 0.5, 1, 2, 5, 10, 20, 50)
+      isTRUE(all.equal(f(a)(probe), f(b)(probe)))
 }
 
 

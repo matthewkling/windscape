@@ -23,7 +23,7 @@ by all the v layers, in time order.
 }
 \description{
 Creates a \code{wind_series}, a time series of wind fields, from a raster, a list of rasters, or
-one or more raster files, such as the monthly files saved by \code{\link[=ncar_download]{ncar_download()}}. Multiple
+one or more raster files, such as the monthly files saved by \code{\link[=download_wind_data]{download_wind_data()}}. Multiple
 inputs are combined into one series, in the order given, without reading the data into
 memory until needed.
 }
@@ -32,7 +32,7 @@ series <- windscape_example("wind_series")
 series
 
 \dontrun{
-# combine monthly files from ncar_download()
+# combine monthly files from download_wind_data()
 series <- wind_series(files)
 }
 }

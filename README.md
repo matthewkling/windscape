@@ -22,11 +22,11 @@ expansion. The package offers the following functionality:
 
 | Task | Description | Functions |
 |:---|:---|:---|
-| Get wind data | Download and import wind data rasters | `ncar_download()`, `ncar_land()`, `wind_series()`, `windscape_example()` |
+| Get wind data | Download and import wind data rasters | `download_wind_data()`, `download_land_mask()`, `wind_series()`, `windscape_example()` |
 | Model wind regimes | Summarize wind time series into | `wind_rose()`, `combine_roses()`, `weight_conductance()`, `downscale()` |
 | Map windsheds | Model a site’s upwind catchment area and downwind deposition shadow using *least cost path* or *random walk* approaches | `least_cost()`, `least_cost_paths()`, `random_walk()`, `ws_summarize()` |
 | Compute pairwise connectivity | Model directional connectivity among sets of sites | `pairwise_least_cost()`, `pairwise_random_walk()`, `check_cell_distance()` |
-| Test hypotheses | Run statistical significance tests about spatial relationships between wind and ecological outcomes | `pairwise_ratios()`, `pairwise_means()`, `mantel_test()` |
+| Test hypotheses | Run statistical significance tests about spatial relationships between wind and ecological outcomes | `mantel_test()`, `pairwise_ratios()`, `pairwise_means()`, `point_distance()` |
 | Trace airflow |  | `wind_trails()` |
 | Visualize | Map spatial wind patterns in ggplot2, including instantaneous wind fields, time-integrated wind regimes, and windsheds | `geom_wind_rose()`, `geom_wind_arrow()`, `geom_wind_trail()`, `geom_wind_path()`, `scale_fill_bearing()` |
 
@@ -41,8 +41,8 @@ remotes::install_github("matthewkling/windscape")
 
 ## Get wind data
 
-`ncar_download()` downloads hourly wind data from NCAR’s Geoscience Data
-Exchange, with no account needed. Datasets include ERA5 (1940 to
+`download_wind_data()` downloads hourly wind data from NCAR’s Geoscience
+Data Exchange, with no account needed. Datasets include ERA5 (1940 to
 present), CFSR (1979-2010), and CFSv2 (2011 to present). Data are
 clipped to your region on the server and saved as one file per month.
 
@@ -50,7 +50,7 @@ clipped to your region on the server and saved as one file per month.
 library(windscape)
 
 # a decade of 10 m altitude ERA5 winds for the western and central US, every 3rd hour
-files <- ncar_download("era5", xlim = c(-120, -90), ylim = c(30, 50),
+files <- download_wind_data("era5", xlim = c(-120, -90), ylim = c(30, 50),
                        years = 2011:2020, time_stride = 3, dir = "~/wind_data")
 ```
 

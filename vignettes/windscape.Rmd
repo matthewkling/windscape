@@ -101,13 +101,13 @@ directions. How long a record to use depends on the question: decades for proces
 flow that integrate over many generations, or a single season for dispersal during a flowering
 or sporulation period.
 
-`ncar_download()` downloads hourly wind data from NCAR's Geoscience Data Exchange, with no account
+`download_wind_data()` downloads hourly wind data from NCAR's Geoscience Data Exchange, with no account
 needed: ERA5 (1940 to present), CFSR (1979-2010), and CFSv2 (2011 to present). Data are clipped
 to a bounding box on the server and saved as one cached file per month, which
 `wind_series()` combines into one series:
 
 ```{r download, eval = FALSE}
-files <- ncar_download("era5", xlim = c(-120, -90), ylim = c(30, 50),
+files <- download_wind_data("era5", xlim = c(-120, -90), ylim = c(30, 50),
                        years = 2011:2020, time_stride = 3, dir = "~/wind_data")
 series <- wind_series(files)
 ```
@@ -171,7 +171,7 @@ ggplot(net_flow(rose), aes(x, y)) +
 
 Two optional steps can adjust a wind rose before modeling. `weight_conductance()` scales
 conductance by a raster of weights between 0 and 1, for example to reduce connectivity across
-open water for terrestrial organisms (`ncar_land()` downloads a matching land-water layer).
+open water for terrestrial organisms (`download_land_mask()` downloads a matching land-water layer).
 `downscale()` interpolates the wind rose onto a finer grid. It rarely changes least-cost results,
 but it does change random walk results, because a random walk's spread depends on cell size; see
 `?downscale` before using it.

@@ -10,19 +10,6 @@ Rcpp::Rostream<true>&  Rcpp::Rcout = Rcpp::Rcpp_cout_get();
 Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
-// edge_loadings
-NumericVector edge_loadings(NumericVector b, NumericVector w, NumericVector nb);
-RcppExport SEXP _windscape_edge_loadings(SEXP bSEXP, SEXP wSEXP, SEXP nbSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< NumericVector >::type b(bSEXP);
-    Rcpp::traits::input_parameter< NumericVector >::type w(wSEXP);
-    Rcpp::traits::input_parameter< NumericVector >::type nb(nbSEXP);
-    rcpp_result_gen = Rcpp::wrap(edge_loadings(b, w, nb));
-    return rcpp_result_gen;
-END_RCPP
-}
 // wind_speeds
 NumericMatrix wind_speeds(NumericMatrix m, int k);
 RcppExport SEXP _windscape_wind_speeds(SEXP mSEXP, SEXP kSEXP) {
@@ -53,7 +40,6 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_windscape_edge_loadings", (DL_FUNC) &_windscape_edge_loadings, 3},
     {"_windscape_wind_speeds", (DL_FUNC) &_windscape_wind_speeds, 2},
     {"_windscape_rose_accumulate", (DL_FUNC) &_windscape_rose_accumulate, 7},
     {NULL, NULL, 0}

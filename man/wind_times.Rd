@@ -14,7 +14,7 @@ A POSIXct vector (UTC), with one element per time step.
 }
 \description{
 Returns the time of each step of a \code{wind_series}, parsed from its layer names (like
-\code{"u 2000-01-01 06:00:00"}, as written by \code{\link[=ncar_download]{ncar_download()}}) or, if the names hold no times,
+\code{"u 2000-01-01 06:00:00"}, as written by \code{\link[=download_wind_data]{download_wind_data()}}) or, if the names hold no times,
 from the times set with \code{terra::time()}.
 }
 \examples{

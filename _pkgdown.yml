@@ -18,8 +18,8 @@ reference:
     Download hourly wind, and represent it as a time series (`wind_series`) or a
     single snapshot (`wind_field`).
   contents:
-  - ncar_download
-  - ncar_land
+  - download_wind_data
+  - download_land_mask
   - wind_series
   - wind_times
   - subset_series
@@ -32,6 +32,9 @@ reference:
     cell to its eight neighbors---the basis of both connectivity models.
   contents:
   - wind_rose
+  - download_wind_rose
+  - wind_rose_catalog
+  - wind_rose_cache
   - combine_roses
   - weight_conductance
   - net_flow

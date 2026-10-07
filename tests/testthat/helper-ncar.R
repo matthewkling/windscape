@@ -1,4 +1,4 @@
-# A fake NCAR NetCDF Subset Service for testing ncar_download() offline. fake_ncss() returns a
+# A fake NCAR NetCDF Subset Service for testing download_wind_data() offline. fake_ncss() returns a
 # replacement for ncss_fetch(url, dest) that parses the request URL and writes a NetCDF file
 # laid out like the real data set (ERA5, CFSR/CFSv2, or the ERA5 land mask), on a coarse 2 degree
 # global grid with 8 time steps per month. Values come from truth_u() and truth_v(), so tests can

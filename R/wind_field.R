@@ -7,7 +7,7 @@ setClass("wind_series",
 #' Create a wind_series
 #'
 #' Creates a `wind_series`, a time series of wind fields, from a raster, a list of rasters, or
-#' one or more raster files, such as the monthly files saved by [ncar_download()]. Multiple
+#' one or more raster files, such as the monthly files saved by [download_wind_data()]. Multiple
 #' inputs are combined into one series, in the order given, without reading the data into
 #' memory until needed.
 #'
@@ -27,7 +27,7 @@ setClass("wind_series",
 #' series
 #'
 #' \dontrun{
-#' # combine monthly files from ncar_download()
+#' # combine monthly files from download_wind_data()
 #' series <- wind_series(files)
 #' }
 #' @export
@@ -176,7 +176,7 @@ setMethod("mean", "wind_series", function(x, ..., na.rm = FALSE){
 #' Get the time of each step in a wind_series
 #'
 #' Returns the time of each step of a `wind_series`, parsed from its layer names (like
-#' `"u 2000-01-01 06:00:00"`, as written by [ncar_download()]) or, if the names hold no times,
+#' `"u 2000-01-01 06:00:00"`, as written by [download_wind_data()]) or, if the names hold no times,
 #' from the times set with `terra::time()`.
 #'
 #' @param x A `wind_series`.

@@ -68,17 +68,17 @@ spores carried high into the atmosphere.
 
 ## Downloading
 
-`ncar_download()` downloads data from NCAR's Geoscience Data Exchange, with no account needed:
+`download_wind_data()` downloads data from NCAR's Geoscience Data Exchange, with no account needed:
 
 ```{r download, eval = FALSE}
-files <- ncar_download("era5", level = "10m",
+files <- download_wind_data("era5", level = "10m",
                        xlim = c(-120, -90), ylim = c(30, 50),
                        years = 2011:2020, months = 1:12,
                        time_stride = 3, dir = "~/wind_data")
 ```
 
 Data are clipped to the bounding box on the server, so only the region you need is transferred,
-and each month is saved as a separate file (see `?ncar_download` for all options). A few choices
+and each month is saved as a separate file (see `?download_wind_data` for all options). A few choices
 deserve thought:
 
 - **Make the box larger than your study area.** Connectivity models lose particles across the
@@ -93,18 +93,18 @@ deserve thought:
 Downloads can be large: a decade of every-third-hour data for the box above is about 1 GB before
 compression, so start with a single month to check your settings.
 
-`ncar_download()` returns the paths of the monthly files. `wind_series()` combines them into
+`download_wind_data()` returns the paths of the monthly files. `wind_series()` combines them into
 a single `wind_series`, without reading the data into memory until needed:
 
 ```{r read, eval = FALSE}
 series <- wind_series(files)
 ```
 
-`ncar_land()` downloads a land-water layer on the same grid as the wind data, for use with
+`download_land_mask()` downloads a land-water layer on the same grid as the wind data, for use with
 `weight_conductance()` (see below):
 
 ```{r land, eval = FALSE}
-land <- ncar_land("era5", xlim = c(-120, -90), ylim = c(30, 50))
+land <- download_land_mask("era5", xlim = c(-120, -90), ylim = c(30, 50))
 ```
 
 
@@ -145,7 +145,7 @@ local times in different places.
 
 Pass the selected series to `wind_rose()` to build a rose from those time steps; this works for
 long records of downloaded files too (see below). When the selection is known in advance,
-`ncar_download()`'s `months` argument also avoids downloading data you won't use.
+`download_wind_data()`'s `months` argument also avoids downloading data you won't use.
 
 
 ## Bringing your own data
@@ -354,11 +354,11 @@ Two functions modify a wind rose before modeling connectivity.
 
 `weight_conductance()` multiplies conductance by a raster of weights, reducing connectivity
 through some cells. For example, for terrestrial organisms that can't establish over water,
-weighting by the land fraction from `ncar_land()` reduces connectivity across lakes and oceans
+weighting by the land fraction from `download_land_mask()` reduces connectivity across lakes and oceans
 (though propagules can still cross them):
 
 ```{r weight, eval = FALSE}
-land <- ncar_land("era5", xlim = c(-120, -90), ylim = c(30, 50))
+land <- download_land_mask("era5", xlim = c(-120, -90), ylim = c(30, 50))
 rose_land <- weight_conductance(rose, land)
 ```
 

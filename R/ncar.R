@@ -55,18 +55,19 @@
 #' @return A character vector of file paths, one per month, in chronological order (returned
 #'   invisibly if all files were already cached).
 #' @seealso [wind_series()] to load the files; [wind_rose()] to summarize them;
-#'   [ncar_land()] to download a matching land-water layer.
+#'   [download_land_mask()] to download a matching land-water layer; [download_wind_rose()] for
+#'   pre-built CFSR wind roses, which need no wind data downloads.
 #' @examples
 #' \dontrun{
 #' # every third hour of 10 m ERA5 wind for summer 2020, Pacific Northwest
-#' files <- ncar_download("era5", xlim = c(-125, -115), ylim = c(42, 49),
+#' files <- download_wind_data("era5", xlim = c(-125, -115), ylim = c(42, 49),
 #'                        years = 2020, months = 6:8, time_stride = 3,
 #'                        dir = "~/wind_data")
 #' ws <- wind_series(files)
 #' rose <- wind_rose(files)
 #' }
 #' @export
-ncar_download <- function(source = c("era5", "cfsr", "cfsv2"), level = "10m",
+download_wind_data <- function(source = c("era5", "cfsr", "cfsv2"), level = "10m",
                           xlim, ylim, years, months = 1:12, time_stride = 1,
                           dir = tempdir(), overwrite = FALSE, quiet = FALSE){
 
@@ -100,21 +101,21 @@ ncar_download <- function(source = c("era5", "cfsr", "cfsv2"), level = "10m",
 
 #' Download a land-water layer from NCAR
 #'
-#' Downloads a land layer matching the grid of [ncar_download()] data for the same `source` and
-#' bounding box, e.g. for weighting a wind rose to reduce conductance over water.
+#' Downloads a land layer matching the grid of [download_wind_data()] data for the same `source`
+#' and bounding box, e.g. for weighting a wind rose to reduce conductance over water.
 #'
 #' @param source Data set: `"era5"` or `"cfsr"`. (Not yet available for `"cfsv2"`.)
-#' @param xlim,ylim Bounding box; see [ncar_download()].
+#' @param xlim,ylim Bounding box; see [download_wind_data()].
 #' @return A single-layer `SpatRaster` named `"land"`. For ERA5 this is the land fraction of each
 #'   cell, from 0 (all water) to 1 (all land); use e.g. `land >= 0.5` for a binary layer. For CFSR
 #'   it is binary, 1 for land and 0 for water. (CFSR publishes no land mask, so it is derived from
 #'   which cells have soil temperature data.)
 #' @examples
 #' \dontrun{
-#' land <- ncar_land("era5", xlim = c(-125, -115), ylim = c(42, 49))
+#' land <- download_land_mask("era5", xlim = c(-125, -115), ylim = c(42, 49))
 #' }
 #' @export
-ncar_land <- function(source = c("era5", "cfsr", "cfsv2"), xlim, ylim){
+download_land_mask <- function(source = c("era5", "cfsr", "cfsv2"), xlim, ylim){
       source <- match.arg(source)
       if(!requireNamespace("ncdf4", quietly = TRUE))
             stop("the ncdf4 package is required to download NCAR data", call. = FALSE)
@@ -125,7 +126,7 @@ ncar_land <- function(source = c("era5", "cfsr", "cfsv2"), xlim, ylim){
                                 vars = c(land = "LSM")),
                     cfsr = list(path = "files/g/d093001/1980/soilt1.gdas.198001.grb2",
                                 vars = c(land = "Temperature_depth_below_surface_layer")),
-                    cfsv2 = stop("ncar_land() is not yet available for CFSv2", call. = FALSE))
+                    cfsv2 = stop("download_land_mask() is not yet available for CFSv2", call. = FALSE))
       g <- ncar_fetch_grid(req, bbox, time_stride = 1)
       x <- grid_to_rast(g, "land")[[1]]
       if(source == "cfsr") x <- terra::ifel(is.na(x), 0, 1)
@@ -188,7 +189,8 @@ current_year <- function() as.integer(format(Sys.Date(), "%Y"))
 
 days_in_month <- function(year, month){
       first <- as.Date(sprintf("%04d-%02d-01", year, month))
-      as.integer(format(seq(first, by = "month", length.out = 2)[2] - 1, "%d"))
+      after <- as.Date(sprintf("%04d-%02d-01", year + (month == 12), month %% 12 + 1))
+      as.integer(after - first)
 }
 
 

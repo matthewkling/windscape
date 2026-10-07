@@ -1,4 +1,4 @@
-# ncar_download(), wind_series(), ncar_land(), combine_roses() --------------------------
+# download_wind_data(), wind_series(), download_land_mask(), combine_roses() --------------------------
 # Downloads are tested against a fake server (helper-ncar.R); no network access is needed.
 
 # value of a raster layer at a lon/lat point
@@ -30,7 +30,7 @@ test_that("ERA5 download produces a monthly wind_series with correct values and 
       skip_if_not_installed("ncdf4")
       local_mocked_bindings(ncss_fetch = fake_ncss())
       dir <- withr::local_tempdir()
-      f <- ncar_download("era5", xlim = c(-120, -100), ylim = c(30, 40), years = 2005,
+      f <- download_wind_data("era5", xlim = c(-120, -100), ylim = c(30, 40), years = 2005,
                          months = 1:2, dir = dir, quiet = TRUE)
       expect_length(f, 2)
       expect_true(all(file.exists(f)))
@@ -54,7 +54,7 @@ test_that("boxes crossing the prime meridian and the antimeridian are assembled"
       dir <- withr::local_tempdir()
       t <- as.POSIXct("2005-01-01 03:00:00", tz = "UTC")
 
-      ws <- wind_series(ncar_download("era5", xlim = c(-10, 10), ylim = c(40, 50), years = 2005,
+      ws <- wind_series(download_wind_data("era5", xlim = c(-10, 10), ylim = c(40, 50), years = 2005,
                                            months = 1, dir = dir, quiet = TRUE))
       expect_length(log$urls, 4) # two pieces x two variables
       expect_equal(as.vector(terra::ext(ws))[1:2], c(xmin = -11, xmax = 11))
@@ -62,7 +62,7 @@ test_that("boxes crossing the prime meridian and the antimeridian are assembled"
       for(lon in c(-8, 0, 8))
             expect_equal(at(ws[["u 2005-01-01 03:00:00"]], lon, 44), truth_u(lon %% 360, 44, t), tolerance = 0.006)
 
-      ws <- wind_series(ncar_download("era5", xlim = c(170, 200), ylim = c(40, 50), years = 2005,
+      ws <- wind_series(download_wind_data("era5", xlim = c(170, 200), ylim = c(40, 50), years = 2005,
                                            months = 1, dir = dir, quiet = TRUE))
       expect_equal(as.vector(terra::ext(ws))[1:2], c(xmin = 169, xmax = 201))
       expect_equal(at(ws[["v 2005-01-01 03:00:00"]], 190, 44), truth_v(190, 44, t), tolerance = 0.006)
@@ -73,7 +73,7 @@ test_that("CFSR and CFSv2 downloads read their layout, levels, and time units", 
       log <- new.env()
       local_mocked_bindings(ncss_fetch = fake_ncss(log))
       dir <- withr::local_tempdir()
-      f <- ncar_download("cfsr", xlim = c(250, 270), ylim = c(30, 40), years = 2000, months = 4,
+      f <- download_wind_data("cfsr", xlim = c(250, 270), ylim = c(30, 40), years = 2000, months = 4,
                          dir = dir, quiet = TRUE)
       expect_match(log$urls[1], "files/g/d093001/2000/wnd10m.gdas.200004.grb2")
       ws <- wind_series(f)
@@ -83,7 +83,7 @@ test_that("CFSR and CFSv2 downloads read their layout, levels, and time units", 
       expect_equal(at(ws[["u 2000-04-01 08:00:00"]], 260, 34), truth_u(260, 34, t), tolerance = 0.006)
       expect_equal(at(ws[["v 2000-04-01 08:00:00"]], 260, 34), truth_v(260, 34, t), tolerance = 0.006)
 
-      ncar_download("cfsv2", level = "850hPa", xlim = c(250, 270), ylim = c(30, 40), years = 2015,
+      download_wind_data("cfsv2", level = "850hPa", xlim = c(250, 270), ylim = c(30, 40), years = 2015,
                     months = 4, dir = dir, quiet = TRUE)
       expect_match(utils::tail(log$urls, 1), "files/g/d094001/2015/wnd850.cdas1.201504.grb2")
       expect_match(utils::tail(log$urls, 1), "var=u-component_of_wind_isobaric")
@@ -93,7 +93,7 @@ test_that("time_stride thins time steps on the server", {
       skip_if_not_installed("ncdf4")
       log <- new.env()
       local_mocked_bindings(ncss_fetch = fake_ncss(log))
-      f <- ncar_download("era5", xlim = c(-120, -100), ylim = c(30, 40), years = 2005, months = 1,
+      f <- download_wind_data("era5", xlim = c(-120, -100), ylim = c(30, 40), years = 2005, months = 1,
                          time_stride = 3, dir = withr::local_tempdir(), quiet = TRUE)
       expect_match(log$urls[1], "timeStride=3")
       expect_match(basename(f), "_t3\\.tif$")
@@ -108,12 +108,12 @@ test_that("downloaded months are cached unless overwrite = TRUE", {
       local_mocked_bindings(ncss_fetch = fake_ncss(log))
       dir <- withr::local_tempdir()
       args <- list(source = "era5", xlim = c(-120, -100), ylim = c(30, 40), years = 2005, dir = dir)
-      do.call(ncar_download, c(args, list(months = 1, quiet = TRUE)))
+      do.call(download_wind_data, c(args, list(months = 1, quiet = TRUE)))
       n <- length(log$urls)
-      msg <- testthat::capture_messages(do.call(ncar_download, c(args, list(months = 1:2))))
+      msg <- testthat::capture_messages(do.call(download_wind_data, c(args, list(months = 1:2))))
       expect_true(any(grepl("1 month\\(s\\) already downloaded", msg)))
       expect_length(log$urls, 2 * n) # only month 2 was fetched
-      do.call(ncar_download, c(args, list(months = 1:2, overwrite = TRUE, quiet = TRUE)))
+      do.call(download_wind_data, c(args, list(months = 1:2, overwrite = TRUE, quiet = TRUE)))
       expect_length(log$urls, 4 * n)
 })
 
@@ -122,43 +122,43 @@ test_that("download falls back to netCDF-3 and reports server errors", {
       log <- new.env()
       local_mocked_bindings(ncss_fetch = fake_ncss(log, reject_netcdf4 = TRUE))
       dir <- withr::local_tempdir()
-      f <- ncar_download("era5", xlim = c(-120, -100), ylim = c(30, 40), years = 2005, months = 1,
+      f <- download_wind_data("era5", xlim = c(-120, -100), ylim = c(30, 40), years = 2005, months = 1,
                          dir = dir, quiet = TRUE)
       expect_true(file.exists(f))
       expect_match(log$urls[2], "accept=netcdf$")
 
       local_mocked_bindings(ncss_fetch = fake_ncss(html = TRUE))
-      expect_error(ncar_download("era5", xlim = c(-120, -100), ylim = c(30, 40), years = 2005,
+      expect_error(download_wind_data("era5", xlim = c(-120, -100), ylim = c(30, 40), years = 2005,
                                  months = 2, dir = dir, quiet = TRUE), "Request URL")
       expect_false(any(grepl("200502", list.files(dir)))) # no partial file left behind
 })
 
 test_that("invalid requests are rejected before downloading", {
-      expect_error(ncar_download("cfsr", xlim = c(0, 10), ylim = c(0, 10), years = 2015), "1979-2010")
-      expect_error(ncar_download("era5", level = "850hPa", xlim = c(0, 10), ylim = c(0, 10),
+      expect_error(download_wind_data("cfsr", xlim = c(0, 10), ylim = c(0, 10), years = 2015), "1979-2010")
+      expect_error(download_wind_data("era5", level = "850hPa", xlim = c(0, 10), ylim = c(0, 10),
                                  years = 2000), "\"10m\", \"100m\"")
-      expect_error(ncar_download("cfsv2", level = "100m", xlim = c(0, 10), ylim = c(0, 10),
+      expect_error(download_wind_data("cfsv2", level = "100m", xlim = c(0, 10), ylim = c(0, 10),
                                  years = 2015), "level")
-      expect_error(ncar_download("era5", xlim = c(0, 10), ylim = c(0, 10), years = 2000, months = 13),
+      expect_error(download_wind_data("era5", xlim = c(0, 10), ylim = c(0, 10), years = 2000, months = 13),
                    "months")
-      expect_error(ncar_download("era5", xlim = c(0, 10), ylim = c(0, 10), years = 2000, time_stride = 0),
+      expect_error(download_wind_data("era5", xlim = c(0, 10), ylim = c(0, 10), years = 2000, time_stride = 0),
                    "time_stride")
 })
 
 test_that("ERA5 land layer is a land fraction on the wind grid", {
       skip_if_not_installed("ncdf4")
       local_mocked_bindings(ncss_fetch = fake_ncss())
-      land <- ncar_land("era5", xlim = c(170, 200), ylim = c(40, 50))
+      land <- download_land_mask("era5", xlim = c(170, 200), ylim = c(40, 50))
       expect_equal(names(land), "land")
       expect_equal(at(land, 176, 44), 0)
       expect_equal(at(land, 190, 44), 0.75)
-      expect_error(ncar_land("cfsv2", xlim = c(0, 10), ylim = c(0, 10)), "not yet available")
+      expect_error(download_land_mask("cfsv2", xlim = c(0, 10), ylim = c(0, 10)), "not yet available")
 })
 
 test_that("a rose from downloaded files matches one built in chunks, and combines", {
       skip_if_not_installed("ncdf4")
       local_mocked_bindings(ncss_fetch = fake_ncss())
-      f <- ncar_download("era5", xlim = c(-120, -100), ylim = c(30, 40), years = 2005, months = 1:3,
+      f <- download_wind_data("era5", xlim = c(-120, -100), ylim = c(30, 40), years = 2005, months = 1:3,
                          dir = withr::local_tempdir(), quiet = TRUE)
       whole <- wind_rose(wind_series(f), trans = 2)
       chunked <- withr::with_options(list(windscape.chunk_values = 1),
