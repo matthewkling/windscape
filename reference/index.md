@@ -5,9 +5,9 @@
 Download hourly wind, and represent it as a time series (`wind_series`)
 or a single snapshot (`wind_field`).
 
-- [`ncar_download()`](https://matthewkling.github.io/windscape/reference/ncar_download.md)
+- [`download_wind_data()`](https://matthewkling.github.io/windscape/reference/download_wind_data.md)
   : Download hourly wind data from NCAR
-- [`ncar_land()`](https://matthewkling.github.io/windscape/reference/ncar_land.md)
+- [`download_land_mask()`](https://matthewkling.github.io/windscape/reference/download_land_mask.md)
   : Download a land-water layer from NCAR
 - [`wind_series()`](https://matthewkling.github.io/windscape/reference/wind_series.md)
   : Create a wind_series
@@ -27,6 +27,12 @@ each cell to its eight neighbors—the basis of both connectivity models.
 
 - [`wind_rose()`](https://matthewkling.github.io/windscape/reference/wind_rose.md)
   : Build or load a wind rose
+- [`download_wind_rose()`](https://matthewkling.github.io/windscape/reference/download_wind_rose.md)
+  : Download a pre-built wind rose
+- [`wind_rose_catalog()`](https://matthewkling.github.io/windscape/reference/wind_rose_catalog.md)
+  : Catalog of pre-built wind roses
+- [`wind_rose_cache()`](https://matthewkling.github.io/windscape/reference/wind_rose_cache.md)
+  : Manage the wind rose download cache
 - [`combine_roses()`](https://matthewkling.github.io/windscape/reference/combine_roses.md)
   : Combine wind roses built from different time periods
 - [`weight_conductance()`](https://matthewkling.github.io/windscape/reference/weight_conductance.md)

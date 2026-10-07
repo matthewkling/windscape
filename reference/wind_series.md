@@ -3,7 +3,7 @@
 Creates a `wind_series`, a time series of wind fields, from a raster, a
 list of rasters, or one or more raster files, such as the monthly files
 saved by
-[`ncar_download()`](https://matthewkling.github.io/windscape/reference/ncar_download.md).
+[`download_wind_data()`](https://matthewkling.github.io/windscape/reference/download_wind_data.md).
 Multiple inputs are combined into one series, in the order given,
 without reading the data into memory until needed.
 
@@ -60,7 +60,7 @@ series
 #> max values  :          0.7,           1,         0.9,           1,          0.7,         1.1, ...
 
 if (FALSE) { # \dontrun{
-# combine monthly files from ncar_download()
+# combine monthly files from download_wind_data()
 series <- wind_series(files)
 } # }
 ```

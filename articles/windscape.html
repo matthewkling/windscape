@@ -169,13 +169,13 @@ winds blowing in opposite directions. How long a record to use depends
 on the question: decades for processes like gene flow that integrate
 over many generations, or a single season for dispersal during a
 flowering or sporulation period.</p>
-<p><code><a href="../reference/ncar_download.html">ncar_download()</a></code> downloads hourly wind data from NCAR’s
-Geoscience Data Exchange, with no account needed: ERA5 (1940 to
+<p><code><a href="../reference/download_wind_data.html">download_wind_data()</a></code> downloads hourly wind data from
+NCAR’s Geoscience Data Exchange, with no account needed: ERA5 (1940 to
 present), CFSR (1979-2010), and CFSv2 (2011 to present). Data are
 clipped to a bounding box on the server and saved as one cached file per
 month, which <code><a href="../reference/wind_series.html">wind_series()</a></code> combines into one series:</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">files</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/ncar_download.html">ncar_download</a></span><span class="op">(</span><span class="st">"era5"</span>, xlim <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">120</span>, <span class="op">-</span><span class="fl">90</span><span class="op">)</span>, ylim <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">30</span>, <span class="fl">50</span><span class="op">)</span>,</span>
+<code class="sourceCode R"><span><span class="va">files</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/download_wind_data.html">download_wind_data</a></span><span class="op">(</span><span class="st">"era5"</span>, xlim <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">120</span>, <span class="op">-</span><span class="fl">90</span><span class="op">)</span>, ylim <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">30</span>, <span class="fl">50</span><span class="op">)</span>,</span>
 <span>                       years <span class="op">=</span> <span class="fl">2011</span><span class="op">:</span><span class="fl">2020</span>, time_stride <span class="op">=</span> <span class="fl">3</span>, dir <span class="op">=</span> <span class="st">"~/wind_data"</span><span class="op">)</span></span>
 <span><span class="va">series</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/wind_series.html">wind_series</a></span><span class="op">(</span><span class="va">files</span><span class="op">)</span></span></code></pre></div>
 <p>Wind data from other sources can be used too. Load it as a
@@ -246,11 +246,12 @@ balance. It returns a wind field, so it can be plotted the same way:</p>
 <p>Two optional steps can adjust a wind rose before modeling.
 <code><a href="../reference/weight_conductance.html">weight_conductance()</a></code> scales conductance by a raster of
 weights between 0 and 1, for example to reduce connectivity across open
-water for terrestrial organisms (<code><a href="../reference/ncar_land.html">ncar_land()</a></code> downloads a
-matching land-water layer). <code><a href="../reference/downscale.html">downscale()</a></code> interpolates the
-wind rose onto a finer grid. It rarely changes least-cost results, but
-it does change random walk results, because a random walk’s spread
-depends on cell size; see <code><a href="../reference/downscale.html">?downscale</a></code> before using it.</p>
+water for terrestrial organisms (<code><a href="../reference/download_land_mask.html">download_land_mask()</a></code>
+downloads a matching land-water layer). <code><a href="../reference/downscale.html">downscale()</a></code>
+interpolates the wind rose onto a finer grid. It rarely changes
+least-cost results, but it does change random walk results, because a
+random walk’s spread depends on cell size; see <code><a href="../reference/downscale.html">?downscale</a></code>
+before using it.</p>
 </div>
 <div class="section level2">
 <h2 id="connectivity-models">Connectivity models<a class="anchor" aria-label="anchor" href="#connectivity-models"></a>

@@ -15,6 +15,9 @@
 <url><loc>https://matthewkling.github.io/windscape/reference/cell_distance.html</loc></url>
 <url><loc>https://matthewkling.github.io/windscape/reference/check_cell_distance.html</loc></url>
 <url><loc>https://matthewkling.github.io/windscape/reference/combine_roses.html</loc></url>
+<url><loc>https://matthewkling.github.io/windscape/reference/download_land_mask.html</loc></url>
+<url><loc>https://matthewkling.github.io/windscape/reference/download_wind_data.html</loc></url>
+<url><loc>https://matthewkling.github.io/windscape/reference/download_wind_rose.html</loc></url>
 <url><loc>https://matthewkling.github.io/windscape/reference/downscale.html</loc></url>
 <url><loc>https://matthewkling.github.io/windscape/reference/fortify.windscape.html</loc></url>
 <url><loc>https://matthewkling.github.io/windscape/reference/generate_particles.html</loc></url>
@@ -29,8 +32,6 @@
 <url><loc>https://matthewkling.github.io/windscape/reference/least_cost_paths.html</loc></url>
 <url><loc>https://matthewkling.github.io/windscape/reference/mantel_test.html</loc></url>
 <url><loc>https://matthewkling.github.io/windscape/reference/mean-wind_series-method.html</loc></url>
-<url><loc>https://matthewkling.github.io/windscape/reference/ncar_download.html</loc></url>
-<url><loc>https://matthewkling.github.io/windscape/reference/ncar_land.html</loc></url>
 <url><loc>https://matthewkling.github.io/windscape/reference/net_flow.html</loc></url>
 <url><loc>https://matthewkling.github.io/windscape/reference/pairwise_least_cost.html</loc></url>
 <url><loc>https://matthewkling.github.io/windscape/reference/pairwise_means.html</loc></url>
@@ -52,6 +53,8 @@
 <url><loc>https://matthewkling.github.io/windscape/reference/wind_rose-class.html</loc></url>
 <url><loc>https://matthewkling.github.io/windscape/reference/wind_rose-grid.html</loc></url>
 <url><loc>https://matthewkling.github.io/windscape/reference/wind_rose.html</loc></url>
+<url><loc>https://matthewkling.github.io/windscape/reference/wind_rose_cache.html</loc></url>
+<url><loc>https://matthewkling.github.io/windscape/reference/wind_rose_catalog.html</loc></url>
 <url><loc>https://matthewkling.github.io/windscape/reference/wind_series-class.html</loc></url>
 <url><loc>https://matthewkling.github.io/windscape/reference/wind_series.html</loc></url>
 <url><loc>https://matthewkling.github.io/windscape/reference/wind_times.html</loc></url>

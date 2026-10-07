@@ -34,18 +34,22 @@ wind_rose(
   Either a non-negative number indicating the power to raise wind speeds
   to, or an elementwise function of wind speed (it may be applied to
   many cells and time steps at once, so its result for each speed must
-  not depend on the others); see details. When loading a saved rose,
-  give the `trans` it was built with, which is recorded with the rose
-  (e.g. for
-  [`combine_roses()`](https://matthewkling.github.io/windscape/reference/combine_roses.md)).
+  not depend on the others); see details. When loading a saved rose, the
+  `trans` it was built with, which is recorded with the rose (e.g. for
+  [`combine_roses()`](https://matthewkling.github.io/windscape/reference/combine_roses.md));
+  if not given, it is read from the file's metadata where recorded there
+  (as in files from
+  [`download_wind_rose()`](https://matthewkling.github.io/windscape/reference/download_wind_rose.md)),
+  and otherwise defaults to 1.
 
 - n_steps:
 
   When loading a saved rose, the number of time steps it summarizes,
   needed to combine it with other roses using
-  [`combine_roses()`](https://matthewkling.github.io/windscape/reference/combine_roses.md).
-  Ignored when building a rose, which records its number of time steps
-  automatically.
+  [`combine_roses()`](https://matthewkling.github.io/windscape/reference/combine_roses.md);
+  if not given, it is read from the file's metadata where recorded
+  there. Ignored when building a rose, which records its number of time
+  steps automatically.
 
 - filename:
 

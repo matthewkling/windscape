@@ -69,13 +69,13 @@ carried high into the atmosphere.
 
 ## Downloading
 
-[`ncar_download()`](https://matthewkling.github.io/windscape/reference/ncar_download.md)
+[`download_wind_data()`](https://matthewkling.github.io/windscape/reference/download_wind_data.md)
 downloads data from NCAR’s Geoscience Data Exchange, with no account
 needed:
 
 ``` r
 
-files <- ncar_download("era5", level = "10m",
+files <- download_wind_data("era5", level = "10m",
                        xlim = c(-120, -90), ylim = c(30, 50),
                        years = 2011:2020, months = 1:12,
                        time_stride = 3, dir = "~/wind_data")
@@ -83,7 +83,7 @@ files <- ncar_download("era5", level = "10m",
 
 Data are clipped to the bounding box on the server, so only the region
 you need is transferred, and each month is saved as a separate file (see
-[`?ncar_download`](https://matthewkling.github.io/windscape/reference/ncar_download.md)
+[`?download_wind_data`](https://matthewkling.github.io/windscape/reference/download_wind_data.md)
 for all options). A few choices deserve thought:
 
 - **Make the box larger than your study area.** Connectivity models lose
@@ -102,7 +102,7 @@ Downloads can be large: a decade of every-third-hour data for the box
 above is about 1 GB before compression, so start with a single month to
 check your settings.
 
-[`ncar_download()`](https://matthewkling.github.io/windscape/reference/ncar_download.md)
+[`download_wind_data()`](https://matthewkling.github.io/windscape/reference/download_wind_data.md)
 returns the paths of the monthly files.
 [`wind_series()`](https://matthewkling.github.io/windscape/reference/wind_series.md)
 combines them into a single `wind_series`, without reading the data into
@@ -113,7 +113,7 @@ memory until needed:
 series <- wind_series(files)
 ```
 
-[`ncar_land()`](https://matthewkling.github.io/windscape/reference/ncar_land.md)
+[`download_land_mask()`](https://matthewkling.github.io/windscape/reference/download_land_mask.md)
 downloads a land-water layer on the same grid as the wind data, for use
 with
 [`weight_conductance()`](https://matthewkling.github.io/windscape/reference/weight_conductance.md)
@@ -121,7 +121,7 @@ with
 
 ``` r
 
-land <- ncar_land("era5", xlim = c(-120, -90), ylim = c(30, 50))
+land <- download_land_mask("era5", xlim = c(-120, -90), ylim = c(30, 50))
 ```
 
 ## Choosing the time window
@@ -175,7 +175,7 @@ Pass the selected series to
 to build a rose from those time steps; this works for long records of
 downloaded files too (see below). When the selection is known in
 advance,
-[`ncar_download()`](https://matthewkling.github.io/windscape/reference/ncar_download.md)’s
+[`download_wind_data()`](https://matthewkling.github.io/windscape/reference/download_wind_data.md)’s
 `months` argument also avoids downloading data you won’t use.
 
 ## Bringing your own data
@@ -464,13 +464,13 @@ Two functions modify a wind rose before modeling connectivity.
 multiplies conductance by a raster of weights, reducing connectivity
 through some cells. For example, for terrestrial organisms that can’t
 establish over water, weighting by the land fraction from
-[`ncar_land()`](https://matthewkling.github.io/windscape/reference/ncar_land.md)
+[`download_land_mask()`](https://matthewkling.github.io/windscape/reference/download_land_mask.md)
 reduces connectivity across lakes and oceans (though propagules can
 still cross them):
 
 ``` r
 
-land <- ncar_land("era5", xlim = c(-120, -90), ylim = c(30, 50))
+land <- download_land_mask("era5", xlim = c(-120, -90), ylim = c(30, 50))
 rose_land <- weight_conductance(rose, land)
 ```
 

@@ -17,11 +17,11 @@ expansion. The package offers the following functionality:
 
 | Task | Description | Functions |
 |:---|:---|:---|
-| Get wind data | Download and import wind data rasters | [`ncar_download()`](https://matthewkling.github.io/windscape/reference/ncar_download.md), [`ncar_land()`](https://matthewkling.github.io/windscape/reference/ncar_land.md), [`wind_series()`](https://matthewkling.github.io/windscape/reference/wind_series.md), [`windscape_example()`](https://matthewkling.github.io/windscape/reference/windscape_example.md) |
+| Get wind data | Download and import wind data rasters | [`download_wind_data()`](https://matthewkling.github.io/windscape/reference/download_wind_data.md), [`download_land_mask()`](https://matthewkling.github.io/windscape/reference/download_land_mask.md), [`wind_series()`](https://matthewkling.github.io/windscape/reference/wind_series.md), [`windscape_example()`](https://matthewkling.github.io/windscape/reference/windscape_example.md) |
 | Model wind regimes | Summarize wind time series into | [`wind_rose()`](https://matthewkling.github.io/windscape/reference/wind_rose.md), [`combine_roses()`](https://matthewkling.github.io/windscape/reference/combine_roses.md), [`weight_conductance()`](https://matthewkling.github.io/windscape/reference/weight_conductance.md), [`downscale()`](https://matthewkling.github.io/windscape/reference/downscale.md) |
 | Map windsheds | Model a site’s upwind catchment area and downwind deposition shadow using *least cost path* or *random walk* approaches | [`least_cost()`](https://matthewkling.github.io/windscape/reference/least_cost.md), [`least_cost_paths()`](https://matthewkling.github.io/windscape/reference/least_cost_paths.md), [`random_walk()`](https://matthewkling.github.io/windscape/reference/random_walk.md), [`ws_summarize()`](https://matthewkling.github.io/windscape/reference/ws_summarize.md) |
 | Compute pairwise connectivity | Model directional connectivity among sets of sites | [`pairwise_least_cost()`](https://matthewkling.github.io/windscape/reference/pairwise_least_cost.md), [`pairwise_random_walk()`](https://matthewkling.github.io/windscape/reference/pairwise_random_walk.md), [`check_cell_distance()`](https://matthewkling.github.io/windscape/reference/check_cell_distance.md) |
-| Test hypotheses | Run statistical significance tests about spatial relationships between wind and ecological outcomes | [`pairwise_ratios()`](https://matthewkling.github.io/windscape/reference/pairwise_ratios.md), [`pairwise_means()`](https://matthewkling.github.io/windscape/reference/pairwise_means.md), [`mantel_test()`](https://matthewkling.github.io/windscape/reference/mantel_test.md) |
+| Test hypotheses | Run statistical significance tests about spatial relationships between wind and ecological outcomes | [`mantel_test()`](https://matthewkling.github.io/windscape/reference/mantel_test.md), [`pairwise_ratios()`](https://matthewkling.github.io/windscape/reference/pairwise_ratios.md), [`pairwise_means()`](https://matthewkling.github.io/windscape/reference/pairwise_means.md), [`point_distance()`](https://matthewkling.github.io/windscape/reference/point_distance.md) |
 | Trace airflow |  | [`wind_trails()`](https://matthewkling.github.io/windscape/reference/wind_trails.md) |
 | Visualize | Map spatial wind patterns in ggplot2, including instantaneous wind fields, time-integrated wind regimes, and windsheds | [`geom_wind_rose()`](https://matthewkling.github.io/windscape/reference/geom_wind_rose.md), [`geom_wind_arrow()`](https://matthewkling.github.io/windscape/reference/geom_wind_arrow.md), [`geom_wind_trail()`](https://matthewkling.github.io/windscape/reference/geom_wind_trail.md), [`geom_wind_path()`](https://matthewkling.github.io/windscape/reference/geom_wind_path.md), [`scale_fill_bearing()`](https://matthewkling.github.io/windscape/reference/scale_fill_bearing.md) |
 
@@ -37,7 +37,7 @@ remotes::install_github("matthewkling/windscape")
 
 ## Get wind data
 
-[`ncar_download()`](https://matthewkling.github.io/windscape/reference/ncar_download.md)
+[`download_wind_data()`](https://matthewkling.github.io/windscape/reference/download_wind_data.md)
 downloads hourly wind data from NCAR’s Geoscience Data Exchange, with no
 account needed. Datasets include ERA5 (1940 to present), CFSR
 (1979-2010), and CFSv2 (2011 to present). Data are clipped to your
@@ -48,7 +48,7 @@ region on the server and saved as one file per month.
 library(windscape)
 
 # a decade of 10 m altitude ERA5 winds for the western and central US, every 3rd hour
-files <- ncar_download("era5", xlim = c(-120, -90), ylim = c(30, 50),
+files <- download_wind_data("era5", xlim = c(-120, -90), ylim = c(30, 50),
                        years = 2011:2020, time_stride = 3, dir = "~/wind_data")
 ```
 

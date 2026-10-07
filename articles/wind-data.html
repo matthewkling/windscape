@@ -164,17 +164,17 @@ carried high into the atmosphere.</p>
 <div class="section level2">
 <h2 id="downloading">Downloading<a class="anchor" aria-label="anchor" href="#downloading"></a>
 </h2>
-<p><code><a href="../reference/ncar_download.html">ncar_download()</a></code> downloads data from NCAR’s Geoscience
-Data Exchange, with no account needed:</p>
+<p><code><a href="../reference/download_wind_data.html">download_wind_data()</a></code> downloads data from NCAR’s
+Geoscience Data Exchange, with no account needed:</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">files</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/ncar_download.html">ncar_download</a></span><span class="op">(</span><span class="st">"era5"</span>, level <span class="op">=</span> <span class="st">"10m"</span>,</span>
+<code class="sourceCode R"><span><span class="va">files</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/download_wind_data.html">download_wind_data</a></span><span class="op">(</span><span class="st">"era5"</span>, level <span class="op">=</span> <span class="st">"10m"</span>,</span>
 <span>                       xlim <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">120</span>, <span class="op">-</span><span class="fl">90</span><span class="op">)</span>, ylim <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">30</span>, <span class="fl">50</span><span class="op">)</span>,</span>
 <span>                       years <span class="op">=</span> <span class="fl">2011</span><span class="op">:</span><span class="fl">2020</span>, months <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">12</span>,</span>
 <span>                       time_stride <span class="op">=</span> <span class="fl">3</span>, dir <span class="op">=</span> <span class="st">"~/wind_data"</span><span class="op">)</span></span></code></pre></div>
 <p>Data are clipped to the bounding box on the server, so only the
 region you need is transferred, and each month is saved as a separate
-file (see <code><a href="../reference/ncar_download.html">?ncar_download</a></code> for all options). A few choices
-deserve thought:</p>
+file (see <code><a href="../reference/download_wind_data.html">?download_wind_data</a></code> for all options). A few
+choices deserve thought:</p>
 <ul>
 <li>
 <strong>Make the box larger than your study area.</strong>
@@ -194,17 +194,17 @@ downloads the new ones. The default is a temporary directory.</li>
 <p>Downloads can be large: a decade of every-third-hour data for the box
 above is about 1 GB before compression, so start with a single month to
 check your settings.</p>
-<p><code><a href="../reference/ncar_download.html">ncar_download()</a></code> returns the paths of the monthly files.
-<code><a href="../reference/wind_series.html">wind_series()</a></code> combines them into a single
+<p><code><a href="../reference/download_wind_data.html">download_wind_data()</a></code> returns the paths of the monthly
+files. <code><a href="../reference/wind_series.html">wind_series()</a></code> combines them into a single
 <code>wind_series</code>, without reading the data into memory until
 needed:</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">series</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/wind_series.html">wind_series</a></span><span class="op">(</span><span class="va">files</span><span class="op">)</span></span></code></pre></div>
-<p><code><a href="../reference/ncar_land.html">ncar_land()</a></code> downloads a land-water layer on the same
-grid as the wind data, for use with <code><a href="../reference/weight_conductance.html">weight_conductance()</a></code>
-(see below):</p>
+<p><code><a href="../reference/download_land_mask.html">download_land_mask()</a></code> downloads a land-water layer on the
+same grid as the wind data, for use with
+<code><a href="../reference/weight_conductance.html">weight_conductance()</a></code> (see below):</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">land</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/ncar_land.html">ncar_land</a></span><span class="op">(</span><span class="st">"era5"</span>, xlim <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">120</span>, <span class="op">-</span><span class="fl">90</span><span class="op">)</span>, ylim <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">30</span>, <span class="fl">50</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="va">land</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/download_land_mask.html">download_land_mask</a></span><span class="op">(</span><span class="st">"era5"</span>, xlim <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">120</span>, <span class="op">-</span><span class="fl">90</span><span class="op">)</span>, ylim <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">30</span>, <span class="fl">50</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="choosing-the-time-window">Choosing the time window<a class="anchor" aria-label="anchor" href="#choosing-the-time-window"></a>
@@ -253,8 +253,8 @@ different places.</p>
 <p>Pass the selected series to <code><a href="../reference/wind_rose.html">wind_rose()</a></code> to build a rose
 from those time steps; this works for long records of downloaded files
 too (see below). When the selection is known in advance,
-<code><a href="../reference/ncar_download.html">ncar_download()</a></code>’s <code>months</code> argument also avoids
-downloading data you won’t use.</p>
+<code><a href="../reference/download_wind_data.html">download_wind_data()</a></code>’s <code>months</code> argument also
+avoids downloading data you won’t use.</p>
 </div>
 <div class="section level2">
 <h2 id="bringing-your-own-data">Bringing your own data<a class="anchor" aria-label="anchor" href="#bringing-your-own-data"></a>
@@ -487,10 +487,11 @@ material more evenly.</p>
 <p><code><a href="../reference/weight_conductance.html">weight_conductance()</a></code> multiplies conductance by a raster
 of weights, reducing connectivity through some cells. For example, for
 terrestrial organisms that can’t establish over water, weighting by the
-land fraction from <code><a href="../reference/ncar_land.html">ncar_land()</a></code> reduces connectivity across
-lakes and oceans (though propagules can still cross them):</p>
+land fraction from <code><a href="../reference/download_land_mask.html">download_land_mask()</a></code> reduces
+connectivity across lakes and oceans (though propagules can still cross
+them):</p>
 <div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">land</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/ncar_land.html">ncar_land</a></span><span class="op">(</span><span class="st">"era5"</span>, xlim <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">120</span>, <span class="op">-</span><span class="fl">90</span><span class="op">)</span>, ylim <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">30</span>, <span class="fl">50</span><span class="op">)</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="va">land</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/download_land_mask.html">download_land_mask</a></span><span class="op">(</span><span class="st">"era5"</span>, xlim <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">120</span>, <span class="op">-</span><span class="fl">90</span><span class="op">)</span>, ylim <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">30</span>, <span class="fl">50</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="va">rose_land</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/weight_conductance.html">weight_conductance</a></span><span class="op">(</span><span class="va">rose</span>, <span class="va">land</span><span class="op">)</span></span></code></pre></div>
 <p><code><a href="../reference/downscale.html">downscale()</a></code> refines the grid of a wind rose by
 interpolation. This matters when sites are only a few grid cells apart;

@@ -117,7 +117,7 @@ decades for processes like gene flow that integrate over many
 generations, or a single season for dispersal during a flowering or
 sporulation period.
 
-[`ncar_download()`](https://matthewkling.github.io/windscape/reference/ncar_download.md)
+[`download_wind_data()`](https://matthewkling.github.io/windscape/reference/download_wind_data.md)
 downloads hourly wind data from NCAR’s Geoscience Data Exchange, with no
 account needed: ERA5 (1940 to present), CFSR (1979-2010), and CFSv2
 (2011 to present). Data are clipped to a bounding box on the server and
@@ -127,7 +127,7 @@ combines into one series:
 
 ``` r
 
-files <- ncar_download("era5", xlim = c(-120, -90), ylim = c(30, 50),
+files <- download_wind_data("era5", xlim = c(-120, -90), ylim = c(30, 50),
                        years = 2011:2020, time_stride = 3, dir = "~/wind_data")
 series <- wind_series(files)
 ```
@@ -219,7 +219,7 @@ Two optional steps can adjust a wind rose before modeling.
 [`weight_conductance()`](https://matthewkling.github.io/windscape/reference/weight_conductance.md)
 scales conductance by a raster of weights between 0 and 1, for example
 to reduce connectivity across open water for terrestrial organisms
-([`ncar_land()`](https://matthewkling.github.io/windscape/reference/ncar_land.md)
+([`download_land_mask()`](https://matthewkling.github.io/windscape/reference/download_land_mask.md)
 downloads a matching land-water layer).
 [`downscale()`](https://matthewkling.github.io/windscape/reference/downscale.md)
 interpolates the wind rose onto a finer grid. It rarely changes

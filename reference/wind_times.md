@@ -2,7 +2,7 @@
 
 Returns the time of each step of a `wind_series`, parsed from its layer
 names (like `"u 2000-01-01 06:00:00"`, as written by
-[`ncar_download()`](https://matthewkling.github.io/windscape/reference/ncar_download.md))
+[`download_wind_data()`](https://matthewkling.github.io/windscape/reference/download_wind_data.md))
 or, if the names hold no times, from the times set with
 [`terra::time()`](https://rspatial.github.io/terra/reference/time.html).
 

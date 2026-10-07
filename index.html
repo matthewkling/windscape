@@ -78,7 +78,7 @@
 <td align="left">Get wind data</td>
 <td align="left">Download and import wind data rasters</td>
 <td align="left">
-<code><a href="reference/ncar_download.html">ncar_download()</a></code>, <code><a href="reference/ncar_land.html">ncar_land()</a></code>, <code><a href="reference/wind_series.html">wind_series()</a></code>, <code><a href="reference/windscape_example.html">windscape_example()</a></code>
+<code><a href="reference/download_wind_data.html">download_wind_data()</a></code>, <code><a href="reference/download_land_mask.html">download_land_mask()</a></code>, <code><a href="reference/wind_series.html">wind_series()</a></code>, <code><a href="reference/windscape_example.html">windscape_example()</a></code>
 </td>
 </tr>
 <tr>
@@ -106,7 +106,7 @@
 <td align="left">Test hypotheses</td>
 <td align="left">Run statistical significance tests about spatial relationships between wind and ecological outcomes</td>
 <td align="left">
-<code><a href="reference/pairwise_ratios.html">pairwise_ratios()</a></code>, <code><a href="reference/pairwise_means.html">pairwise_means()</a></code>, <code><a href="reference/mantel_test.html">mantel_test()</a></code>
+<code><a href="reference/mantel_test.html">mantel_test()</a></code>, <code><a href="reference/pairwise_ratios.html">pairwise_ratios()</a></code>, <code><a href="reference/pairwise_means.html">pairwise_means()</a></code>, <code><a href="reference/point_distance.html">point_distance()</a></code>
 </td>
 </tr>
 <tr>
@@ -134,12 +134,12 @@
 <div class="section level2">
 <h2 id="get-wind-data">Get wind data<a class="anchor" aria-label="anchor" href="#get-wind-data"></a>
 </h2>
-<p><code><a href="reference/ncar_download.html">ncar_download()</a></code> downloads hourly wind data from NCAR’s Geoscience Data Exchange, with no account needed. Datasets include ERA5 (1940 to present), CFSR (1979-2010), and CFSv2 (2011 to present). Data are clipped to your region on the server and saved as one file per month.</p>
+<p><code><a href="reference/download_wind_data.html">download_wind_data()</a></code> downloads hourly wind data from NCAR’s Geoscience Data Exchange, with no account needed. Datasets include ERA5 (1940 to present), CFSR (1979-2010), and CFSv2 (2011 to present). Data are clipped to your region on the server and saved as one file per month.</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://matthewkling.github.io/windscape/">windscape</a></span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># a decade of 10 m altitude ERA5 winds for the western and central US, every 3rd hour</span></span>
-<span><span class="va">files</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/ncar_download.html">ncar_download</a></span><span class="op">(</span><span class="st">"era5"</span>, xlim <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">120</span>, <span class="op">-</span><span class="fl">90</span><span class="op">)</span>, ylim <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">30</span>, <span class="fl">50</span><span class="op">)</span>,</span>
+<span><span class="va">files</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/download_wind_data.html">download_wind_data</a></span><span class="op">(</span><span class="st">"era5"</span>, xlim <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">120</span>, <span class="op">-</span><span class="fl">90</span><span class="op">)</span>, ylim <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">30</span>, <span class="fl">50</span><span class="op">)</span>,</span>
 <span>                       years <span class="op">=</span> <span class="fl">2011</span><span class="op">:</span><span class="fl">2020</span>, time_stride <span class="op">=</span> <span class="fl">3</span>, dir <span class="op">=</span> <span class="st">"~/wind_data"</span><span class="op">)</span></span></code></pre></div>
 <div class="section level3">
 <h3 id="visualize-wind-fields">Visualize wind fields<a class="anchor" aria-label="anchor" href="#visualize-wind-fields"></a>

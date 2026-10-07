@@ -77,14 +77,16 @@ that order.</p></dd>
 <dd><p>Either a non-negative number indicating the power to raise wind speeds to, or
 an elementwise function of wind speed (it may be applied to many cells and time steps at
 once, so its result for each speed must not depend on the others); see details. When
-loading a saved rose, give the <code>trans</code> it was built with, which is recorded with the rose
-(e.g. for <code><a href="combine_roses.html">combine_roses()</a></code>).</p></dd>
+loading a saved rose, the <code>trans</code> it was built with, which is recorded with the rose (e.g.
+for <code><a href="combine_roses.html">combine_roses()</a></code>); if not given, it is read from the file's metadata where recorded
+there (as in files from <code><a href="download_wind_rose.html">download_wind_rose()</a></code>), and otherwise defaults to 1.</p></dd>
 
 
 <dt id="arg-n-steps">n_steps<a class="anchor" aria-label="anchor" href="#arg-n-steps"></a></dt>
 <dd><p>When loading a saved rose, the number of time steps it summarizes, needed to
-combine it with other roses using <code><a href="combine_roses.html">combine_roses()</a></code>. Ignored when building a rose, which
-records its number of time steps automatically.</p></dd>
+combine it with other roses using <code><a href="combine_roses.html">combine_roses()</a></code>; if not given, it is read from the
+file's metadata where recorded there. Ignored when building a rose, which records its
+number of time steps automatically.</p></dd>
 
 
 <dt id="arg-filename">filename<a class="anchor" aria-label="anchor" href="#arg-filename"></a></dt>
