@@ -100,6 +100,7 @@ rose_reference <- function(x, trans = identity){
       res <- x[2]
       uv <- matrix(x[-(1:2)], ncol = 2)
       w <- trans(sqrt(uv[, 1]^2 + uv[, 2]^2))
+      w[uv[, 1] == 0 & uv[, 2] == 0] <- 0   # calm steps have no direction
       dir <- atan2(uv[, 2], -uv[, 1]) * 180 / pi - 90
       dir[dir < -180] <- dir[dir < -180] + 360
       dir[dir < 0] <- dir[dir < 0] + 360

@@ -22,7 +22,8 @@ NumericMatrix wind_speeds(NumericMatrix m, int k) {
 // Add each time step's wind to running per-cell sums of loadings toward the 8 neighbors, in
 // place. The wind at each step is split between the two neighbors whose bearings bracket its
 // direction, in proportion to how closely it points toward each, weighted by its transformed
-// speed: `w` (a cells x k matrix), or speed ^ `p` when `w` has no rows.
+// speed: `w` (a cells x k matrix), or speed ^ `p` when `w` has no rows. Calm steps (u and v
+// both zero) have no direction and add nothing, whatever the weight (e.g. 0 ^ 0 = 1).
 //
 // nb: one row per grid row, holding the rhumb-line bearings (degrees) to the N, NE, E, SE, S, SW,
 //     W, and NW neighbors, then 360.
@@ -42,6 +43,7 @@ void rose_accumulate(NumericMatrix m, int k, NumericMatrix w, double p,
                         for(int j = 0; j < 8; ++j) acc(c, j) = NA_REAL;
                         continue;
                   }
+                  if(u == 0.0 && v == 0.0) continue;   // calm
 
                   // compass bearing the wind blows toward, in (0, 360]
                   double b = std::atan2(v, -u) * 180.0 / M_PI - 90.0;

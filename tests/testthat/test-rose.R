@@ -58,8 +58,21 @@ test_that("reversing the wind reverses the rose at the equator", {
       expect_equal(bwd, fwd[c(5:8, 1:4)], tolerance = 1e-8)
 })
 
-test_that("calm wind gives zero conductance", {
-      expect_true(all(rose(c(40, 1, rep(0, 5), rep(0, 5))) == 0))
+test_that("calm wind gives zero conductance, whatever trans is", {
+      calm <- c(40, 1, rep(0, 5), rep(0, 5))
+      expect_true(all(rose(calm) == 0))
+      expect_true(all(rose(calm, trans = 0) == 0))
+      expect_true(all(rose(calm, trans = function(s) s + 1) == 0))
+})
+
+test_that("calm steps count toward the average but add no direction", {
+      windy <- c(40, 1, 3, 0)                          # one step, wind toward the east
+      mixed <- c(40, 1, c(3, 0, 0), c(0, 0, 0))        # the same step plus two calm ones
+      for(tr in list(1, 0, function(s) s + 1)){
+            expect_equal(rose(mixed, tr), rose(windy, tr) / 3, tolerance = 1e-12)
+      }
+      x <- c(30, 1, c(0, 2, 0, -1), c(0, 1, 0, 4))
+      expect_equal(rose(x, 0), rose_reference(x, function(s) s^0), tolerance = 1e-12)
 })
 
 test_that("rose() matches an independent per-time-step reference implementation", {
