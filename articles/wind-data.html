@@ -475,14 +475,17 @@ and build roses with <code><a href="../reference/wind_rose.html">wind_rose()</a>
 <div class="section level3">
 <h3 id="saving-and-loading">Saving and loading<a class="anchor" aria-label="anchor" href="#saving-and-loading"></a>
 </h3>
-<p>A wind rose is a <code>SpatRaster</code> and can be saved with
-<code><a href="https://rspatial.github.io/terra/reference/writeRaster.html" class="external-link">terra::writeRaster()</a></code>. Given a saved rose instead of a wind
-series, <code><a href="../reference/wind_rose.html">wind_rose()</a></code> loads it; supply the same
-<code>trans</code> it was built with, and the number of time steps if
-you might combine it with other roses later:</p>
+<p>Given a saved rose instead of a wind series, <code><a href="../reference/wind_rose.html">wind_rose()</a></code>
+loads it. A rose written with <code>wind_rose(..., filename = )</code>
+records its number of time steps and <code>trans</code> (if a number),
+so it reloads with no other arguments:</p>
 <div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu">terra</span><span class="fu">::</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/writeRaster.html" class="external-link">writeRaster</a></span><span class="op">(</span><span class="va">rose</span>, <span class="st">"rose.tif"</span><span class="op">)</span></span>
-<span><span class="va">rose</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/wind_rose.html">wind_rose</a></span><span class="op">(</span><span class="st">"rose.tif"</span>, trans <span class="op">=</span> <span class="fl">1</span>, n_steps <span class="op">=</span> <span class="fl">29220</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="va">rose</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/wind_rose.html">wind_rose</a></span><span class="op">(</span><span class="va">series</span>, trans <span class="op">=</span> <span class="fl">1</span>, filename <span class="op">=</span> <span class="st">"rose.tif"</span><span class="op">)</span></span>
+<span><span class="va">rose</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/wind_rose.html">wind_rose</a></span><span class="op">(</span><span class="st">"rose.tif"</span><span class="op">)</span></span></code></pre></div>
+<p>For a rose saved some other way, such as with
+<code><a href="https://rspatial.github.io/terra/reference/writeRaster.html" class="external-link">terra::writeRaster()</a></code>, supply the <code>trans</code> it was
+built with, and the number of time steps if you might combine it with
+other roses later.</p>
 </div>
 <div class="section level3">
 <h3 id="mapping-wind-roses">Mapping wind roses<a class="anchor" aria-label="anchor" href="#mapping-wind-roses"></a>

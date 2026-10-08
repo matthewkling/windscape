@@ -54,7 +54,9 @@ wind_rose(
 - filename:
 
   When building a rose, an optional file path to write the result to, as
-  a raster file (e.g. a GeoTIFF).
+  a raster file (e.g. a GeoTIFF). The file records the rose's number of
+  time steps, and `trans` if it is a number, so `wind_rose(filename)`
+  reloads it with no other arguments.
 
 - overwrite:
 
@@ -121,8 +123,8 @@ to combine roses built from different time periods.
 series <- windscape_example("wind_series")
 rose <- wind_rose(series)
 
-# save and reload
+# save and reload; the file records n_steps and trans
 f <- tempfile(fileext = ".tif")
-terra::writeRaster(rose, f)
-rose2 <- wind_rose(f, trans = 1, n_steps = rose@n_steps)
+rose <- wind_rose(series, filename = f)
+rose2 <- wind_rose(f)
 ```

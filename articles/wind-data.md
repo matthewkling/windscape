@@ -453,18 +453,22 @@ as above.
 
 ### Saving and loading
 
-A wind rose is a `SpatRaster` and can be saved with
-[`terra::writeRaster()`](https://rspatial.github.io/terra/reference/writeRaster.html).
 Given a saved rose instead of a wind series,
 [`wind_rose()`](https://matthewkling.github.io/windscape/reference/wind_rose.md)
-loads it; supply the same `trans` it was built with, and the number of
-time steps if you might combine it with other roses later:
+loads it. A rose written with `wind_rose(..., filename = )` records its
+number of time steps and `trans` (if a number), so it reloads with no
+other arguments:
 
 ``` r
 
-terra::writeRaster(rose, "rose.tif")
-rose <- wind_rose("rose.tif", trans = 1, n_steps = 29220)
+rose <- wind_rose(series, trans = 1, filename = "rose.tif")
+rose <- wind_rose("rose.tif")
 ```
+
+For a rose saved some other way, such as with
+[`terra::writeRaster()`](https://rspatial.github.io/terra/reference/writeRaster.html),
+supply the `trans` it was built with, and the number of time steps if
+you might combine it with other roses later.
 
 ### Mapping wind roses
 
