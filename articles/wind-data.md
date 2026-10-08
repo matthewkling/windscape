@@ -69,6 +69,10 @@ carried high into the atmosphere.
 
 ## Downloading
 
+If 10 m CFSR wind for 1979-2010 suits your question, you may not need to
+download wind data at all: pre-built wind roses are available for any
+combination of those years and months (see [Pre-built wind
+roses](#pre-built-wind-roses) below). Otherwise,
 [`download_wind_data()`](https://matthewkling.github.io/windscape/reference/download_wind_data.md)
 downloads data from NCAR’s Geoscience Data Exchange, with no account
 needed:
@@ -410,6 +414,42 @@ rose_gs <- wind_rose(subset_series(series, months = 4:9, hours = c(20:23, 0)))
 does the same for roses built separately, for example to add a new year
 of data to an existing rose. It weights each rose by its number of time
 steps.
+
+### Pre-built wind roses
+
+[`download_wind_rose()`](https://matthewkling.github.io/windscape/reference/download_wind_rose.md)
+provides ready-made global wind roses, built from hourly 10 m CFSR wind
+for 1979-2010 with `trans = 1`, for any combination of years and
+calendar months. Given a region, it reads just the cells within it over
+the internet, typically in about a second per file:
+
+``` r
+
+# long-term wind regime for the western US
+rose <- download_wind_rose(ext = c(-125, -100, 30, 50))
+ 
+# summers of the 1990s
+summer_90s <- download_wind_rose(year = 1990:1999, month = 6:8, ext = c(-125, -100, 30, 50))
+```
+
+Roses are stored for single months, calendar years, calendar months
+across all years, and the full period, and each request is met with the
+fewest of these, combined with
+[`combine_roses()`](https://matthewkling.github.io/windscape/reference/combine_roses.md).
+The result is identical to a rose built from all the requested hours at
+once. Without `ext`, the global files (about 15 MB each) are downloaded
+and cached, so later requests for them need no download;
+[`wind_rose_cache()`](https://matthewkling.github.io/windscape/reference/wind_rose_cache.md)
+lists the cached files and clears them.
+[`wind_rose_catalog()`](https://matthewkling.github.io/windscape/reference/wind_rose_catalog.md)
+lists all the available files.
+
+For other data sets, heights, or periods, or for `trans` other than 1,
+download wind data with
+[`download_wind_data()`](https://matthewkling.github.io/windscape/reference/download_wind_data.md)
+and build roses with
+[`wind_rose()`](https://matthewkling.github.io/windscape/reference/wind_rose.md)
+as above.
 
 ### Saving and loading
 

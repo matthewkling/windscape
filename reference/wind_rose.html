@@ -124,7 +124,10 @@ proportional to aerodynamic drag, and trans = 3 assumes it's proportional to for
 Any intermediate value can also be used. Any elementwise function, transforming each
 speed independently of the others, can also be supplied; for example, to model seed
 dispersal for a species that only releases seeds when winds exceed 10 m/s, we could specify
-a threshold function <code>trans = function(x){x[x &lt; 10] &lt;- 0; return(x)}</code>.</p>
+a threshold function <code>trans = function(x){x[x &lt; 10] &lt;- 0; return(x)}</code>. Calm time steps
+(zero wind speed) have no direction, so they contribute no conductance whatever <code>trans</code> is,
+though they still count toward the average; with <code>trans = 0</code>, a rose's total conductance
+thus reflects the fraction of time steps that are not calm.</p>
 <p>Grid geometry: windscape works on longitude/latitude grids with square cells. Distances
 and bearings to each cell's neighbors are computed on the ellipsoid at that cell's latitude,
 so conductance accounts for the narrowing of cells toward the poles. Projected grids are not

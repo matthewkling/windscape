@@ -164,8 +164,11 @@ carried high into the atmosphere.</p>
 <div class="section level2">
 <h2 id="downloading">Downloading<a class="anchor" aria-label="anchor" href="#downloading"></a>
 </h2>
-<p><code><a href="../reference/download_wind_data.html">download_wind_data()</a></code> downloads data from NCAR’s
-Geoscience Data Exchange, with no account needed:</p>
+<p>If 10 m CFSR wind for 1979-2010 suits your question, you may not need
+to download wind data at all: pre-built wind roses are available for any
+combination of those years and months (see <a href="#pre-built-wind-roses">Pre-built wind roses</a> below). Otherwise,
+<code><a href="../reference/download_wind_data.html">download_wind_data()</a></code> downloads data from NCAR’s Geoscience
+Data Exchange, with no account needed:</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">files</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/download_wind_data.html">download_wind_data</a></span><span class="op">(</span><span class="st">"era5"</span>, level <span class="op">=</span> <span class="st">"10m"</span>,</span>
 <span>                       xlim <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">120</span>, <span class="op">-</span><span class="fl">90</span><span class="op">)</span>, ylim <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">30</span>, <span class="fl">50</span><span class="op">)</span>,</span>
@@ -444,6 +447,32 @@ separately, for example to add a new year of data to an existing rose.
 It weights each rose by its number of time steps.</p>
 </div>
 <div class="section level3">
+<h3 id="pre-built-wind-roses">Pre-built wind roses<a class="anchor" aria-label="anchor" href="#pre-built-wind-roses"></a>
+</h3>
+<p><code><a href="../reference/download_wind_rose.html">download_wind_rose()</a></code> provides ready-made global wind
+roses, built from hourly 10 m CFSR wind for 1979-2010 with
+<code>trans = 1</code>, for any combination of years and calendar
+months. Given a region, it reads just the cells within it over the
+internet, typically in about a second per file:</p>
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># long-term wind regime for the western US</span></span>
+<span><span class="va">rose</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/download_wind_rose.html">download_wind_rose</a></span><span class="op">(</span>ext <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">125</span>, <span class="op">-</span><span class="fl">100</span>, <span class="fl">30</span>, <span class="fl">50</span><span class="op">)</span><span class="op">)</span></span>
+<span> </span>
+<span><span class="co"># summers of the 1990s</span></span>
+<span><span class="va">summer_90s</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/download_wind_rose.html">download_wind_rose</a></span><span class="op">(</span>year <span class="op">=</span> <span class="fl">1990</span><span class="op">:</span><span class="fl">1999</span>, month <span class="op">=</span> <span class="fl">6</span><span class="op">:</span><span class="fl">8</span>, ext <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">125</span>, <span class="op">-</span><span class="fl">100</span>, <span class="fl">30</span>, <span class="fl">50</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<p>Roses are stored for single months, calendar years, calendar months
+across all years, and the full period, and each request is met with the
+fewest of these, combined with <code><a href="../reference/combine_roses.html">combine_roses()</a></code>. The result
+is identical to a rose built from all the requested hours at once.
+Without <code>ext</code>, the global files (about 15 MB each) are
+downloaded and cached, so later requests for them need no download;
+<code><a href="../reference/wind_rose_cache.html">wind_rose_cache()</a></code> lists the cached files and clears them.
+<code><a href="../reference/wind_rose_catalog.html">wind_rose_catalog()</a></code> lists all the available files.</p>
+<p>For other data sets, heights, or periods, or for <code>trans</code>
+other than 1, download wind data with <code><a href="../reference/download_wind_data.html">download_wind_data()</a></code>
+and build roses with <code><a href="../reference/wind_rose.html">wind_rose()</a></code> as above.</p>
+</div>
+<div class="section level3">
 <h3 id="saving-and-loading">Saving and loading<a class="anchor" aria-label="anchor" href="#saving-and-loading"></a>
 </h3>
 <p>A wind rose is a <code>SpatRaster</code> and can be saved with
@@ -451,7 +480,7 @@ It weights each rose by its number of time steps.</p>
 series, <code><a href="../reference/wind_rose.html">wind_rose()</a></code> loads it; supply the same
 <code>trans</code> it was built with, and the number of time steps if
 you might combine it with other roses later:</p>
-<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">terra</span><span class="fu">::</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/writeRaster.html" class="external-link">writeRaster</a></span><span class="op">(</span><span class="va">rose</span>, <span class="st">"rose.tif"</span><span class="op">)</span></span>
 <span><span class="va">rose</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/wind_rose.html">wind_rose</a></span><span class="op">(</span><span class="st">"rose.tif"</span>, trans <span class="op">=</span> <span class="fl">1</span>, n_steps <span class="op">=</span> <span class="fl">29220</span><span class="op">)</span></span></code></pre></div>
 </div>
@@ -462,7 +491,7 @@ you might combine it with other roses later:</p>
 <code><a href="../reference/net_flow.html">net_flow()</a></code> reduces a rose to a single vector per cell, the
 net direction and rate of flow, returned as a wind field that can be
 drawn like any other:</p>
-<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="fu"><a href="../reference/net_flow.html">net_flow</a></span><span class="op">(</span><span class="va">rose</span><span class="op">)</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">y</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
 <span>      <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_tile.html" class="external-link">geom_raster</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>fill <span class="op">=</span> <span class="va">speed</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
 <span>      <span class="va">borders</span> <span class="op">+</span></span>
@@ -490,7 +519,7 @@ terrestrial organisms that can’t establish over water, weighting by the
 land fraction from <code><a href="../reference/download_land_mask.html">download_land_mask()</a></code> reduces
 connectivity across lakes and oceans (though propagules can still cross
 them):</p>
-<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">land</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/download_land_mask.html">download_land_mask</a></span><span class="op">(</span><span class="st">"era5"</span>, xlim <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">120</span>, <span class="op">-</span><span class="fl">90</span><span class="op">)</span>, ylim <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">30</span>, <span class="fl">50</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="va">rose_land</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/weight_conductance.html">weight_conductance</a></span><span class="op">(</span><span class="va">rose</span>, <span class="va">land</span><span class="op">)</span></span></code></pre></div>
 <p><code><a href="../reference/downscale.html">downscale()</a></code> refines the grid of a wind rose by
