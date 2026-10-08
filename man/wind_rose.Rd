@@ -33,7 +33,8 @@ file's metadata where recorded there. Ignored when building a rose, which record
 number of time steps automatically.}
 
 \item{filename}{When building a rose, an optional file path to write the result to, as a
-raster file (e.g. a GeoTIFF).}
+raster file (e.g. a GeoTIFF). The file records the rose's number of time steps, and \code{trans}
+if it is a number, so \code{wind_rose(filename)} reloads it with no other arguments.}
 
 \item{overwrite}{Logical. Whether to overwrite an existing \code{filename}.}
 }
@@ -83,10 +84,10 @@ defined relative to the projected grid (as in some reanalysis products).
 series <- windscape_example("wind_series")
 rose <- wind_rose(series)
 
-# save and reload
+# save and reload; the file records n_steps and trans
 f <- tempfile(fileext = ".tif")
-terra::writeRaster(rose, f)
-rose2 <- wind_rose(f, trans = 1, n_steps = rose@n_steps)
+rose <- wind_rose(series, filename = f)
+rose2 <- wind_rose(f)
 }
 \seealso{
 \code{\link[=combine_roses]{combine_roses()}} to combine roses built from different time periods.

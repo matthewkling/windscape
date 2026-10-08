@@ -16,8 +16,8 @@
 ##
 ## Output: cloud-optimized GeoTIFFs (pixel-interleaved 256 x 256 tiles, DEFLATE with the
 ## floating-point predictor, no overviews), longitudes -180 to 180, with windscape_* GDAL
-## metadata (read with terra::describe(f, meta = TRUE)); plus catalog.csv. Writing the COGs uses
-## sf::gdal_utils(), because terra does not write dataset metadata into the file itself.
+## metadata (read with terra::describe(f, meta = TRUE)); plus catalog.csv. Requires terra >= 1.8-42,
+## which writes metadata tags (terra::metags()) into the file itself.
 
 library(terra)
 devtools::load_all()
@@ -29,9 +29,8 @@ source <- "cfsr"
 level <- "10m"
 format_version <- 1   # bump if the meaning of rose values or the metadata ever changes
 
+stopifnot(packageVersion("terra") >= "1.8-42")
 dir.create(out_dir, showWarnings = FALSE, recursive = TRUE)
-tmp_dir <- file.path(tempdir(), "cfsr_roses")
-dir.create(tmp_dir, showWarnings = FALSE)
 
 
 # monthly inputs --------------------------------------------------------------------------------
@@ -59,18 +58,13 @@ write_rose <- function(rose, tier, year = NA, month = NA, first, last){
       r <- methods::as(rose, "SpatRaster")
       if(xmax(r) > 180 + xres(r)) r <- rotate(r)   # 0 to 360 -> -180 to 180
       stopifnot(abs(xmax(r) - xmin(r) - 360) < xres(r) / 2, xmax(r) <= 180 + xres(r))
-      tmp <- file.path(tmp_dir, name)
-      writeRaster(r, tmp, datatype = "FLT4S", overwrite = TRUE)
-
       meta <- c(rose_format = format_version, source = source, level = level, tier = tier,
                 trans = 1, n_steps = rose@n_steps, first = first, last = last,
                 units = "1/hour")
-      mo <- as.vector(rbind("-mo", paste0("windscape_", names(meta), "=", meta)))
+      metags(r) <- setNames(as.character(meta), paste0("windscape_", names(meta)))
       out <- file.path(path.expand(out_dir), name)
-      sf::gdal_utils("translate", tmp, out,
-                     options = c("-of", "COG", "-co", "COMPRESS=DEFLATE", "-co", "PREDICTOR=YES",
-                                 "-co", "BLOCKSIZE=256", "-co", "OVERVIEWS=NONE", mo))
-      unlink(tmp)
+      writeRaster(r, out, filetype = "COG", datatype = "FLT4S", overwrite = TRUE,
+                  gdal = c("COMPRESS=DEFLATE", "PREDICTOR=YES", "BLOCKSIZE=256", "OVERVIEWS=NONE"))
 
       catalog[[length(catalog) + 1]] <<- data.frame(
             source = source, level = level, tier = tier, year = year, month = month,

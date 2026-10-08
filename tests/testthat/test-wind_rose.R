@@ -127,6 +127,25 @@ test_that("wind_rose writes to a file when given a filename", {
       expect_equal(terra::values(wind_rose(f)), terra::values(r), tolerance = 1e-6)
 })
 
+test_that("roses written with a filename reload with their n_steps and trans", {
+      series <- windscape_example("wind_series")
+      f <- withr::local_tempfile(fileext = ".tif")
+      r <- wind_rose(series, trans = 2.5, filename = f)
+      expect_false(file.exists(paste0(f, ".aux.json")))   # recorded in the file itself
+      back <- wind_rose(f)
+      expect_equal(back@n_steps, series@n_steps)
+      expect_equal(back@trans(3), 3^2.5)
+      expect_s4_class(combine_roses(back, r), "wind_rose")
+
+      # a function trans can't be recorded, so it defaults to 1 on reload
+      g <- withr::local_tempfile(fileext = ".tif")
+      wind_rose(series, trans = function(x) x^2, filename = g)
+      back <- wind_rose(g)
+      expect_equal(back@n_steps, series@n_steps)
+      expect_equal(back@trans(3), 3)
+      expect_equal(wind_rose(g, trans = function(x) x^2)@trans(3), 9)
+})
+
 test_that("wind_rose rejects inputs that aren't series or roses", {
       series <- windscape_example("wind_series")
       four <- as(subset_series(series, steps = 1:4), "SpatRaster") # 8 layers, but wind data

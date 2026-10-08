@@ -123,16 +123,16 @@ test_that("download_wind_rose reads hosted roses", {
 # Reading windscape metadata in wind_rose() ------------------------------------------------------
 
 test_that("wind_rose reads n_steps and trans recorded in a file's metadata", {
-      skip_if_not_installed("sf")
       plain <- withr::local_tempfile(fileext = ".tif")
       terra::writeRaster(windscape_example("wind_rose"), plain)
       tagged <- function(...){
             f <- withr::local_tempfile(fileext = ".tif", .local_envir = parent.frame(2))
-            mo <- as.vector(rbind("-mo", c(...)))
-            sf::gdal_utils("translate", plain, f, options = mo)
+            r <- terra::rast(plain)
+            terra::metags(r) <- c(...)
+            terra::writeRaster(r, f)
             f
       }
-      f <- tagged("windscape_rose_format=1", "windscape_n_steps=576", "windscape_trans=2")
+      f <- tagged(windscape_rose_format = "1", windscape_n_steps = "576", windscape_trans = "2")
       x <- wind_rose(f)
       expect_equal(x@n_steps, 576)
       expect_equal(x@trans(3), 9)
@@ -145,5 +145,5 @@ test_that("wind_rose reads n_steps and trans recorded in a file's metadata", {
       expect_true(is.na(z@n_steps))
       expect_equal(z@trans(3), 3)
 
-      expect_error(wind_rose(tagged("windscape_rose_format=99")), "newer format")
+      expect_error(wind_rose(tagged(windscape_rose_format = "99")), "newer format")
 })

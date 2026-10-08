@@ -76,7 +76,8 @@ as_wind_rose <- function(x, trans, n_steps = NA_integer_){
 #'    file's metadata where recorded there. Ignored when building a rose, which records its
 #'    number of time steps automatically.
 #' @param filename When building a rose, an optional file path to write the result to, as a
-#'    raster file (e.g. a GeoTIFF).
+#'    raster file (e.g. a GeoTIFF). The file records the rose's number of time steps, and `trans`
+#'    if it is a number, so `wind_rose(filename)` reloads it with no other arguments.
 #' @param overwrite Logical. Whether to overwrite an existing `filename`.
 #' @return A \code{wind_rose} object. This is an 8-layer raster stack, where each layer is wind
 #'   conductance from the focal cell to one of its neighbors (clockwise starting in the SW).
@@ -87,10 +88,10 @@ as_wind_rose <- function(x, trans, n_steps = NA_integer_){
 #' series <- windscape_example("wind_series")
 #' rose <- wind_rose(series)
 #'
-#' # save and reload
+#' # save and reload; the file records n_steps and trans
 #' f <- tempfile(fileext = ".tif")
-#' terra::writeRaster(rose, f)
-#' rose2 <- wind_rose(f, trans = 1, n_steps = rose@n_steps)
+#' rose <- wind_rose(series, filename = f)
+#' rose2 <- wind_rose(f)
 #' @aliases windrose_rasters
 #' @export
 wind_rose <- function(x, trans = 1, n_steps = NA_integer_, filename = NULL, overwrite = FALSE){
@@ -159,7 +160,10 @@ wind_rose <- function(x, trans = 1, n_steps = NA_integer_, filename = NULL, over
 
       out <- terra::rast(data, nlyrs = 8)
       terra::values(out) <- rose_finish(acc, n, geo$nd, row)
-      if(!is.null(filename)) out <- terra::writeRaster(out, filename, overwrite = overwrite)
+      if(!is.null(filename)){
+            terra::metags(out) <- rose_tags(n, trans)
+            out <- terra::writeRaster(out, filename, overwrite = overwrite)
+      }
       as_wind_rose(out, trans = trn, n_steps = n)
 }
 
@@ -188,6 +192,14 @@ rose_metadata <- function(x){
       if(!is.na(num("n_steps"))) out$n_steps <- num("n_steps")
       if(!is.na(num("trans"))) out$trans <- num("trans")
       out
+}
+
+# windscape_* metadata tags recording a rose's number of time steps and, if numeric, its `trans`
+# (a function can't be recorded), for writing with the rose (see rose_metadata())
+rose_tags <- function(n_steps, trans){
+      tags <- c(windscape_rose_format = rose_format_version, windscape_n_steps = n_steps)
+      if(is.numeric(trans)) tags <- c(tags, windscape_trans = trans)
+      vapply(tags, format, character(1), digits = 15)
 }
 
 # Do two `trans` specifications (numbers or functions) give the same transformation?
