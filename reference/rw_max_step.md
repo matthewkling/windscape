@@ -15,3 +15,9 @@ rw_max_step(rose)
 - rose:
 
   A `wind_rose`.
+
+## Value
+
+A number: the residence time of the cell with the greatest total
+conductance, in hours for a rose built from wind speeds in m/s with
+`trans = 1`.

@@ -84,7 +84,9 @@ any single one.</p>
 <li>
 <strong>Wind rose</strong>: a summary of the time series as the
 average conductance of wind from each grid cell toward each of its eight
-neighbors (a <code>wind_rose</code>).</li>
+neighbors (a <code>wind_rose</code>). For 10 m winds over 1979???2010,
+<code><a href="../reference/download_wind_rose.html">download_wind_rose()</a></code> provides pre-built roses, so steps 1
+and 2 need no wind data download.</li>
 <li>
 <strong>Connectivity model</strong>: either a least-cost model,
 which finds the fastest routes through the wind rose, or a random walk
@@ -410,7 +412,7 @@ connect a site to its windshed and the flux of material through it.</p>
 every pair, as matrices in which element <code>[i, j]</code> describes
 flow from site <code>i</code> to site <code>j</code>. Because wind
 connectivity is directional, these matrices are asymmetric
-(<code>[j, i]</code> can differ strongly fom <code>[i, j]</code>).</p>
+(<code>[j, i]</code> can differ strongly from <code>[i, j]</code>).</p>
 <p>Let’s generate ten random sites:</p>
 <div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">sites</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">cbind</a></span><span class="op">(</span>lon <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/Uniform.html" class="external-link">runif</a></span><span class="op">(</span><span class="fl">10</span>, <span class="op">-</span><span class="fl">115</span>, <span class="op">-</span><span class="fl">95</span><span class="op">)</span>, lat <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/Uniform.html" class="external-link">runif</a></span><span class="op">(</span><span class="fl">10</span>, <span class="fl">33</span>, <span class="fl">47</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>

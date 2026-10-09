@@ -64,5 +64,5 @@ A named vector of summary statistics:
   accessibility values, weighted to correct for grid distortions. Higher
   values indicate landscapes with greater overall wind accessibility.
 
-- "windshed_landarea": A realative measure of the land area covered by
+- "windshed_landarea": A relative measure of the land area covered by
   grid cells with nonzero wind accessibility.

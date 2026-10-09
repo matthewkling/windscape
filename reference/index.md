@@ -154,9 +154,9 @@ ggplot2 layers for wind data and connectivity results.
 - [`wind_graph-class`](https://matthewkling.github.io/windscape/reference/wind_graph-class.md)
   : An S4 object class representing a wind graph
 - [`windscape-layers`](https://matthewkling.github.io/windscape/reference/windscape-layers.md)
-  [`[[,wind_series-method`](https://matthewkling.github.io/windscape/reference/windscape-layers.md)
-  [`[[,wind_field-method`](https://matthewkling.github.io/windscape/reference/windscape-layers.md)
-  [`[[,wind_rose-method`](https://matthewkling.github.io/windscape/reference/windscape-layers.md)
+  [`[[,wind_series,ANY,ANY-method`](https://matthewkling.github.io/windscape/reference/windscape-layers.md)
+  [`[[,wind_field,ANY,ANY-method`](https://matthewkling.github.io/windscape/reference/windscape-layers.md)
+  [`[[,wind_rose,ANY,ANY-method`](https://matthewkling.github.io/windscape/reference/windscape-layers.md)
   [`subset,wind_series-method`](https://matthewkling.github.io/windscape/reference/windscape-layers.md)
   [`subset,wind_field-method`](https://matthewkling.github.io/windscape/reference/windscape-layers.md)
   [`subset,wind_rose-method`](https://matthewkling.github.io/windscape/reference/windscape-layers.md)

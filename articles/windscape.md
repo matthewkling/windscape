@@ -15,7 +15,10 @@ A windscape analysis follows a few steps:
     `wind_series`).
 2.  **Wind rose**: a summary of the time series as the average
     conductance of wind from each grid cell toward each of its eight
-    neighbors (a `wind_rose`).
+    neighbors (a `wind_rose`). For 10 m winds over 1979???2010,
+    [`download_wind_rose()`](https://matthewkling.github.io/windscape/reference/download_wind_rose.md)
+    provides pre-built roses, so steps 1 and 2 need no wind data
+    download.
 3.  **Connectivity model**: either a least-cost model, which finds the
     fastest routes through the wind rose, or a random walk model, which
     simulates particles diffusing through it.
@@ -415,7 +418,7 @@ and
 estimate wind connectivity between every pair, as matrices in which
 element `[i, j]` describes flow from site `i` to site `j`. Because wind
 connectivity is directional, these matrices are asymmetric (`[j, i]` can
-differ strongly fom `[i, j]`).
+differ strongly from `[i, j]`).
 
 Let’s generate ten random sites:
 
