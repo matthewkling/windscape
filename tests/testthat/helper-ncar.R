@@ -1,8 +1,11 @@
 # A fake NCAR NetCDF Subset Service for testing download_wind_data() offline. fake_ncss() returns a
 # replacement for ncss_fetch(url, dest) that parses the request URL and writes a NetCDF file
 # laid out like the real data set (ERA5, CFSR/CFSv2, or the ERA5 land mask), on a coarse 2 degree
-# global grid with 8 time steps per month. Values come from truth_u() and truth_v(), so tests can
-# check them at known locations and times.
+# global grid with `n_hours` hourly time steps per month (ERA5 from 00:00 on the 1st, CFSR/CFSv2
+# from 01:00), or, with `full_months`, whole months (CFSR/CFSv2 through 00:00 on the 1st of the
+# next month). Values come from truth_u() and truth_v(), so tests can check them at known
+# locations and times. Like the real server, it serves time ranges (time_start, time_end,
+# timeStride) and rejects requests larger than `max_bytes`.
 
 truth_u <- function(lon, lat, time) 10 * sin(lon * pi / 180) + lat / 10 + as.numeric(format(time, "%H", tz = "UTC")) / 10
 truth_v <- function(lon, lat, time) 5 * cos(lon * pi / 180) - lat / 20 + as.numeric(format(time, "%d", tz = "UTC")) / 10
@@ -13,14 +16,31 @@ parse_ncss_url <- function(url){
       key <- sub("=.*$", "", q)
       val <- utils::URLdecode(sub("^[^=]*=", "", q))
       p <- split(val, key)
+      tm <- function(x) if(is.null(x)) NULL else as.POSIXct(x, format = "%Y-%m-%dT%H:%M:%SZ", tz = "UTC")
       list(path = path, var = p$var, west = as.numeric(p$west), east = as.numeric(p$east),
            south = as.numeric(p$south), north = as.numeric(p$north),
            stride = if(is.null(p$timeStride)) 1 else as.integer(p$timeStride),
+           start = tm(p$time_start), end = tm(p$time_end),
            accept = p$accept, temporal = p$temporal)
 }
 
-fake_ncss <- function(log = new.env(), reject_netcdf4 = FALSE, html = FALSE){
+fake_ncss <- function(log = new.env(), reject_netcdf4 = FALSE, html = FALSE, n_hours = 8,
+                      max_bytes = Inf, full_months = FALSE){
       log$urls <- character()
+      # the requested subset of a file's times
+      select_times <- function(times, q){
+            if(identical(q$temporal, "all")){
+                  i <- seq_along(times)
+            }else{
+                  stopifnot(!is.null(q$start), !is.null(q$end))
+                  i <- which(times >= q$start & times <= q$end)
+                  i <- i[seq(1, length(i), q$stride)]
+            }
+            i
+      }
+      check_size <- function(n_lon, n_lat, n_var, n_time){
+            if(n_lon * n_lat * n_var * n_time * 4 > max_bytes) stop("HTTP status 400")
+      }
       function(url, dest, tries = 3){
             log$urls <- c(log$urls, url)
             q <- parse_ncss_url(url)
@@ -29,7 +49,6 @@ fake_ncss <- function(log = new.env(), reject_netcdf4 = FALSE, html = FALSE){
                   writeLines("<html>error</html>", dest)
                   return(invisible(dest))
             }
-            stopifnot(identical(q$temporal, "all"))
             lon <- seq(0, 358, 2)
             lon <- lon[lon >= q$west & lon <= q$east]
             lat_all <- seq(90, -90, -2)
@@ -51,10 +70,14 @@ fake_ncss <- function(log = new.env(), reject_netcdf4 = FALSE, html = FALSE){
 
             ym <- regmatches(q$path, regexpr("\\d{6}(?=(0100_|\\.grb2))", q$path, perl = TRUE))
             month_start <- as.POSIXct(paste0(substr(ym, 1, 4), "-", substr(ym, 5, 6), "-01"), tz = "UTC")
+            # with full_months, files span whole months, as on the real server
+            if(full_months) n_hours <- 24 * days_in_month(as.integer(substr(ym, 1, 4)),
+                                                          as.integer(substr(ym, 5, 6)))
 
             if(grepl("d633000", q$path)){ # ERA5: one variable per file, int hours since 1900
-                  times <- month_start + 3600 * (0:7)
-                  times <- times[seq(1, length(times), q$stride)]
+                  times <- month_start + 3600 * (seq_len(n_hours) - 1)
+                  times <- times[select_times(times, q)]
+                  check_size(length(lon), length(lat), 1, length(times))
                   tv <- as.integer(round(as.numeric(difftime(times, as.POSIXct("1900-01-01", tz = "UTC"), units = "hours"))))
                   dims <- list(ncdf4::ncdim_def("longitude", "degrees_east", lon),
                                ncdf4::ncdim_def("latitude", "degrees_north", lat),
@@ -72,9 +95,10 @@ fake_ncss <- function(log = new.env(), reject_netcdf4 = FALSE, html = FALSE){
             # CFSR/CFSv2: u and v in one file, a degenerate height dimension, ascending latitudes,
             # and times starting at hour 1 in units like "Hour since 2000-04-01T00:00:00Z"
             lat <- rev(lat)
-            hv <- 1:8
-            hv <- hv[seq(1, length(hv), q$stride)]
+            hv <- seq_len(n_hours)
+            hv <- hv[select_times(month_start + 3600 * hv, q)]
             times <- month_start + 3600 * hv
+            check_size(length(lon), length(lat), length(q$var), length(times))
             tunits <- paste0("Hour since ", format(month_start, "%Y-%m-%dT%H:%M:%SZ", tz = "UTC"))
             dims <- list(ncdf4::ncdim_def("lon", "degrees_east", lon),
                          ncdf4::ncdim_def("lat", "degrees_north", lat),

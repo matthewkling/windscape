@@ -11,7 +11,8 @@ download_wind_data(
   ylim,
   years,
   months = 1:12,
-  time_stride = 1,
+  days = NULL,
+  hours = NULL,
   dir = tempdir(),
   overwrite = FALSE,
   quiet = FALSE
@@ -47,9 +48,18 @@ box, in degrees, in the range -90 to 90.}
 \item{months}{Integer vector of months (1-12) to download within each year. Defaults to all
 months.}
 
-\item{time_stride}{Integer. Download every \code{time_stride}-th hourly time step, starting with
-each month's first time step. The default, 1, downloads all hours; for example, 3 downloads
-every third hour and reduces download time and file size about threefold.}
+\item{days}{Integer vector of days of the month (1-31) to download, by the UTC date of each
+time step. \code{NULL} (the default) downloads all days. Months with none of the requested days
+(e.g. day 31 in a 30-day month) are skipped.}
+
+\item{hours}{Integer vector of hours of the day (0-23, UTC) to download. \code{NULL} (the default)
+downloads all hours; for example, \code{hours = seq(0, 21, 3)} downloads every third hour, which
+reduces download time and file size about threefold. Days and hours refer to the UTC date
+and time of each time step, within each requested month. (CFSR and CFSv2 monthly files hold
+hourly forecasts valid from 01:00 on the first through 00:00 on the first of the following
+month. With \code{days} or \code{hours}, time steps are assigned to their calendar month, so 00:00 on
+the first comes from the previous month's file; without them, each month's file is
+downloaded as is, as in the pre-built roses of \code{\link[=download_wind_rose]{download_wind_rose()}}.)}
 
 \item{dir}{Directory where monthly files are saved. Defaults to a temporary directory, which
 is deleted at the end of the R session; set it to a permanent location to keep the data and
@@ -62,13 +72,15 @@ skipped.}
 }
 \value{
 A character vector of file paths, one per month, in chronological order (returned
-invisibly if all files were already cached).
+invisibly if all files were already cached). Files for a subset of days or hours have
+names ending in a tag recording the selection (e.g. \verb{_d28_h23}), so they are cached
+separately from whole months.
 }
 \description{
 Downloads gridded hourly wind data from the NCAR Geoscience Data Exchange (GDEX) for a
-bounding box and a set of months, saving one GeoTIFF file per month. No account is needed.
-Data are clipped to the bounding box on the server, so only the requested region is
-transferred.
+bounding box and a set of months, optionally limited to particular days and hours, saving one
+GeoTIFF file per month. No account is needed. Data are clipped to the bounding box and the
+requested times on the server, so only the requested data are transferred.
 }
 \details{
 Each output file holds one month of data in \code{wind_series} layout: all u layers followed by
@@ -79,7 +91,9 @@ which keeps the data on disk, and summarize it with \code{\link[=wind_rose]{wind
 Downloads are cached: a month whose file already exists in \code{dir} is not downloaded again
 unless \code{overwrite = TRUE}, so an interrupted download can be resumed by rerunning the same
 call. Large requests (many years, or a large region) can take a long time and use
-substantial disk space; thinning hourly data with \code{time_stride} reduces both.
+substantial disk space; selecting hours with \code{hours} (e.g. every third hour) reduces both.
+The server limits the size of each request (about 100 MB), so large requests are split into
+several, by time, and reassembled.
 
 Requires the \pkg{ncdf4} package.
 }
@@ -87,10 +101,14 @@ Requires the \pkg{ncdf4} package.
 \dontrun{
 # every third hour of 10 m ERA5 wind for summer 2020, Pacific Northwest
 files <- download_wind_data("era5", xlim = c(-125, -115), ylim = c(42, 49),
-                       years = 2020, months = 6:8, time_stride = 3,
-                       dir = "~/wind_data")
-ws <- wind_series(files)
-rose <- wind_rose(files)
+                            years = 2020, months = 6:8, hours = seq(0, 21, 3),
+                            dir = "~/wind_data")
+rose <- wind_rose(wind_series(files))
+
+# a single hour: Hurricane Katrina, 2005-08-28 23:00 UTC
+f <- download_wind_data("era5", xlim = c(-99, -78), ylim = c(17, 35),
+                        years = 2005, months = 8, days = 28, hours = 23)
+katrina <- wind_field(wind_series(f))
 }
 }
 \seealso{

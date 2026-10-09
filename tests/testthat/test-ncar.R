@@ -89,17 +89,122 @@ test_that("CFSR and CFSv2 downloads read their layout, levels, and time units", 
       expect_match(utils::tail(log$urls, 1), "var=u-component_of_wind_isobaric")
 })
 
-test_that("time_stride thins time steps on the server", {
+test_that("days and hours select time steps on the server", {
       skip_if_not_installed("ncdf4")
       log <- new.env()
-      local_mocked_bindings(ncss_fetch = fake_ncss(log))
-      f <- download_wind_data("era5", xlim = c(-120, -100), ylim = c(30, 40), years = 2005, months = 1,
-                         time_stride = 3, dir = withr::local_tempdir(), quiet = TRUE)
-      expect_match(log$urls[1], "timeStride=3")
-      expect_match(basename(f), "_t3\\.tif$")
+      local_mocked_bindings(ncss_fetch = fake_ncss(log, n_hours = 72)) # three days per month
+      dir <- withr::local_tempdir()
+      args <- list(source = "era5", xlim = c(-120, -100), ylim = c(30, 40), years = 2005,
+                   months = 1, dir = dir, quiet = TRUE)
+
+      # regular hours on one day: a single strided request per variable, after the time probe
+      f <- do.call(download_wind_data, c(args, list(days = 2, hours = c(0, 6, 12, 18))))
+      expect_match(basename(f), "_d2_h0\\.6\\.12\\.18\\.tif$")
+      expect_length(log$urls, 3)
+      expect_match(log$urls[2], "time_start=2005-01-02T00:00:00Z&time_end=2005-01-02T18:00:00Z&timeStride=6")
       ws <- wind_series(f)
-      expect_equal(ws@n_steps, 3)
-      expect_equal(names(ws)[1:3], paste("u 2005-01-01", c("00:00:00", "03:00:00", "06:00:00")))
+      expect_equal(names(ws)[1:4], paste("u 2005-01-02", c("00:00:00", "06:00:00", "12:00:00", "18:00:00")))
+      t <- as.POSIXct("2005-01-02 12:00:00", tz = "UTC")
+      expect_equal(at(ws[["v 2005-01-02 12:00:00"]], -110, 36), truth_v(250, 36, t), tolerance = 0.006)
+
+      # a single hour
+      ws <- wind_series(do.call(download_wind_data, c(args, list(days = 3, hours = 23))))
+      expect_equal(names(ws), c("u 2005-01-03 23:00:00", "v 2005-01-03 23:00:00"))
+
+      # irregular hours (evenings, across midnight)
+      ws <- wind_series(do.call(download_wind_data, c(args, list(hours = c(20:23, 0)))))
+      tm <- wind_times(ws)
+      expect_equal(ws@n_steps, 15)
+      expect_true(all(as.integer(format(tm, "%H", tz = "UTC")) %in% c(20:23, 0)))
+      expect_equal(at(ws[["u 2005-01-02 21:00:00"]], -110, 36),
+                   truth_u(250, 36, as.POSIXct("2005-01-02 21:00:00", tz = "UTC")), tolerance = 0.006)
+
+      # whole months and selections are cached separately
+      full <- do.call(download_wind_data, args)
+      expect_equal(wind_series(full)@n_steps, 72)
+      expect_length(list.files(dir, "^era5_10m_200501_"), 4)
+
+      expect_error(do.call(download_wind_data, c(args, list(days = 4))), "no time steps")
+})
+
+test_that("CFSR days and hours follow the calendar, across monthly files", {
+      skip_if_not_installed("ncdf4")
+      log <- new.env()
+      local_mocked_bindings(ncss_fetch = fake_ncss(log, full_months = TRUE))
+      dir <- withr::local_tempdir()
+      args <- list(source = "cfsr", xlim = c(250, 270), ylim = c(30, 40), dir = dir, quiet = TRUE)
+      hrs <- function(f) format(wind_times(wind_series(f)), "%Y-%m-%d %H", tz = "UTC")
+
+      # 1 January: 00:00 from December's file, 01:00-23:00 from January's; not 1 February 00:00
+      f <- do.call(download_wind_data, c(args, list(years = 2000, months = 1, days = 1)))
+      expect_equal(hrs(f), sprintf("2000-01-01 %02d", 0:23))
+      expect_true(any(grepl("199912.grb2", log$urls)))
+      ws <- wind_series(f)
+      t <- as.POSIXct("2000-01-01 00:00:00", tz = "UTC")
+      expect_equal(at(ws[["u 2000-01-01 00:00:00"]], 260, 34), truth_u(260, 34, t), tolerance = 0.006)
+
+      # midnight on the 1st only
+      f <- do.call(download_wind_data, c(args, list(years = 2000, months = 3, days = 1, hours = 0)))
+      expect_equal(hrs(f), "2000-03-01 00")
+
+      # last day of a month, without the next month's first step
+      f <- do.call(download_wind_data, c(args, list(years = 2000, months = 2, days = 29)))
+      expect_equal(hrs(f), sprintf("2000-02-29 %02d", 0:23))
+
+      # the first month of the data set has no earlier file
+      f <- do.call(download_wind_data, c(args, list(years = 1979, months = 1, days = 1)))
+      expect_equal(hrs(f), sprintf("1979-01-01 %02d", 1:23))
+
+      # whole months keep the file as is
+      f <- do.call(download_wind_data, c(args, list(years = 2000, months = 4)))
+      expect_equal(range(hrs(f)), c("2000-04-01 01", "2000-05-01 00"))
+})
+
+test_that("large requests are split by time to fit the server's size limit", {
+      skip_if_not_installed("ncdf4")
+      # the fake grid has 11 x 6 cells in this box; allow requests of up to 3 time steps
+      cap <- 11 * 6 * 4 * 3
+      dir <- withr::local_tempdir()
+      args <- list(source = "era5", xlim = c(-120, -100), ylim = c(30, 40), years = 2005,
+                   months = 1, dir = dir, quiet = TRUE)
+      local_mocked_bindings(ncss_fetch = fake_ncss(max_bytes = cap))
+      expect_error(do.call(download_wind_data, args), "Request URL")
+
+      log <- new.env()
+      local_mocked_bindings(ncss_fetch = fake_ncss(log, max_bytes = cap))
+      step_bytes <- 81 * 41 * 4 # the package's estimate, from ERA5's 0.25 degree grid
+      withr::local_options(windscape.ncss_max_bytes = 3 * step_bytes)
+      f <- do.call(download_wind_data, args)
+      expect_length(log$urls, 1 + 2 * 3) # time probe, then 3 chunks per variable
+      expect_true(all(grepl("time_start", log$urls[-1])))
+      ws <- wind_series(f)
+      expect_equal(ws@n_steps, 8)
+      expect_equal(names(ws)[1:8], paste("u 2005-01-01", sprintf("%02d:00:00", 0:7)))
+      t <- as.POSIXct("2005-01-01 07:00:00", tz = "UTC")
+      expect_equal(at(ws[["u 2005-01-01 07:00:00"]], -110, 36), truth_u(250, 36, t), tolerance = 0.006)
+})
+
+test_that("selections are spelled out in file names, or hashed when long", {
+      expect_equal(selection_tag(NULL, NULL), "")
+      expect_equal(selection_tag(28, 23), "_d28_h23")
+      expect_equal(selection_tag(1:15, NULL), "_d1-15")
+      expect_equal(selection_tag(NULL, c(0, 20:23)), "_h0.20-23")
+      long <- selection_tag(c(1, 3, 5, 7, 9, 11), c(1, 3, 5, 7, 9, 11))
+      expect_match(long, "^_s[0-9a-f]{8}$")
+      expect_false(identical(long, selection_tag(c(1, 3, 5, 7, 9, 11), c(1, 3, 5, 7, 9, 13))))
+})
+
+test_that("time steps are grouped into evenly spaced runs", {
+      expect_equal(time_runs(5), list(list(idx = 5, by = 1)))
+      expect_equal(time_runs(c(1, 7, 13, 19)), list(list(idx = c(1, 7, 13, 19), by = 6)))
+      # nearly regular: one run, with a few extra steps dropped after download
+      expect_equal(time_runs(c(1, 2, 4)), list(list(idx = 1:4, by = 1)))
+      # irregular: separate runs, covering exactly the selected steps
+      idx <- c(1, 21:25, 45:49, 69:72)
+      runs <- time_runs(idx)
+      expect_gt(length(runs), 1)
+      expect_equal(sort(unlist(lapply(runs, `[[`, "idx"))), idx)
+      for(r in runs) expect_true(length(r$idx) == 1 || all(diff(r$idx) == r$by))
 })
 
 test_that("downloaded months are cached unless overwrite = TRUE", {
@@ -127,6 +232,14 @@ test_that("download falls back to netCDF-3 and reports server errors", {
       expect_true(file.exists(f))
       expect_match(log$urls[2], "accept=netcdf$")
 
+      # CFSR is requested as netCDF-3 directly
+      log2 <- new.env()
+      local_mocked_bindings(ncss_fetch = fake_ncss(log2, reject_netcdf4 = TRUE))
+      download_wind_data("cfsr", xlim = c(250, 270), ylim = c(30, 40), years = 2000, months = 4,
+                         dir = dir, quiet = TRUE)
+      expect_length(log2$urls, 1)
+      expect_match(log2$urls[1], "accept=netcdf$")
+
       local_mocked_bindings(ncss_fetch = fake_ncss(html = TRUE))
       expect_error(download_wind_data("era5", xlim = c(-120, -100), ylim = c(30, 40), years = 2005,
                                  months = 2, dir = dir, quiet = TRUE), "Request URL")
@@ -141,8 +254,12 @@ test_that("invalid requests are rejected before downloading", {
                                  years = 2015), "level")
       expect_error(download_wind_data("era5", xlim = c(0, 10), ylim = c(0, 10), years = 2000, months = 13),
                    "months")
-      expect_error(download_wind_data("era5", xlim = c(0, 10), ylim = c(0, 10), years = 2000, time_stride = 0),
-                   "time_stride")
+      expect_error(download_wind_data("era5", xlim = c(0, 10), ylim = c(0, 10), years = 2000, days = 32),
+                   "days")
+      expect_error(download_wind_data("era5", xlim = c(0, 10), ylim = c(0, 10), years = 2000, hours = 24),
+                   "hours")
+      expect_error(download_wind_data("era5", xlim = c(0, 10), ylim = c(0, 10), years = 2000, hours = 1.5),
+                   "hours")
 })
 
 test_that("ERA5 land layer is a land fraction on the wind grid", {

@@ -6,9 +6,9 @@
 #' Download hourly wind data from NCAR
 #'
 #' Downloads gridded hourly wind data from the NCAR Geoscience Data Exchange (GDEX) for a
-#' bounding box and a set of months, saving one GeoTIFF file per month. No account is needed.
-#' Data are clipped to the bounding box on the server, so only the requested region is
-#' transferred.
+#' bounding box and a set of months, optionally limited to particular days and hours, saving one
+#' GeoTIFF file per month. No account is needed. Data are clipped to the bounding box and the
+#' requested times on the server, so only the requested data are transferred.
 #'
 #' Each output file holds one month of data in `wind_series` layout: all u layers followed by
 #' all v layers, named like `"u 2005-08-28 23:00:00"` (UTC), in m/s, oriented to true east and
@@ -18,7 +18,9 @@
 #' Downloads are cached: a month whose file already exists in `dir` is not downloaded again
 #' unless `overwrite = TRUE`, so an interrupted download can be resumed by rerunning the same
 #' call. Large requests (many years, or a large region) can take a long time and use
-#' substantial disk space; thinning hourly data with `time_stride` reduces both.
+#' substantial disk space; selecting hours with `hours` (e.g. every third hour) reduces both.
+#' The server limits the size of each request (about 100 MB), so large requests are split into
+#' several, by time, and reassembled.
 #'
 #' Requires the \pkg{ncdf4} package.
 #'
@@ -43,9 +45,17 @@
 #' @param years Integer vector of years to download.
 #' @param months Integer vector of months (1-12) to download within each year. Defaults to all
 #'   months.
-#' @param time_stride Integer. Download every `time_stride`-th hourly time step, starting with
-#'   each month's first time step. The default, 1, downloads all hours; for example, 3 downloads
-#'   every third hour and reduces download time and file size about threefold.
+#' @param days Integer vector of days of the month (1-31) to download, by the UTC date of each
+#'   time step. `NULL` (the default) downloads all days. Months with none of the requested days
+#'   (e.g. day 31 in a 30-day month) are skipped.
+#' @param hours Integer vector of hours of the day (0-23, UTC) to download. `NULL` (the default)
+#'   downloads all hours; for example, `hours = seq(0, 21, 3)` downloads every third hour, which
+#'   reduces download time and file size about threefold. Days and hours refer to the UTC date
+#'   and time of each time step, within each requested month. (CFSR and CFSv2 monthly files hold
+#'   hourly forecasts valid from 01:00 on the first through 00:00 on the first of the following
+#'   month. With `days` or `hours`, time steps are assigned to their calendar month, so 00:00 on
+#'   the first comes from the previous month's file; without them, each month's file is
+#'   downloaded as is, as in the pre-built roses of [download_wind_rose()].)
 #' @param dir Directory where monthly files are saved. Defaults to a temporary directory, which
 #'   is deleted at the end of the R session; set it to a permanent location to keep the data and
 #'   make use of caching across sessions.
@@ -53,7 +63,9 @@
 #'   skipped.
 #' @param quiet Logical. If `TRUE`, progress messages are suppressed.
 #' @return A character vector of file paths, one per month, in chronological order (returned
-#'   invisibly if all files were already cached).
+#'   invisibly if all files were already cached). Files for a subset of days or hours have
+#'   names ending in a tag recording the selection (e.g. `_d28_h23`), so they are cached
+#'   separately from whole months.
 #' @seealso [wind_series()] to load the files; [wind_rose()] to summarize them;
 #'   [download_land_mask()] to download a matching land-water layer; [download_wind_rose()] for
 #'   pre-built CFSR wind roses, which need no wind data downloads.
@@ -61,23 +73,29 @@
 #' \dontrun{
 #' # every third hour of 10 m ERA5 wind for summer 2020, Pacific Northwest
 #' files <- download_wind_data("era5", xlim = c(-125, -115), ylim = c(42, 49),
-#'                        years = 2020, months = 6:8, time_stride = 3,
-#'                        dir = "~/wind_data")
-#' ws <- wind_series(files)
-#' rose <- wind_rose(files)
+#'                             years = 2020, months = 6:8, hours = seq(0, 21, 3),
+#'                             dir = "~/wind_data")
+#' rose <- wind_rose(wind_series(files))
+#'
+#' # a single hour: Hurricane Katrina, 2005-08-28 23:00 UTC
+#' f <- download_wind_data("era5", xlim = c(-99, -78), ylim = c(17, 35),
+#'                         years = 2005, months = 8, days = 28, hours = 23)
+#' katrina <- wind_field(wind_series(f))
 #' }
 #' @export
 download_wind_data <- function(source = c("era5", "cfsr", "cfsv2"), level = "10m",
-                          xlim, ylim, years, months = 1:12, time_stride = 1,
-                          dir = tempdir(), overwrite = FALSE, quiet = FALSE){
+                               xlim, ylim, years, months = 1:12, days = NULL, hours = NULL,
+                               dir = tempdir(), overwrite = FALSE, quiet = FALSE){
 
       source <- match.arg(source)
       if(!requireNamespace("ncdf4", quietly = TRUE))
             stop("the ncdf4 package is required to download NCAR data", call. = FALSE)
       spec <- ncar_spec(source, level)
       bbox <- check_bbox(xlim, ylim)
-      if(length(time_stride) != 1 || !is.finite(time_stride) || time_stride < 1 ||
-         time_stride %% 1 != 0) stop("`time_stride` must be a positive integer", call. = FALSE)
+      check_ints(days, 1:31, "days")
+      check_ints(hours, 0:23, "hours")
+      if(!is.null(days)) days <- sort(unique(as.integer(days)))
+      if(!is.null(hours)) hours <- sort(unique(as.integer(hours)))
       if(length(months) == 0 || any(!months %in% 1:12))
             stop("`months` must be integers between 1 and 12", call. = FALSE)
       if(length(years) == 0 || any(years %% 1 != 0))
@@ -87,15 +105,47 @@ download_wind_data <- function(source = c("era5", "cfsr", "cfsv2"), level = "10m
       dir.create(dir, showWarnings = FALSE, recursive = TRUE)
 
       files <- file.path(dir, sprintf("%s_%s_%04d%02d_%s%s.tif", source, level, ym$year, ym$month,
-                                      bbox$tag, ifelse(time_stride > 1, paste0("_t", time_stride), "")))
+                                      bbox$tag, selection_tag(days, hours)))
       todo <- overwrite | !file.exists(files)
+      empty <- rep(FALSE, length(files))
       for(i in which(todo)){
             if(!quiet) message(sprintf("downloading %s %s %04d-%02d (%d of %d)", source, level,
                                        ym$year[i], ym$month[i], sum(todo[seq_len(i)]), sum(todo)))
-            ncar_month(spec, ym$year[i], ym$month[i], bbox, time_stride, files[i])
+            empty[i] <- !ncar_month(spec, ym$year[i], ym$month[i], bbox, days, hours, files[i])
+            if(empty[i] && !quiet) message(sprintf("  no time steps in %04d-%02d match `days` and ",
+                                                   ym$year[i], ym$month[i]), "`hours`; skipped")
       }
+      if(all(empty)) stop("no time steps in the requested months match `days` and `hours`",
+                          call. = FALSE)
       if(!quiet && any(!todo)) message(sum(!todo), " month(s) already downloaded; skipped")
+      files <- files[!empty]
       if(any(todo)) files else invisible(files)
+}
+
+# Check an optional vector of whole numbers against the allowed values
+check_ints <- function(x, allowed, name){
+      if(is.null(x)) return(invisible())
+      if(length(x) == 0 || !is.numeric(x) || anyNA(x) || any(!x %in% allowed))
+            stop("`", name, "` must be NULL or integers from ", min(allowed), " to ", max(allowed),
+                 call. = FALSE)
+}
+
+# File name tag for a selection of days and hours, e.g. "_d1-15_h0.6.12.18"; a short hash when
+# that would be long
+selection_tag <- function(days, hours){
+      runs <- function(x){
+            g <- cumsum(c(1, diff(x) != 1))
+            paste(vapply(split(x, g), function(r) if(length(r) == 1) as.character(r)
+                         else paste0(r[1], "-", r[length(r)]), ""), collapse = ".")
+      }
+      tag <- paste(c(if(!is.null(days)) paste0("_d", runs(days)),
+                     if(!is.null(hours)) paste0("_h", runs(hours))), collapse = "")
+      if(nchar(tag) > 24){
+            h <- 0
+            for(b in utf8ToInt(tag)) h <- (h * 31 + b) %% 2147483647
+            tag <- sprintf("_s%08x", as.integer(h))
+      }
+      tag
 }
 
 
@@ -125,9 +175,10 @@ download_land_mask <- function(source = c("era5", "cfsr", "cfsv2"), xlim, ylim){
                                               "e5.oper.invariant.128_172_lsm.ll025sc.1979010100_1979010100.nc"),
                                 vars = c(land = "LSM")),
                     cfsr = list(path = "files/g/d093001/1980/soilt1.gdas.198001.grb2",
-                                vars = c(land = "Temperature_depth_below_surface_layer")),
+                                vars = c(land = "Temperature_depth_below_surface_layer"),
+                                formats = "netcdf"),
                     cfsv2 = stop("download_land_mask() is not yet available for CFSv2", call. = FALSE))
-      g <- ncar_fetch_grid(req, bbox, time_stride = 1)
+      g <- ncar_fetch_grid(req, bbox)
       x <- grid_to_rast(g, "land")[[1]]
       if(source == "cfsr") x <- terra::ifel(is.na(x), 0, 1)
       names(x) <- "land"
@@ -160,7 +211,8 @@ ncar_spec <- function(source, level){
                   list(list(path = path[1], vars = var["u"]),
                        list(path = path[2], vars = var["v"]))
             }
-            return(list(source = source, years = c(1940, current_year()), requests = requests))
+            return(list(source = source, years = c(1940, current_year()), res = 0.25,
+                        requests = requests))
       }
 
       # CFSR and CFSv2 share a file structure, with u and v in one file
@@ -170,11 +222,13 @@ ncar_spec <- function(source, level){
       ds <- switch(source, cfsr = "d093001", cfsv2 = "d094001")
       stream <- switch(source, cfsr = "gdas", cfsv2 = "cdas1")
       requests <- function(year, month){
+            # the server serves these GRIB files as netCDF-3 only
             list(list(path = sprintf("files/g/%s/%04d/%s.%s.%04d%02d.grb2", ds, year, file, stream, year, month),
-                      vars = var))
+                      vars = var, formats = "netcdf"))
       }
       yrs <- switch(source, cfsr = c(1979, 2010), cfsv2 = c(2011, current_year()))
-      list(source = source, years = yrs, requests = requests)
+      res <- switch(source, cfsr = 0.3125, cfsv2 = 0.2045)
+      list(source = source, years = yrs, res = res, requests = requests)
 }
 
 check_years <- function(ym, spec){
@@ -237,9 +291,36 @@ convert_lon <- function(lon, convention){
 
 # Fetching and assembling -----------------------------------------------------------------------
 
-# Download, assemble, and save one month
-ncar_month <- function(spec, year, month, bbox, time_stride, file){
-      grids <- lapply(spec$requests(year, month), ncar_fetch_grid, bbox = bbox, time_stride = time_stride)
+# Download, assemble, and save one month, selecting `days` and `hours` (either can be NULL, for
+# all). Returns FALSE, writing nothing, if no time steps match.
+ncar_month <- function(spec, year, month, bbox, days, hours, file){
+      reqs <- spec$requests(year, month)
+      plan <- ncar_time_plan(spec, reqs[[1]], bbox, year, month, days, hours)
+      if(is.null(plan)) return(FALSE)
+      grids <- NULL
+      if(length(plan$chunks)){
+            grids <- lapply(reqs, ncar_fetch_grid, bbox = bbox, chunks = plan$chunks,
+                            keep = plan$keep)
+      }
+      # selected steps of this month held at the end of the previous month's file (CFSR and
+      # CFSv2: 00:00 on the 1st), unless that file precedes the data set
+      if(length(plan$early) && year - (month == 1) >= spec$years[1]){
+            prev <- spec$requests(year - (month == 1), (month - 2) %% 12 + 1)
+            chunk <- list(list(start = min(plan$early), end = max(plan$early), stride = 1))
+            early <- tryCatch(lapply(prev, ncar_fetch_grid, bbox = bbox, chunks = chunk,
+                                     keep = plan$early, strict = FALSE),
+                              error = function(e){
+                                    warning("could not download ", format(min(plan$early),
+                                            tz = "UTC"), " UTC from the previous month's file; ",
+                                            "it is omitted: ", conditionMessage(e), call. = FALSE)
+                                    NULL
+                              })
+            if(length(early) && length(early[[1]]$time)){
+                  grids <- if(is.null(grids)) early else
+                        Map(function(a, b) bind_time(list(a, b)), early, grids)
+            }
+      }
+      if(is.null(grids)) return(FALSE)
       g <- do.call(merge_vars, grids)
       x <- grid_to_rast(g, c("u", "v"))
       tmp <- paste0(file, ".part.tif")
@@ -247,20 +328,131 @@ ncar_month <- function(spec, year, month, bbox, time_stride, file){
       terra::writeRaster(round(x, 2), tmp, datatype = "INT2S", scale = 0.01, NAflag = -32768,
                          gdal = c("COMPRESS=DEFLATE", "PREDICTOR=2"), overwrite = TRUE)
       file.rename(tmp, file) # only now does the month count as downloaded
-      invisible(file)
+      TRUE
 }
 
-# Fetch the variables in one request (a single server file), across one or two longitude
-# pieces, and assemble them into one grid: list(lon, lat, time, data = list(var = array[lon, lat, time]))
-ncar_fetch_grid <- function(req, bbox, time_stride){
-      pieces <- lapply(bbox$pieces, function(p){
-            nc <- tempfile(fileext = ".nc")
-            on.exit(unlink(nc))
-            ncss_get(req$path, req$vars, west = p[1], east = p[2], south = bbox$ylim[1],
-                     north = bbox$ylim[2], time_stride = time_stride, dest = nc)
-            read_ncss(nc, req$vars)
+# Plan the requests for one month's file: a list of time `chunks` (each NULL for the whole file,
+# or list(start, end, stride)) small enough for the server's request size limit, and the times
+# to `keep` from what they return (NULL for all). Without `days` or `hours`, the whole file is
+# kept. With them, only the selected time steps in the calendar month are kept, and `early`
+# lists any selected steps of the month that precede the file's first time step (and so sit in
+# the previous month's file). NULL if no time steps match.
+ncar_time_plan <- function(spec, req, bbox, year, month, days, hours){
+      widths <- vapply(bbox$pieces, diff, numeric(1))
+      cells <- sum(ceiling(widths / spec$res) + 1) * (ceiling(diff(bbox$ylim) / spec$res) + 1)
+      step_bytes <- cells * length(req$vars) * 4
+      budget <- getOption("windscape.ncss_max_bytes", 8e7)
+      if(is.null(days) && is.null(hours) &&
+         step_bytes * (days_in_month(year, month) * 24 + 1) <= budget)
+            return(list(chunks = list(NULL), keep = NULL, early = NULL)) # the whole file, at once
+
+      times <- ncar_probe_times(req, bbox)
+      wanted <- function(t){
+            ok <- format(t, "%Y-%m", tz = "UTC") == sprintf("%04d-%02d", year, month)
+            if(!is.null(days)) ok <- ok & as.integer(format(t, "%d", tz = "UTC")) %in% days
+            if(!is.null(hours)) ok <- ok & as.integer(format(t, "%H", tz = "UTC")) %in% hours
+            ok
+      }
+      idx <- which(wanted(times))
+      month_start <- as.POSIXct(sprintf("%04d-%02d-01", year, month), tz = "UTC")
+      early <- NULL
+      dt <- if(length(times) > 1) as.numeric(times[2]) - as.numeric(times[1]) else 3600
+      if(length(times) && times[1] - dt >= month_start){
+            early <- rev(seq(times[1] - dt, month_start, by = -dt))
+            early <- early[wanted(early)]
+      }
+      if(length(idx) == 0 && length(early) == 0) return(NULL)
+      per <- max(1, floor(budget / step_bytes))
+      chunks <- list()
+      for(r in if(length(idx)) time_runs(idx)){
+            for(g in split(r$idx, ceiling(seq_along(r$idx) / per))){
+                  chunks[[length(chunks) + 1]] <- list(start = times[g[1]],
+                                                       end = times[g[length(g)]], stride = r$by)
+            }
+      }
+      list(chunks = chunks, keep = times[idx], early = early)
+}
+
+# The time steps in a server file, from a request for a small corner of the bounding box
+ncar_probe_times <- function(req, bbox){
+      p <- bbox$pieces[[1]]
+      nc <- tempfile(fileext = ".nc")
+      on.exit(unlink(nc))
+      ncss_get(req$path, req$vars, west = p[1], east = min(p[2], p[1] + 2.5), south = bbox$ylim[1],
+               north = min(bbox$ylim[2], bbox$ylim[1] + 2.5), dest = nc, formats = req$formats)
+      read_ncss(nc, req$vars)$time
+}
+
+# Group time step indices into evenly spaced runs, each requested with one start, end, and
+# stride. A selection that is nearly regular is requested as one run that includes some extra
+# steps (at most three times as many as selected), which are dropped after download; otherwise
+# each stretch of evenly spaced steps is its own run.
+time_runs <- function(idx){
+      if(length(idx) == 1) return(list(list(idx = idx, by = 1)))
+      gcd <- function(a, b) if(b == 0) a else gcd(b, a %% b)
+      by <- Reduce(gcd, diff(idx))
+      all <- seq(idx[1], idx[length(idx)], by = by)
+      if(length(all) <= 3 * length(idx)) return(list(list(idx = all, by = by)))
+      runs <- list()
+      i <- 1
+      while(i <= length(idx)){
+            j <- i
+            by <- if(i < length(idx)) idx[i + 1] - idx[i] else 1
+            while(j < length(idx) && idx[j + 1] - idx[j] == by) j <- j + 1
+            runs[[length(runs) + 1]] <- list(idx = idx[i:j], by = by)
+            i <- j + 1
+      }
+      runs
+}
+
+# Fetch the variables of one server file, in one or more time `chunks` (see ncar_time_plan())
+# and across one or two longitude pieces, and assemble them into one grid, keeping the times in
+# `keep` (NULL for all; if `strict` is FALSE, those the server has):
+# list(lon, lat, time, data = list(var = array[lon, lat, time]))
+ncar_fetch_grid <- function(req, bbox, chunks = list(NULL), keep = NULL, strict = TRUE){
+      parts <- lapply(chunks, function(chunk){
+            pieces <- lapply(bbox$pieces, function(p){
+                  nc <- tempfile(fileext = ".nc")
+                  on.exit(unlink(nc))
+                  ncss_get(req$path, req$vars, west = p[1], east = p[2], south = bbox$ylim[1],
+                           north = bbox$ylim[2], time = chunk, dest = nc, formats = req$formats)
+                  read_ncss(nc, req$vars)
+            })
+            join_lon(pieces, bbox$convention)
       })
-      join_lon(pieces, bbox$convention)
+      g <- if(length(parts) == 1) parts[[1]] else bind_time(parts)
+      if(!is.null(keep)){
+            i <- match(as.numeric(keep), as.numeric(g$time))
+            if(anyNA(i) && strict) stop("the server returned different time steps than requested ",
+                                        "from ", req$path, call. = FALSE)
+            i <- i[!is.na(i)]
+            g$time <- g$time[i]
+            g$data <- lapply(g$data, function(a) a[, , i, drop = FALSE])
+      }
+      g
+}
+
+# Join grids holding consecutive time chunks
+bind_time <- function(parts){
+      for(p in parts[-1]){
+            if(!isTRUE(all.equal(p$lon, parts[[1]]$lon)) ||
+               !isTRUE(all.equal(p$lat, parts[[1]]$lat)))
+                  stop("time chunks of downloaded data are on different grids", call. = FALSE)
+      }
+      g <- parts[[1]]
+      g$time <- as.POSIXct(unlist(lapply(parts, function(p) as.numeric(p$time))),
+                           origin = "1970-01-01", tz = "UTC")
+      g$data <- lapply(stats::setNames(names(g$data), names(g$data)), function(v){
+            a <- lapply(parts, function(p) p$data[[v]])
+            out <- array(NA_real_, c(dim(a[[1]])[1:2], sum(vapply(a, function(z) dim(z)[3], 0))))
+            k <- 0
+            for(z in a){
+                  out[, , k + seq_len(dim(z)[3])] <- z
+                  k <- k + dim(z)[3]
+            }
+            out
+      })
+      g
 }
 
 # Combine pieces covering different longitudes into one grid in the output convention
@@ -334,17 +526,23 @@ grid_to_rast <- function(g, vars){
 
 # Server access ------------------------------------------------------------------------------------
 
-# Request a spatial subset of a file through the NetCDF Subset Service, trying the compressed
-# netCDF-4 format first and falling back to netCDF-3.
-ncss_get <- function(path, vars, west, east, south, north, time_stride, dest){
+# Request a spatial subset of a file through the NetCDF Subset Service, for all its times
+# (`time` NULL) or for list(start, end, stride), trying each output format in `formats` in turn
+# (by default the compressed netCDF-4 format first, falling back to netCDF-3).
+ncss_get <- function(path, vars, west, east, south, north, time = NULL, dest,
+                     formats = NULL){
+      if(is.null(formats)) formats <- c("netcdf4", "netcdf")
+      fmt_time <- function(t) format(t, "%Y-%m-%dT%H:%M:%SZ", tz = "UTC")
+      tq <- if(is.null(time)) "temporal=all" else
+            c(paste0("time_start=", fmt_time(time$start)), paste0("time_end=", fmt_time(time$end)),
+              if(time$stride > 1) paste0("timeStride=", time$stride))
       query <- c(paste0("var=", vars),
                  paste0("north=", fmt_num(north)), paste0("south=", fmt_num(south)),
-                 paste0("west=", fmt_num(west)), paste0("east=", fmt_num(east)),
-                 "temporal=all", if(time_stride > 1) paste0("timeStride=", time_stride))
+                 paste0("west=", fmt_num(west)), paste0("east=", fmt_num(east)), tq)
       url <- paste0(ncar_thredds(), "/ncss/grid/", path, "?",
                     paste(utils::URLencode(query, reserved = FALSE), collapse = "&"))
       err <- NULL
-      for(fmt in c("netcdf4", "netcdf")){
+      for(fmt in formats){
             ok <- tryCatch({
                   ncss_fetch(paste0(url, "&accept=", fmt), dest)
                   is_netcdf(dest)
