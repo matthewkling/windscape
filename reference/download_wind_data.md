@@ -1,9 +1,11 @@
 # Download hourly wind data from NCAR
 
 Downloads gridded hourly wind data from the NCAR Geoscience Data
-Exchange (GDEX) for a bounding box and a set of months, saving one
-GeoTIFF file per month. No account is needed. Data are clipped to the
-bounding box on the server, so only the requested region is transferred.
+Exchange (GDEX) for a bounding box and a set of months, optionally
+limited to particular days and hours, saving one GeoTIFF file per month.
+No account is needed. Data are clipped to the bounding box and the
+requested times on the server, so only the requested data are
+transferred.
 
 ## Usage
 
@@ -15,7 +17,8 @@ download_wind_data(
   ylim,
   years,
   months = 1:12,
-  time_stride = 1,
+  days = NULL,
+  hours = NULL,
   dir = tempdir(),
   overwrite = FALSE,
   quiet = FALSE
@@ -68,12 +71,26 @@ download_wind_data(
   Integer vector of months (1-12) to download within each year. Defaults
   to all months.
 
-- time_stride:
+- days:
 
-  Integer. Download every `time_stride`-th hourly time step, starting
-  with each month's first time step. The default, 1, downloads all
-  hours; for example, 3 downloads every third hour and reduces download
-  time and file size about threefold.
+  Integer vector of days of the month (1-31) to download, by the UTC
+  date of each time step. `NULL` (the default) downloads all days.
+  Months with none of the requested days (e.g. day 31 in a 30-day month)
+  are skipped.
+
+- hours:
+
+  Integer vector of hours of the day (0-23, UTC) to download. `NULL`
+  (the default) downloads all hours; for example,
+  `hours = seq(0, 21, 3)` downloads every third hour, which reduces
+  download time and file size about threefold. Days and hours refer to
+  the UTC date and time of each time step, within each requested month.
+  (CFSR and CFSv2 monthly files hold hourly forecasts valid from 01:00
+  on the first through 00:00 on the first of the following month. With
+  `days` or `hours`, time steps are assigned to their calendar month, so
+  00:00 on the first comes from the previous month's file; without them,
+  each month's file is downloaded as is, as in the pre-built roses of
+  [`download_wind_rose()`](https://matthewkling.github.io/windscape/reference/download_wind_rose.md).)
 
 - dir:
 
@@ -94,7 +111,10 @@ download_wind_data(
 ## Value
 
 A character vector of file paths, one per month, in chronological order
-(returned invisibly if all files were already cached).
+(returned invisibly if all files were already cached). Files for a
+subset of days or hours have names ending in a tag recording the
+selection (e.g. `_d28_h23`), so they are cached separately from whole
+months.
 
 ## Details
 
@@ -110,7 +130,9 @@ Downloads are cached: a month whose file already exists in `dir` is not
 downloaded again unless `overwrite = TRUE`, so an interrupted download
 can be resumed by rerunning the same call. Large requests (many years,
 or a large region) can take a long time and use substantial disk space;
-thinning hourly data with `time_stride` reduces both.
+selecting hours with `hours` (e.g. every third hour) reduces both. The
+server limits the size of each request (about 100 MB), so large requests
+are split into several, by time, and reassembled.
 
 Requires the ncdf4 package.
 
@@ -131,9 +153,13 @@ for pre-built CFSR wind roses, which need no wind data downloads.
 if (FALSE) { # \dontrun{
 # every third hour of 10 m ERA5 wind for summer 2020, Pacific Northwest
 files <- download_wind_data("era5", xlim = c(-125, -115), ylim = c(42, 49),
-                       years = 2020, months = 6:8, time_stride = 3,
-                       dir = "~/wind_data")
-ws <- wind_series(files)
-rose <- wind_rose(files)
+                            years = 2020, months = 6:8, hours = seq(0, 21, 3),
+                            dir = "~/wind_data")
+rose <- wind_rose(wind_series(files))
+
+# a single hour: Hurricane Katrina, 2005-08-28 23:00 UTC
+f <- download_wind_data("era5", xlim = c(-99, -78), ylim = c(17, 35),
+                        years = 2005, months = 8, days = 28, hours = 23)
+katrina <- wind_field(wind_series(f))
 } # }
 ```

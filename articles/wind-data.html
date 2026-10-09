@@ -173,7 +173,7 @@ Data Exchange, with no account needed:</p>
 <code class="sourceCode R"><span><span class="va">files</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/download_wind_data.html">download_wind_data</a></span><span class="op">(</span><span class="st">"era5"</span>, level <span class="op">=</span> <span class="st">"10m"</span>,</span>
 <span>                       xlim <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">120</span>, <span class="op">-</span><span class="fl">90</span><span class="op">)</span>, ylim <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">30</span>, <span class="fl">50</span><span class="op">)</span>,</span>
 <span>                       years <span class="op">=</span> <span class="fl">2011</span><span class="op">:</span><span class="fl">2020</span>, months <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">12</span>,</span>
-<span>                       time_stride <span class="op">=</span> <span class="fl">3</span>, dir <span class="op">=</span> <span class="st">"~/wind_data"</span><span class="op">)</span></span></code></pre></div>
+<span>                       hours <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">21</span>, <span class="fl">3</span><span class="op">)</span>, dir <span class="op">=</span> <span class="st">"~/wind_data"</span><span class="op">)</span></span></code></pre></div>
 <p>Data are clipped to the bounding box on the server, so only the
 region you need is transferred, and each month is saved as a separate
 file (see <code><a href="../reference/download_wind_data.html">?download_wind_data</a></code> for all options). A few
@@ -185,9 +185,12 @@ Connectivity models lose particles across the edges of the domain, so
 results near the edges are less reliable.</li>
 <li>
 <strong>Consider thinning in time.</strong> Winds are strongly
-autocorrelated from hour to hour, so <code>time_stride = 3</code> (every
-third hour) loses little information for building wind roses, while
-cutting download time and file size about threefold.</li>
+autocorrelated from hour to hour, so <code>hours = seq(0, 21, 3)</code>
+(every third hour) loses little information for building wind roses,
+while cutting download time and file size about threefold.
+<code>days</code> and <code>hours</code> can also pick out particular
+events, down to a single hour
+(e.g. <code>months = 8, days = 28, hours = 23</code>).</li>
 <li>
 <strong>Save to a permanent directory.</strong> Months already
 downloaded to <code>dir</code> are skipped, so an interrupted download
@@ -221,7 +224,7 @@ decision. A few principles:</p>
 over time, for example into monthly means, cancels out winds blowing in
 opposite directions, so averaged winds understate both the speed and the
 variability of the wind. Use hourly data, or data thinned with
-<code>time_stride</code>, rather than averages.</li>
+<code>hours</code>, rather than averages.</li>
 <li>
 <strong>Match the record length to the process.</strong> For
 processes that integrate over many years, such as gene flow, use a long

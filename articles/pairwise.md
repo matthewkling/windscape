@@ -364,7 +364,7 @@ since the download is large.
 ``` r
 
 files <- download_wind_data("era5", xlim = c(-15, 100), ylim = c(35, 72),
-                       years = 2011:2020, time_stride = 6, dir = "~/wind_data")
+                       years = 2011:2020, hours = c(0, 6, 12, 18), dir = "~/wind_data")
 rose <- wind_rose(wind_series(files), trans = 1)
 ```
 

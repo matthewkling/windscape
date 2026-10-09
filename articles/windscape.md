@@ -131,7 +131,7 @@ combines into one series:
 ``` r
 
 files <- download_wind_data("era5", xlim = c(-120, -90), ylim = c(30, 50),
-                       years = 2011:2020, time_stride = 3, dir = "~/wind_data")
+                       years = 2011:2020, hours = seq(0, 21, 3), dir = "~/wind_data")
 series <- wind_series(files)
 ```
 

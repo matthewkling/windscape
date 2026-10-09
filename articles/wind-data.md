@@ -82,7 +82,7 @@ needed:
 files <- download_wind_data("era5", level = "10m",
                        xlim = c(-120, -90), ylim = c(30, 50),
                        years = 2011:2020, months = 1:12,
-                       time_stride = 3, dir = "~/wind_data")
+                       hours = seq(0, 21, 3), dir = "~/wind_data")
 ```
 
 Data are clipped to the bounding box on the server, so only the region
@@ -94,9 +94,11 @@ for all options). A few choices deserve thought:
   particles across the edges of the domain, so results near the edges
   are less reliable.
 - **Consider thinning in time.** Winds are strongly autocorrelated from
-  hour to hour, so `time_stride = 3` (every third hour) loses little
-  information for building wind roses, while cutting download time and
-  file size about threefold.
+  hour to hour, so `hours = seq(0, 21, 3)` (every third hour) loses
+  little information for building wind roses, while cutting download
+  time and file size about threefold. `days` and `hours` can also pick
+  out particular events, down to a single hour
+  (e.g. `months = 8, days = 28, hours = 23`).
 - **Save to a permanent directory.** Months already downloaded to `dir`
   are skipped, so an interrupted download resumes where it stopped, and
   extending an analysis to more years only downloads the new ones. The
@@ -138,7 +140,7 @@ decision. A few principles:
   example into monthly means, cancels out winds blowing in opposite
   directions, so averaged winds understate both the speed and the
   variability of the wind. Use hourly data, or data thinned with
-  `time_stride`, rather than averages.
+  `hours`, rather than averages.
 - **Match the record length to the process.** For processes that
   integrate over many years, such as gene flow, use a long record,
   ideally a decade or more, so that the wind rose reflects typical
