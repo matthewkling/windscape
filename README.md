@@ -22,7 +22,7 @@ expansion. The package offers the following functionality:
 
 | Task | Description | Functions |
 |:---|:---|:---|
-| Get wind data | Download and import wind data rasters | `download_wind_data()`, `download_land_mask()`, `wind_series()`, `windscape_example()` |
+| Get wind data | Download and import wind data rasters | `download_wind_data()`, `download_wind_rose()`, `download_land_mask()`, `wind_series()`, `windscape_example()` |
 | Model wind regimes | Summarize wind time series into | `wind_rose()`, `combine_roses()`, `weight_conductance()`, `downscale()` |
 | Map windsheds | Model a site’s upwind catchment area and downwind deposition shadow using *least cost path* or *random walk* approaches | `least_cost()`, `least_cost_paths()`, `random_walk()`, `ws_summarize()` |
 | Compute pairwise connectivity | Model directional connectivity among sets of sites | `pairwise_least_cost()`, `pairwise_random_walk()`, `check_cell_distance()` |

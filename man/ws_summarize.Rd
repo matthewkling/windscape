@@ -26,7 +26,7 @@ A named vector of summary statistics:
 \item{"windshed_bearing": }{Mean bearing from origin, in degrees. This is the circular-mean bearing from the origin to every other grid cell, weighted by accessibility.}
 \item{"windshed_isotropy": }{Circular standard deviation of the bearing from the origin to every other grid cell, weighted by accessibility. Low values indicate that accessible sites are concentrated in a narrow range of compass directions, while high values indicate a wide distribution of directions. The range of possible values is 0-1.}
 \item{"windshed_size": }{Mean accessibility. This is the average of all accessibility values, weighted to correct for grid distortions. Higher values indicate landscapes with greater overall wind accessibility.}
-\item{"windshed_landarea": }{A realative measure of the land area covered by grid cells with nonzero wind accessibility.}
+\item{"windshed_landarea": }{A relative measure of the land area covered by grid cells with nonzero wind accessibility.}
 }
 }
 \description{

@@ -361,7 +361,8 @@ iter_length <- function(x){
 #' faster than this.
 #'
 #' @param rose A \code{wind_rose}.
-#'
+#' @return A number: the residence time of the cell with the greatest total conductance, in hours
+#'    for a rose built from wind speeds in m/s with `trans = 1`.
 #' @export
 rw_max_step <- function(rose){
       1 / minmax(sum(rose))[2, ]

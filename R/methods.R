@@ -22,7 +22,8 @@ NULL
 #' class(subset_series(series, steps = 1:2)) # a wind_series
 #' @name windscape-layers
 #' @exportMethod [[ subset c
-#' @aliases [[,wind_series-method [[,wind_field-method [[,wind_rose-method subset,wind_series-method subset,wind_field-method subset,wind_rose-method c,wind_series-method c,wind_field-method c,wind_rose-method
+#' @aliases [[,wind_series,ANY,ANY-method [[,wind_field,ANY,ANY-method [[,wind_rose,ANY,ANY-method
+#'    subset,wind_series-method subset,wind_field-method subset,wind_rose-method c,wind_series-method c,wind_field-method c,wind_rose-method
 NULL
 
 plain <- function(x) if(inherits(x, "SpatRaster")) as(x, "SpatRaster") else x

@@ -4,9 +4,9 @@
 \name{windscape-package}
 \alias{windscape}
 \alias{windscape-package}
-\title{windscape: Landscape connectivity by wind}
+\title{windscape: Landscape Connectivity by Wind}
 \description{
-Analyze the geography wind regimes across your study area. Import and visualize wind data, model landscape connectivity by wind dispersal using random walk or least-cost path algorithms, and test statistical relationships between wind and ecological data.
+Analyze the geography of wind regimes across a study area. Import and visualize wind data, model landscape connectivity by wind dispersal using random walk or least-cost path algorithms, and test statistical relationships between wind and ecological data.
 }
 \seealso{
 Useful links:

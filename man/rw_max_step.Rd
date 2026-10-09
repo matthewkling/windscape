@@ -9,6 +9,10 @@ rw_max_step(rose)
 \arguments{
 \item{rose}{A \code{wind_rose}.}
 }
+\value{
+A number: the residence time of the cell with the greatest total conductance, in hours
+for a rose built from wind speeds in m/s with \code{trans = 1}.
+}
 \description{
 Calculate the maximum possible iteration length for a random walk simulation, which is the
 residence time of the grid cell with the greatest total conductance. Walks can proceed no
