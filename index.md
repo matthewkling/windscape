@@ -27,11 +27,12 @@ expansion. The package offers the following functionality:
 
 ## Installation
 
-Install the development version from GitHub:
-
 ``` r
 
-# install.packages("remotes")
+# You can install the package from CRAN:
+install.packages("windscape")
+
+# Or get the development version from GitHub:
 remotes::install_github("matthewkling/windscape")
 ```
 
@@ -274,7 +275,7 @@ vignette, and articles on each part of the workflow in more depth:
   mapping and comparing site-to-landscape connectivity with least-cost
   and random walk models.
 - [**Pairwise
-  connectivity**](https://matthewkling.github.io/windscape/articles/pairwise-connectivity.html):
+  connectivity**](https://matthewkling.github.io/windscape/articles/pairwise.html):
   estimating connectivity among sites and testing hypotheses about the
   role of wind in ecological patterns.
 - [**Connectivity models in
