@@ -42,7 +42,7 @@ This vignette walks through each step using small example data sets that ship wi
 For more depth, the [package website](https://matthewkling.github.io/windscape/) has articles on
 [wind data](https://matthewkling.github.io/windscape/articles/wind-data.html),
 [windsheds](https://matthewkling.github.io/windscape/articles/windsheds.html),
-[pairwise connectivity](https://matthewkling.github.io/windscape/articles/pairwise-connectivity.html),
+[pairwise connectivity](https://matthewkling.github.io/windscape/articles/pairwise.html),
 and the [connectivity models](https://matthewkling.github.io/windscape/articles/connectivity-models.html).
 
 
@@ -404,7 +404,7 @@ sapply(list(flow = flow, isolation = isolation, asymmetry = asymmetry),
 As expected for random data, none of the relationships here are significant. With only ten sites,
 these tests also have little power; real analyses often need more sites.
 
-The [pairwise connectivity](https://matthewkling.github.io/windscape/articles/pairwise-connectivity.html)
+The [pairwise connectivity](https://matthewkling.github.io/windscape/articles/pairwise.html)
 article compares the two models' matrices, covers site placement in more detail, and works through
 these tests with the `birch` landscape genetic data set.
 
@@ -418,7 +418,7 @@ workflow in more depth:
   downloading, and preparing wind data, and building wind roses from long records.
 - [**Windsheds**](https://matthewkling.github.io/windscape/articles/windsheds.html): mapping and
   comparing site-to-landscape connectivity with least-cost and random walk models.
-- [**Pairwise connectivity**](https://matthewkling.github.io/windscape/articles/pairwise-connectivity.html):
+- [**Pairwise connectivity**](https://matthewkling.github.io/windscape/articles/pairwise.html):
   estimating connectivity among sites and testing hypotheses about the role of wind in
   ecological patterns.
 - [**Connectivity models in depth**](https://matthewkling.github.io/windscape/articles/connectivity-models.html):

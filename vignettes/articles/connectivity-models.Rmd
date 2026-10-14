@@ -10,7 +10,7 @@ knitr::opts_chunk$set(collapse = TRUE, comment = "#>", message = FALSE, warning 
 windscape models wind connectivity from a wind rose in two ways. A **least-cost model** finds
 the fastest route between places. A **random walk model** follows particles as they spread along
 all routes and (potentially) settle out of the air. The [windsheds](windsheds.html) and
-[pairwise connectivity](pairwise-connectivity.html) articles use both; this article explains how
+[pairwise connectivity](pairwise.html) articles use both; this article explains how
 they work, what their settings do, and what their limitations are, as a reference for choosing
 between them and setting them up.
 
