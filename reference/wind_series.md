@@ -69,8 +69,8 @@ wind_series(files)
 #> resolution  : 0.3157895, 0.3174603  (x, y)
 #> extent      : -120.1579, -89.84211, 29.84127, 50.15873  (xmin, xmax, ymin, ymax)
 #> coord. ref. : lon/lat WGS 84 (EPSG:4326)
-#> sources     : file1df479351fef.tif (96 layers)
-#>               file1df47f49e52.tif (96 layers)
+#> sources     : file1e8d411a920c.tif (96 layers)
+#>               file1e8d5b340dea.tif (96 layers)
 #> names       : u 2000-01-01, u 200~00:00, u 200~00:00, u 200~00:00, u 2000-01-15, u 200~00:00, ...
 #> min values  :         -4.7,        -4.7,        -6.4,        -6.9,         -4.7,        -5.7, ...
 #> max values  :          7.8,        10.6,         9.4,        10.8,            7,        11.9, ...
