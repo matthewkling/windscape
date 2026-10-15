@@ -59,8 +59,19 @@ series
 #> min values  :         -0.4,        -0.4,        -0.6,        -0.6,         -0.4,        -0.5, ...
 #> max values  :          0.7,           1,         0.9,           1,          0.7,         1.1, ...
 
-if (FALSE) { # \dontrun{
-# combine monthly files from download_wind_data()
-series <- wind_series(files)
-} # }
+# combine series stored in separate files, such as monthly files from download_wind_data()
+files <- c(tempfile(fileext = ".tif"), tempfile(fileext = ".tif"))
+terra::writeRaster(subset_series(series, steps = 1:48), files[1])
+terra::writeRaster(subset_series(series, steps = 49:96), files[2])
+wind_series(files)
+#> class       : SpatRaster
+#> size        : 64, 96, 192  (nrow, ncol, nlyr)
+#> resolution  : 0.3157895, 0.3174603  (x, y)
+#> extent      : -120.1579, -89.84211, 29.84127, 50.15873  (xmin, xmax, ymin, ymax)
+#> coord. ref. : lon/lat WGS 84 (EPSG:4326)
+#> sources     : file1e0d2c27e2c1.tif (96 layers)
+#>               file1e0dbf61059.tif (96 layers)
+#> names       : u 2000-01-01, u 200~00:00, u 200~00:00, u 200~00:00, u 2000-01-15, u 200~00:00, ...
+#> min values  :         -4.7,        -4.7,        -6.4,        -6.9,         -4.7,        -5.7, ...
+#> max values  :          7.8,        10.6,         9.4,        10.8,            7,        11.9, ...
 ```

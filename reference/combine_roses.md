@@ -31,3 +31,17 @@ A `wind_rose` whose `n_steps` is the total across the inputs.
 
 [`wind_rose()`](https://matthewkling.github.io/windscape/reference/wind_rose.md),
 which uses this function to build roses from long series in chunks.
+
+## Examples
+
+``` r
+series <- windscape_example("wind_series")
+n <- series@n_steps
+first <- wind_rose(subset_series(series, steps = 1:(n %/% 2)))
+second <- wind_rose(subset_series(series, steps = (n %/% 2 + 1):n))
+both <- combine_roses(first, second)
+
+# the same as building one rose from all the time steps
+all.equal(terra::values(both), terra::values(wind_rose(series)))
+#> [1] TRUE
+```

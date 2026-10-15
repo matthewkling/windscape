@@ -1,15 +1,27 @@
-# windscape: Landscape Connectivity by Wind
+# windscape: Model Landscape Connectivity by Wind
 
-Analyze the geography of wind regimes across a study area. Import and
-visualize wind data, model landscape connectivity by wind dispersal
-using random walk or least-cost path algorithms, and test statistical
-relationships between wind and ecological data.
+Model landscape connectivity by wind for ecological and evolutionary
+analyses. Summarize long time series of gridded wind data, downloaded
+from reanalyses or supplied by the user, into wind roses describing
+directional conductance between neighboring grid cells. Model dispersal
+through them with least-cost path and random walk algorithms, to map
+windsheds around sites and estimate pairwise connectivity among them,
+test hypotheses relating wind to ecological data, and visualize wind and
+connectivity with 'ggplot2'. The approach builds on Kling and Ackerly
+(2020)
+[doi:10.1038/s41558-020-0848-3](https://doi.org/10.1038/s41558-020-0848-3)
+and Kling and Ackerly (2021)
+[doi:10.1073/pnas.2017317118](https://doi.org/10.1073/pnas.2017317118) .
 
 ## See also
 
 Useful links:
 
 - <https://matthewkling.github.io/windscape/>
+
+- <https://github.com/matthewkling/windscape>
+
+- Report bugs at <https://github.com/matthewkling/windscape/issues>
 
 ## Author
 

@@ -35,6 +35,7 @@ is a matrix that represents each pair's relative asymmetry, removing information
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><form class="form-inline" role="search">
  <input class="form-control" type="search" name="search-input" id="search-input" autocomplete="off" aria-label="Search site" placeholder="Search for" data-search-index="../search.json"></form></li>
+<li class="nav-item"><a class="external-link nav-link" href="https://github.com/matthewkling/windscape/" aria-label="GitHub"><span class="fa fab fa-github fa-lg"></span></a></li>
       </ul></div>
 
 
@@ -44,7 +45,7 @@ is a matrix that represents each pair's relative asymmetry, removing information
   <main id="main" class="col-md-9"><div class="page-header">
 
       <h1>Convert asymmetric pairwise matrix to reciprocally symmetrical matrix</h1>
-
+      <small class="dont-index">Source: <a href="https://github.com/matthewkling/windscape/blob/master/R/pairwise_matrices.R" class="external-link"><code>R/pairwise_matrices.R</code></a></small>
       <div class="d-none name"><code>pairwise_ratios.Rd</code></div>
     </div>
 
@@ -76,15 +77,37 @@ or a numeric vector with a value for each node.</p></dd>
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>A square matrix the same size as <code>x</code>, with ones in the diagonal and reciprocal values in the upper and lower triangles.
+    <p>A square matrix the same size as <code>x</code>, with ones in the diagonal (zeros if <code>log = TRUE</code>) and reciprocal values in the upper and lower triangles.
+The diagonal is set regardless of the diagonal of <code>x</code>, which for a matrix of flows is typically zero.
+A pair with zero flow in one direction gives a ratio of 0 or <code>Inf</code> (<code>-Inf</code> or <code>Inf</code> if logged), and a pair with no flow in either direction gives <code>NaN</code>.
 If <code>x</code> is a matrix, the output represents the ratios of above-diagonal to below-diagonal values in <code>x</code>.
 If <code>x</code> is a vector, the output represents the ratios of every pairwise combination of <code>x</code> values; e.g. a matrix in which the value of cell <code>[2, 4]</code> equals <code>x[2] / x[4]</code>.</p>
     </div>
     <div class="section level2">
     <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a></h2>
-    <p>Kling and Ackerly (2021). Global wind patterns shape genetic differentiation, asymmetric gene flow, and genetic diversity in trees. Proceedings of the National Academy of Sciences. https://doi.org/10.1073/pnas.2017317118</p>
+    <p>Kling and Ackerly (2021). Global wind patterns shape genetic differentiation, asymmetric gene flow, and genetic diversity in trees. Proceedings of the National Academy of Sciences 118: e2017317118. <a href="https://doi.org/10.1073/pnas.2017317118" class="external-link">doi:10.1073/pnas.2017317118</a></p>
     </div>
 
+    <div class="section level2">
+    <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># directional flows among three sites, from row to column</span></span></span>
+<span class="r-in"><span><span class="va">x</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">2</span>, <span class="fl">6</span>,</span></span>
+<span class="r-in"><span>              <span class="fl">4</span>, <span class="fl">0</span>, <span class="fl">1</span>,</span></span>
+<span class="r-in"><span>              <span class="fl">2</span>, <span class="fl">3</span>, <span class="fl">0</span><span class="op">)</span>, <span class="fl">3</span>, byrow <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu">pairwise_ratios</span><span class="op">(</span><span class="va">x</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>            [,1]       [,2]      [,3]</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1,]  0.0000000 -0.6931472  1.098612</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [2,]  0.6931472  0.0000000 -1.098612</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [3,] -1.0986123  1.0986123  0.000000</span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># ratios of a site attribute, such as genetic diversity</span></span></span>
+<span class="r-in"><span><span class="fu">pairwise_ratios</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.2</span>, <span class="fl">0.4</span>, <span class="fl">0.8</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>           [,1]       [,2]       [,3]</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1,] 0.0000000 -0.6931472 -1.3862944</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [2,] 0.6931472  0.0000000 -0.6931472</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [3,] 1.3862944  0.6931472  0.0000000</span>
+</code></pre></div>
+    </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside></div>
 

@@ -54,3 +54,20 @@ finer grid, or to
 [`downscale()`](https://matthewkling.github.io/windscape/reference/downscale.md)
 the wind rose (see its documentation for how downscaling changes random
 walk results).
+
+## Examples
+
+``` r
+rose <- windscape_example("wind_rose")
+sites <- cbind(c(-110, -109.9, -100), c(35, 35.1, 40)) # the first two share a cell
+check_cell_distance(rose, sites)
+#> Total point pairs: 3
+#> Point pairs in the same grid cell: 1 (33.3%)
+#> Distribution of cell-point distance discrepancies:
+#>  0--1%: 0 (0%)
+#>  1--2.5%: 1 (33.3%)
+#>  2.5--5%: 1 (33.3%)
+#>  5--10%: 0 (0%)
+#>  10--25%: 0 (0%)
+#>  25--Inf%: 1 (33.3%)
+```

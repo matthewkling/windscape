@@ -55,3 +55,18 @@ generate_particles(
 
 A two-column matrix of x (longitude) and y (latitude) values, with a row
 for each particle.
+
+## Examples
+
+``` r
+field <- windscape_example("wind_field")
+p <- generate_particles(field, n = 100)
+head(p)
+#>              x        y
+#> [1,] -93.64991 24.81653
+#> [2,] -83.89934 19.76607
+#> [3,] -96.70346 25.62244
+#> [4,] -82.48499 33.81829
+#> [5,] -83.48341 28.87295
+#> [6,] -96.09867 23.96857
+```

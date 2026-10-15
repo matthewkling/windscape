@@ -35,6 +35,7 @@ functions, download wind data with download_wind_data() and build a rose with wi
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><form class="form-inline" role="search">
  <input class="form-control" type="search" name="search-input" id="search-input" autocomplete="off" aria-label="Search site" placeholder="Search for" data-search-index="../search.json"></form></li>
+<li class="nav-item"><a class="external-link nav-link" href="https://github.com/matthewkling/windscape/" aria-label="GitHub"><span class="fa fab fa-github fa-lg"></span></a></li>
       </ul></div>
 
 
@@ -44,7 +45,7 @@ functions, download wind data with download_wind_data() and build a rose with wi
   <main id="main" class="col-md-9"><div class="page-header">
 
       <h1>Download a pre-built wind rose</h1>
-
+      <small class="dont-index">Source: <a href="https://github.com/matthewkling/windscape/blob/master/R/download_wind_rose.R" class="external-link"><code>R/download_wind_rose.R</code></a></small>
       <div class="d-none name"><code>download_wind_rose.Rd</code></div>
     </div>
 
@@ -131,9 +132,9 @@ built from all of the requested hours at once.</p>
 <span class="r-in"><span><span class="va">rose</span> <span class="op">&lt;-</span> <span class="fu">download_wind_rose</span><span class="op">(</span>ext <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">125</span>, <span class="op">-</span><span class="fl">100</span>, <span class="fl">30</span>, <span class="fl">50</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> reading 1 wind rose file remotely</span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># summers of the 1990s</span></span></span>
-<span class="r-in"><span><span class="va">summer</span> <span class="op">&lt;-</span> <span class="fu">download_wind_rose</span><span class="op">(</span>year <span class="op">=</span> <span class="fl">1990</span><span class="op">:</span><span class="fl">1999</span>, month <span class="op">=</span> <span class="fl">6</span><span class="op">:</span><span class="fl">8</span>, ext <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">125</span>, <span class="op">-</span><span class="fl">100</span>, <span class="fl">30</span>, <span class="fl">50</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> reading 30 wind rose files remotely</span>
+<span class="r-in"><span><span class="co"># summers of 1990-1992</span></span></span>
+<span class="r-in"><span><span class="va">summer</span> <span class="op">&lt;-</span> <span class="fu">download_wind_rose</span><span class="op">(</span>year <span class="op">=</span> <span class="fl">1990</span><span class="op">:</span><span class="fl">1992</span>, month <span class="op">=</span> <span class="fl">6</span><span class="op">:</span><span class="fl">8</span>, ext <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">125</span>, <span class="op">-</span><span class="fl">100</span>, <span class="fl">30</span>, <span class="fl">50</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> reading 9 wind rose files remotely</span>
 <span class="r-in"><span><span class="co"># }</span></span></span>
 </code></pre></div>
     </div>

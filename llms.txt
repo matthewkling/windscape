@@ -440,13 +440,13 @@ ggplot2 layers for wind data and connectivity results.
   : An S4 object class representing a wind graph
 - [`windscape-layers`](https://matthewkling.github.io/windscape/reference/windscape-layers.md)
   [`[[,wind_series,ANY,ANY-method`](https://matthewkling.github.io/windscape/reference/windscape-layers.md)
-  [`[[,wind_field,ANY,ANY-method`](https://matthewkling.github.io/windscape/reference/windscape-layers.md)
-  [`[[,wind_rose,ANY,ANY-method`](https://matthewkling.github.io/windscape/reference/windscape-layers.md)
   [`subset,wind_series-method`](https://matthewkling.github.io/windscape/reference/windscape-layers.md)
-  [`subset,wind_field-method`](https://matthewkling.github.io/windscape/reference/windscape-layers.md)
-  [`subset,wind_rose-method`](https://matthewkling.github.io/windscape/reference/windscape-layers.md)
   [`c,wind_series-method`](https://matthewkling.github.io/windscape/reference/windscape-layers.md)
+  [`[[,wind_field,ANY,ANY-method`](https://matthewkling.github.io/windscape/reference/windscape-layers.md)
+  [`subset,wind_field-method`](https://matthewkling.github.io/windscape/reference/windscape-layers.md)
   [`c,wind_field-method`](https://matthewkling.github.io/windscape/reference/windscape-layers.md)
+  [`[[,wind_rose,ANY,ANY-method`](https://matthewkling.github.io/windscape/reference/windscape-layers.md)
+  [`subset,wind_rose-method`](https://matthewkling.github.io/windscape/reference/windscape-layers.md)
   [`c,wind_rose-method`](https://matthewkling.github.io/windscape/reference/windscape-layers.md)
   : Selecting and combining layers of windscape objects
 - [`geoCorrection(`*`<wind_graph>`*`,`*`<ANY>`*`)`](https://matthewkling.github.io/windscape/reference/geoCorrection-wind_graph-ANY-method.md)

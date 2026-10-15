@@ -84,3 +84,12 @@ retention probability; see
 It omits mass that leaves and returns, which is substantial in a
 nearest-neighbor walk, especially in fast cells where `p_cc` is near
 zero.
+
+## Examples
+
+``` r
+rose <- windscape_example("wind_rose")
+sites <- cbind(c(-110, -100), c(35, 40))
+rw_self_retention(rose, half_life = 24, cells = sites, exact = TRUE)
+#> [1] 3.795700 2.932573
+```

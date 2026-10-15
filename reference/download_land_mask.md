@@ -33,7 +33,7 @@ cells have soil temperature data.)
 ## Examples
 
 ``` r
-if (FALSE) { # \dontrun{
+if (FALSE) { # interactive() && requireNamespace("ncdf4", quietly = TRUE)
 land <- download_land_mask("era5", xlim = c(-125, -115), ylim = c(42, 49))
-} # }
+}
 ```

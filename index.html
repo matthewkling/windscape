@@ -5,14 +5,14 @@
 <meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<title>Landscape Connectivity by Wind • windscape</title>
+<title>Model Landscape Connectivity by Wind • windscape</title>
 <script src="deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <link href="deps/bootstrap-5.3.8/bootstrap.min.css" rel="stylesheet">
 <script src="deps/bootstrap-5.3.8/bootstrap.bundle.min.js"></script><link href="deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
-<script src="deps/headroom-0.11.0/headroom.min.js"></script><script src="deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="deps/search-1.0.0/fuse.min.js"></script><script src="deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="pkgdown.js"></script><meta property="og:title" content="Landscape Connectivity by Wind">
-<meta name="description" content="Analyze the geography of wind regimes across a study area. Import and visualize wind data, model landscape connectivity by wind dispersal using random walk or least-cost path algorithms, and test statistical relationships between wind and ecological data.">
-<meta property="og:description" content="Analyze the geography of wind regimes across a study area. Import and visualize wind data, model landscape connectivity by wind dispersal using random walk or least-cost path algorithms, and test statistical relationships between wind and ecological data.">
+<script src="deps/headroom-0.11.0/headroom.min.js"></script><script src="deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="deps/search-1.0.0/fuse.min.js"></script><script src="deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="pkgdown.js"></script><meta property="og:title" content="Model Landscape Connectivity by Wind">
+<meta name="description" content="Model landscape connectivity by wind for ecological and evolutionary analyses. Summarize long time series of gridded wind data, downloaded from reanalyses or supplied by the user, into wind roses describing directional conductance between neighboring grid cells. Model dispersal through them with least-cost path and random walk algorithms, to map windsheds around sites and estimate pairwise connectivity among them, test hypotheses relating wind to ecological data, and visualize wind and connectivity with ggplot2. The approach builds on Kling and Ackerly (2020) &lt;doi:10.1038/s41558-020-0848-3&gt; and Kling and Ackerly (2021) &lt;doi:10.1073/pnas.2017317118&gt;.">
+<meta property="og:description" content="Model landscape connectivity by wind for ecological and evolutionary analyses. Summarize long time series of gridded wind data, downloaded from reanalyses or supplied by the user, into wind roses describing directional conductance between neighboring grid cells. Model dispersal through them with least-cost path and random walk algorithms, to map windsheds around sites and estimate pairwise connectivity among them, test hypotheses relating wind to ecological data, and visualize wind and connectivity with ggplot2. The approach builds on Kling and Ackerly (2020) &lt;doi:10.1038/s41558-020-0848-3&gt; and Kling and Ackerly (2021) &lt;doi:10.1073/pnas.2017317118&gt;.">
 </head>
 <body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
@@ -48,6 +48,7 @@
 <li class="nav-item"><form class="form-inline" role="search">
  <input class="form-control" type="search" name="search-input" id="search-input" autocomplete="off" aria-label="Search site" placeholder="Search for" data-search-index="search.json">
 </form></li>
+<li class="nav-item"><a class="external-link nav-link" href="https://github.com/matthewkling/windscape/" aria-label="GitHub"><span class="fa fab fa-github fa-lg"></span></a></li>
       </ul>
 </div>
 
@@ -274,7 +275,15 @@
 </ul>
 </div>
 </div>
-  </main><aside class="col-md-3"><div class="license">
+  </main><aside class="col-md-3"><div class="links">
+<h2 data-toc-skip>Links</h2>
+<ul class="list-unstyled">
+<li><a href="https://github.com/matthewkling/windscape/" class="external-link">Browse source code</a></li>
+<li><a href="https://github.com/matthewkling/windscape/issues" class="external-link">Report a bug</a></li>
+</ul>
+</div>
+
+<div class="license">
 <h2 data-toc-skip>License</h2>
 <ul class="list-unstyled">
 <li><a href="LICENSE.html">Full license</a></li>

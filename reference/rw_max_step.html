@@ -31,6 +31,7 @@ faster than this."></head><body>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><form class="form-inline" role="search">
  <input class="form-control" type="search" name="search-input" id="search-input" autocomplete="off" aria-label="Search site" placeholder="Search for" data-search-index="../search.json"></form></li>
+<li class="nav-item"><a class="external-link nav-link" href="https://github.com/matthewkling/windscape/" aria-label="GitHub"><span class="fa fab fa-github fa-lg"></span></a></li>
       </ul></div>
 
 
@@ -40,7 +41,7 @@ faster than this."></head><body>
   <main id="main" class="col-md-9"><div class="page-header">
 
       <h1>Maximum iteration duration for a random walk</h1>
-
+      <small class="dont-index">Source: <a href="https://github.com/matthewkling/windscape/blob/master/R/random_walk.R" class="external-link"><code>R/random_walk.R</code></a></small>
       <div class="d-none name"><code>rw_max_step.Rd</code></div>
     </div>
 
@@ -69,6 +70,13 @@ faster than this.</p>
 for a rose built from wind speeds in m/s with <code>trans = 1</code>.</p>
     </div>
 
+    <div class="section level2">
+    <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="va">rose</span> <span class="op">&lt;-</span> <span class="fu"><a href="windscape_example.html">windscape_example</a></span><span class="op">(</span><span class="st">"wind_rose"</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu">rw_max_step</span><span class="op">(</span><span class="va">rose</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 1.324253</span>
+</code></pre></div>
+    </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside></div>
 

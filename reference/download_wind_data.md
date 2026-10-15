@@ -150,16 +150,15 @@ for pre-built CFSR wind roses, which need no wind data downloads.
 ## Examples
 
 ``` r
-if (FALSE) { # \dontrun{
+if (FALSE) { # interactive() && requireNamespace("ncdf4", quietly = TRUE)
 # every third hour of 10 m ERA5 wind for summer 2020, Pacific Northwest
 files <- download_wind_data("era5", xlim = c(-125, -115), ylim = c(42, 49),
-                            years = 2020, months = 6:8, hours = seq(0, 21, 3),
-                            dir = "~/wind_data")
+                            years = 2020, months = 6:8, hours = seq(0, 21, 3))
 rose <- wind_rose(wind_series(files))
 
 # a single hour: Hurricane Katrina, 2005-08-28 23:00 UTC
 f <- download_wind_data("era5", xlim = c(-99, -78), ylim = c(17, 35),
                         years = 2005, months = 8, days = 28, hours = 23)
 katrina <- wind_field(wind_series(f))
-} # }
+}
 ```

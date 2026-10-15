@@ -21,3 +21,11 @@ rw_max_step(rose)
 A number: the residence time of the cell with the greatest total
 conductance, in hours for a rose built from wind speeds in m/s with
 `trans = 1`.
+
+## Examples
+
+``` r
+rose <- windscape_example("wind_rose")
+rw_max_step(rose)
+#> [1] 1.324253
+```

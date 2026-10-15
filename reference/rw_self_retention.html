@@ -31,6 +31,7 @@ subtracted for a leave-one-out surface, e.g. to avoid a site predicting itself."
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><form class="form-inline" role="search">
  <input class="form-control" type="search" name="search-input" id="search-input" autocomplete="off" aria-label="Search site" placeholder="Search for" data-search-index="../search.json"></form></li>
+<li class="nav-item"><a class="external-link nav-link" href="https://github.com/matthewkling/windscape/" aria-label="GitHub"><span class="fa fab fa-github fa-lg"></span></a></li>
       </ul></div>
 
 
@@ -40,7 +41,7 @@ subtracted for a leave-one-out surface, e.g. to avoid a site predicting itself."
   <main id="main" class="col-md-9"><div class="page-header">
 
       <h1>Self-contribution of each source cell in a stream-mode random walk</h1>
-
+      <small class="dont-index">Source: <a href="https://github.com/matthewkling/windscape/blob/master/R/random_walk.R" class="external-link"><code>R/random_walk.R</code></a></small>
       <div class="d-none name"><code>rw_self_retention.Rd</code></div>
     </div>
 
@@ -120,6 +121,14 @@ It omits mass that leaves and returns, which is substantial in a nearest-neighbo
 especially in fast cells where <code>p_cc</code> is near zero.</p>
     </div>
 
+    <div class="section level2">
+    <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="va">rose</span> <span class="op">&lt;-</span> <span class="fu"><a href="windscape_example.html">windscape_example</a></span><span class="op">(</span><span class="st">"wind_rose"</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">sites</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">cbind</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">110</span>, <span class="op">-</span><span class="fl">100</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">35</span>, <span class="fl">40</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu">rw_self_retention</span><span class="op">(</span><span class="va">rose</span>, half_life <span class="op">=</span> <span class="fl">24</span>, cells <span class="op">=</span> <span class="va">sites</span>, exact <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 3.795700 2.932573</span>
+</code></pre></div>
+    </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside></div>
 

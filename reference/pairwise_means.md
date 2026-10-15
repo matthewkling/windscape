@@ -28,5 +28,19 @@ representing the pairwise means of directional flows in `x`.
 
 Kling and Ackerly (2021). Global wind patterns shape genetic
 differentiation, asymmetric gene flow, and genetic diversity in trees.
-Proceedings of the National Academy of Sciences.
-https://doi.org/10.1073/pnas.2017317118
+Proceedings of the National Academy of Sciences 118: e2017317118.
+[doi:10.1073/pnas.2017317118](https://doi.org/10.1073/pnas.2017317118)
+
+## Examples
+
+``` r
+# directional flows among three sites, from row to column
+x <- matrix(c(0, 2, 6,
+              4, 0, 1,
+              2, 3, 0), 3, byrow = TRUE)
+pairwise_means(x)
+#>      [,1] [,2] [,3]
+#> [1,]    0    3    4
+#> [2,]    3    0    2
+#> [3,]    4    2    0
+```

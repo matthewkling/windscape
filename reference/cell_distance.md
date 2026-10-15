@@ -25,3 +25,15 @@ cell_distance(x, ll)
 ## Value
 
 Pairwise distances between the cell centroids, in km
+
+## Examples
+
+``` r
+rose <- windscape_example("wind_rose")
+sites <- cbind(c(-110, -100, -95), c(35, 40, 45))
+cell_distance(rose, sites)
+#>          [,1]      [,2]      [,3]
+#> [1,]    0.000 1013.6924 1668.6407
+#> [2,] 1013.692    0.0000  700.7436
+#> [3,] 1668.641  700.7436    0.0000
+```
