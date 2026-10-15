@@ -20,6 +20,16 @@ months or years), into a single rose representing all of those time steps. Becau
 is an average over time steps, the result is the mean of the input roses weighted by their
 numbers of time steps, and equals the rose that would be built from all the time steps at once.
 }
+\examples{
+series <- windscape_example("wind_series")
+n <- series@n_steps
+first <- wind_rose(subset_series(series, steps = 1:(n \%/\% 2)))
+second <- wind_rose(subset_series(series, steps = (n \%/\% 2 + 1):n))
+both <- combine_roses(first, second)
+
+# the same as building one rose from all the time steps
+all.equal(terra::values(both), terra::values(wind_rose(series)))
+}
 \seealso{
 \code{\link[=wind_rose]{wind_rose()}}, which uses this function to build roses from long series in chunks.
 }

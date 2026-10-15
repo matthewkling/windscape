@@ -31,10 +31,11 @@ memory until needed.
 series <- windscape_example("wind_series")
 series
 
-\dontrun{
-# combine monthly files from download_wind_data()
-series <- wind_series(files)
-}
+# combine series stored in separate files, such as monthly files from download_wind_data()
+files <- c(tempfile(fileext = ".tif"), tempfile(fileext = ".tif"))
+terra::writeRaster(subset_series(series, steps = 1:48), files[1])
+terra::writeRaster(subset_series(series, steps = 49:96), files[2])
+wind_series(files)
 }
 \seealso{
 \code{\link[=subset_series]{subset_series()}} and \code{\link[=wind_times]{wind_times()}} for working with time steps.

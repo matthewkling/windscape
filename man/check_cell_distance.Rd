@@ -35,3 +35,8 @@ Where many site pairs are affected, options are to use wind data on a finer grid
 \code{\link[=downscale]{downscale()}} the wind rose (see its documentation for how downscaling changes random walk
 results).
 }
+\examples{
+rose <- windscape_example("wind_rose")
+sites <- cbind(c(-110, -109.9, -100), c(35, 35.1, 40)) # the first two share a cell
+check_cell_distance(rose, sites)
+}

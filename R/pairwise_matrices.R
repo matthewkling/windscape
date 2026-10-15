@@ -9,14 +9,26 @@
 #' @param x Either a square matrix with entries representing directional edge weights between pairs of nodes,
 #' or a numeric vector with a value for each node.
 #' @param log Should ratios be log-transformed? Default is \code{TRUE}, since this generates a symmetrical frequency distribution desirable for most analyses.
-#' @return A square matrix the same size as \code{x}, with ones in the diagonal and reciprocal values in the upper and lower triangles.
+#' @return A square matrix the same size as \code{x}, with ones in the diagonal (zeros if `log = TRUE`) and reciprocal values in the upper and lower triangles.
+#' The diagonal is set regardless of the diagonal of \code{x}, which for a matrix of flows is typically zero.
+#' A pair with zero flow in one direction gives a ratio of 0 or `Inf` (`-Inf` or `Inf` if logged), and a pair with no flow in either direction gives `NaN`.
 #' If \code{x} is a matrix, the output represents the ratios of above-diagonal to below-diagonal values in \code{x}.
 #' If \code{x} is a vector, the output represents the ratios of every pairwise combination of \code{x} values; e.g. a matrix in which the value of cell `[2, 4]` equals `x[2] / x[4]`.
-#' @references Kling and Ackerly (2021). Global wind patterns shape genetic differentiation, asymmetric gene flow, and genetic diversity in trees. Proceedings of the National Academy of Sciences. https://doi.org/10.1073/pnas.2017317118
+#' @references Kling and Ackerly (2021). Global wind patterns shape genetic differentiation, asymmetric gene flow, and genetic diversity in trees. Proceedings of the National Academy of Sciences 118: e2017317118. \doi{10.1073/pnas.2017317118}
+#' @examples
+#' # directional flows among three sites, from row to column
+#' x <- matrix(c(0, 2, 6,
+#'               4, 0, 1,
+#'               2, 3, 0), 3, byrow = TRUE)
+#' pairwise_ratios(x)
+#'
+#' # ratios of a site attribute, such as genetic diversity
+#' pairwise_ratios(c(0.2, 0.4, 0.8))
 #' @export
 pairwise_ratios <- function(x, log = TRUE){
       if(!inherits(x, "matrix")) x <- matrix(rep(x, length(x)), length(x))
       x <- x / t(x)
+      diag(x) <- 1
       if(log) x <- log(x)
       return(x)
 }
@@ -28,7 +40,13 @@ pairwise_ratios <- function(x, log = TRUE){
 #'
 #' @param x A square matrix with entries representing directional edge weights between pairs of nodes.
 #' @return A symmetrical square matrix the same size as \code{x}, with values representing the pairwise means of directional flows in \code{x}.
-#' @references Kling and Ackerly (2021). Global wind patterns shape genetic differentiation, asymmetric gene flow, and genetic diversity in trees. Proceedings of the National Academy of Sciences. https://doi.org/10.1073/pnas.2017317118
+#' @references Kling and Ackerly (2021). Global wind patterns shape genetic differentiation, asymmetric gene flow, and genetic diversity in trees. Proceedings of the National Academy of Sciences 118: e2017317118. \doi{10.1073/pnas.2017317118}
+#' @examples
+#' # directional flows among three sites, from row to column
+#' x <- matrix(c(0, 2, 6,
+#'               4, 0, 1,
+#'               2, 3, 0), 3, byrow = TRUE)
+#' pairwise_means(x)
 #' @export
 pairwise_means <- function(x){
       x <- (x + t(x)) / 2

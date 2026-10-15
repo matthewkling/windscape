@@ -13,7 +13,9 @@ or a numeric vector with a value for each node.}
 \item{log}{Should ratios be log-transformed? Default is \code{TRUE}, since this generates a symmetrical frequency distribution desirable for most analyses.}
 }
 \value{
-A square matrix the same size as \code{x}, with ones in the diagonal and reciprocal values in the upper and lower triangles.
+A square matrix the same size as \code{x}, with ones in the diagonal (zeros if \code{log = TRUE}) and reciprocal values in the upper and lower triangles.
+The diagonal is set regardless of the diagonal of \code{x}, which for a matrix of flows is typically zero.
+A pair with zero flow in one direction gives a ratio of 0 or \code{Inf} (\code{-Inf} or \code{Inf} if logged), and a pair with no flow in either direction gives \code{NaN}.
 If \code{x} is a matrix, the output represents the ratios of above-diagonal to below-diagonal values in \code{x}.
 If \code{x} is a vector, the output represents the ratios of every pairwise combination of \code{x} values; e.g. a matrix in which the value of cell \verb{[2, 4]} equals \code{x[2] / x[4]}.
 }
@@ -24,6 +26,16 @@ with entries representing directed edge weights (e.g. directional flows of wind 
 or it can be a vector of node attributes (e.g. properties of a site or population, such as genetic diversity). The result
 is a matrix that represents each pair's relative asymmetry, removing information about their absolute magnitudes.
 }
+\examples{
+# directional flows among three sites, from row to column
+x <- matrix(c(0, 2, 6,
+              4, 0, 1,
+              2, 3, 0), 3, byrow = TRUE)
+pairwise_ratios(x)
+
+# ratios of a site attribute, such as genetic diversity
+pairwise_ratios(c(0.2, 0.4, 0.8))
+}
 \references{
-Kling and Ackerly (2021). Global wind patterns shape genetic differentiation, asymmetric gene flow, and genetic diversity in trees. Proceedings of the National Academy of Sciences. https://doi.org/10.1073/pnas.2017317118
+Kling and Ackerly (2021). Global wind patterns shape genetic differentiation, asymmetric gene flow, and genetic diversity in trees. Proceedings of the National Academy of Sciences 118: e2017317118. \doi{10.1073/pnas.2017317118}
 }

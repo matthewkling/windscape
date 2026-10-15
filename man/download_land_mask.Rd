@@ -22,7 +22,7 @@ Downloads a land layer matching the grid of \code{\link[=download_wind_data]{dow
 and bounding box, e.g. for weighting a wind rose to reduce conductance over water.
 }
 \examples{
-\dontrun{
+\dontshow{if (interactive() && requireNamespace("ncdf4", quietly = TRUE)) withAutoprint(\{ # examplesIf}
 land <- download_land_mask("era5", xlim = c(-125, -115), ylim = c(42, 49))
-}
+\dontshow{\}) # examplesIf}
 }

@@ -59,8 +59,8 @@ built from all of the requested hours at once.
 # long-term rose for the western US, read remotely
 rose <- download_wind_rose(ext = c(-125, -100, 30, 50))
 
-# summers of the 1990s
-summer <- download_wind_rose(year = 1990:1999, month = 6:8, ext = c(-125, -100, 30, 50))
+# summers of 1990-1992
+summer <- download_wind_rose(year = 1990:1992, month = 6:8, ext = c(-125, -100, 30, 50))
 }
 }
 \seealso{

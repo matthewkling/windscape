@@ -17,6 +17,13 @@ test_that("pairwise_ratios of a matrix gives x[i, j] / x[j, i]", {
       expect_equal(lr, -t(lr))   # log ratios are antisymmetric
 })
 
+test_that("pairwise_ratios sets the diagonal, even where the input's is zero", {
+      m <- matrix(c(0, 2, 6, 4, 0, 1, 2, 3, 0), 3)
+      expect_equal(diag(pairwise_ratios(m, log = FALSE)), rep(1, 3))
+      expect_equal(diag(pairwise_ratios(m)), rep(0, 3))
+      expect_false(anyNA(pairwise_ratios(m)))
+})
+
 test_that("pairwise_means symmetrizes a matrix", {
       m <- matrix(1:9, 3)
       p <- pairwise_means(m)

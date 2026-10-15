@@ -347,6 +347,10 @@ as_wind_walk <- function(x, mode, n_iter, iter_length, decay = NA_real_, directi
 #' @param x The list returned by [random_walk()], or one of its elements.
 #' @return Length of one iteration (time step), in hours if `trans = 1` and wind speeds are in m/s.
 #'
+#' @examples
+#' rose <- windscape_example("wind_rose")
+#' rw <- random_walk(rose, cbind(-100, 40), iter = 10)
+#' iter_length(rw)
 #' @export
 iter_length <- function(x){
       if(is.list(x)) x <- x[[1]]
@@ -363,6 +367,9 @@ iter_length <- function(x){
 #' @param rose A \code{wind_rose}.
 #' @return A number: the residence time of the cell with the greatest total conductance, in hours
 #'    for a rose built from wind speeds in m/s with `trans = 1`.
+#' @examples
+#' rose <- windscape_example("wind_rose")
+#' rw_max_step(rose)
 #' @export
 rw_max_step <- function(rose){
       1 / minmax(sum(rose))[2, ]
@@ -400,6 +407,10 @@ rw_max_step <- function(rose){
 #'    leave-one-out surface, `residence_loo = residence - init * G_cc` and
 #'    `deposition_loo = log(2) / half_life * residence_loo`, using the `residence` layer from
 #'    [random_walk()] and `init` values at the source cells.
+#' @examples
+#' rose <- windscape_example("wind_rose")
+#' sites <- cbind(c(-110, -100), c(35, 40))
+#' rw_self_retention(rose, half_life = 24, cells = sites, exact = TRUE)
 #' @export
 rw_self_retention <- function(rose, half_life = Inf, timescale = 1, latitude_correction = TRUE,
                               wrap = NULL, cells = NULL, exact = FALSE, chunk = 200){

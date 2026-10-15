@@ -15,3 +15,7 @@ Pairwise distances between the points, in km
 \description{
 A wrapper around \link[geosphere]{distm}, returning distances in km.
 }
+\examples{
+sites <- cbind(c(-110, -100, -95), c(35, 40, 45))
+point_distance(sites)
+}

@@ -9,6 +9,12 @@
 #' @param rose A `wind_rose`.
 #' @param w A single-layer `SpatRaster` with values to be multiplied by \code{rose}, on the same grid as \code{rose}.
 #' @return A `wind_rose`, with conductance values weighted by \code{w}.
+#' @examples
+#' rose <- windscape_example("wind_rose")
+#'
+#' # halve conductance west of 105 degrees W
+#' w <- terra::ifel(terra::init(rose[[1]], "x") < -105, 0.5, 1)
+#' weighted <- weight_conductance(rose, w)
 #' @export
 weight_conductance <- function(rose, w){
       if(!inherits(rose, "wind_rose")) stop("`rose` must be a wind_rose")

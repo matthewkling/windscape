@@ -4,6 +4,9 @@
 #'
 #' @param ll two-column matrix of point coordinates
 #' @return Pairwise distances between the points, in km
+#' @examples
+#' sites <- cbind(c(-110, -100, -95), c(35, 40, 45))
+#' point_distance(sites)
 #' @export
 point_distance <- function(ll){
       geosphere::distm(ll) / 1000
@@ -19,6 +22,10 @@ point_distance <- function(ll){
 #' @param x SpatRaster
 #' @param ll two-column matrix of site coordinates
 #' @return Pairwise distances between the cell centroids, in km
+#' @examples
+#' rose <- windscape_example("wind_rose")
+#' sites <- cbind(c(-110, -100, -95), c(35, 40, 45))
+#' cell_distance(rose, sites)
 #' @export
 cell_distance <- function(x, ll){
       cc <- terra::xyFromCell(x, terra::cellFromXY(x, ll)) # cell centers
@@ -49,6 +56,10 @@ cell_distance <- function(x, ll){
 #'    and the distribution of discrepancies between cell and point distances, as percentages of
 #'    point distance. If `return = TRUE`, also returns a matrix of the ratios of cell distances to
 #'    point distances (`NaN` for a site with itself, and 0 for distinct sites in the same cell).
+#' @examples
+#' rose <- windscape_example("wind_rose")
+#' sites <- cbind(c(-110, -109.9, -100), c(35, 35.1, 40)) # the first two share a cell
+#' check_cell_distance(rose, sites)
 #' @export
 check_cell_distance <- function(x, ll, return = FALSE){
       cell <- cell_distance(x, ll)

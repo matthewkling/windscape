@@ -37,3 +37,8 @@ A two-column matrix of x (longitude) and y (latitude) values, with a row for eac
 \description{
 Initialize a set of particle locations for use in \code{\link[=wind_trails]{wind_trails()}}.
 }
+\examples{
+field <- windscape_example("wind_field")
+p <- generate_particles(field, n = 100)
+head(p)
+}

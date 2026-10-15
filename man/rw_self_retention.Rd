@@ -56,3 +56,8 @@ which mass never leaves the cell (\code{p_cc} is the retention probability; see 
 It omits mass that leaves and returns, which is substantial in a nearest-neighbor walk,
 especially in fast cells where \code{p_cc} is near zero.
 }
+\examples{
+rose <- windscape_example("wind_rose")
+sites <- cbind(c(-110, -100), c(35, 40))
+rw_self_retention(rose, half_life = 24, cells = sites, exact = TRUE)
+}

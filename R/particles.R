@@ -183,6 +183,10 @@ geo_grid <- function(x, n){
 #' @param expand Proportion by which to expand the bounding box around \code{x} after projection, to capture the full
 #'    domain in projected space. Only used if \code{equalarea = TRUE} and \code{sample = "grid"}.
 #' @return A two-column matrix of x (longitude) and y (latitude) values, with a row for each particle.
+#' @examples
+#' field <- windscape_example("wind_field")
+#' p <- generate_particles(field, n = 100)
+#' head(p)
 #' @export
 generate_particles <- function(x, n = 1000, sample = "random", equalarea = TRUE,
                                epsg = 8857, expand = .25){

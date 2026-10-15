@@ -18,3 +18,7 @@ Calculate the maximum possible iteration length for a random walk simulation, wh
 residence time of the grid cell with the greatest total conductance. Walks can proceed no
 faster than this.
 }
+\examples{
+rose <- windscape_example("wind_rose")
+rw_max_step(rose)
+}

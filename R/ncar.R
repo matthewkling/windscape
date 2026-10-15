@@ -69,19 +69,16 @@
 #' @seealso [wind_series()] to load the files; [wind_rose()] to summarize them;
 #'   [download_land_mask()] to download a matching land-water layer; [download_wind_rose()] for
 #'   pre-built CFSR wind roses, which need no wind data downloads.
-#' @examples
-#' \dontrun{
+#' @examplesIf interactive() && requireNamespace("ncdf4", quietly = TRUE)
 #' # every third hour of 10 m ERA5 wind for summer 2020, Pacific Northwest
 #' files <- download_wind_data("era5", xlim = c(-125, -115), ylim = c(42, 49),
-#'                             years = 2020, months = 6:8, hours = seq(0, 21, 3),
-#'                             dir = "~/wind_data")
+#'                             years = 2020, months = 6:8, hours = seq(0, 21, 3))
 #' rose <- wind_rose(wind_series(files))
 #'
 #' # a single hour: Hurricane Katrina, 2005-08-28 23:00 UTC
 #' f <- download_wind_data("era5", xlim = c(-99, -78), ylim = c(17, 35),
 #'                         years = 2005, months = 8, days = 28, hours = 23)
 #' katrina <- wind_field(wind_series(f))
-#' }
 #' @export
 download_wind_data <- function(source = c("era5", "cfsr", "cfsv2"), level = "10m",
                                xlim, ylim, years, months = 1:12, days = NULL, hours = NULL,
@@ -160,10 +157,8 @@ selection_tag <- function(days, hours){
 #'   cell, from 0 (all water) to 1 (all land); use e.g. `land >= 0.5` for a binary layer. For CFSR
 #'   it is binary, 1 for land and 0 for water. (CFSR publishes no land mask, so it is derived from
 #'   which cells have soil temperature data.)
-#' @examples
-#' \dontrun{
+#' @examplesIf interactive() && requireNamespace("ncdf4", quietly = TRUE)
 #' land <- download_land_mask("era5", xlim = c(-125, -115), ylim = c(42, 49))
-#' }
 #' @export
 download_land_mask <- function(source = c("era5", "cfsr", "cfsv2"), xlim, ylim){
       source <- match.arg(source)

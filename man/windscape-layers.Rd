@@ -3,13 +3,13 @@
 \name{windscape-layers}
 \alias{windscape-layers}
 \alias{[[,wind_series,ANY,ANY-method}
-\alias{[[,wind_field,ANY,ANY-method}
-\alias{[[,wind_rose,ANY,ANY-method}
 \alias{subset,wind_series-method}
-\alias{subset,wind_field-method}
-\alias{subset,wind_rose-method}
 \alias{c,wind_series-method}
+\alias{[[,wind_field,ANY,ANY-method}
+\alias{subset,wind_field-method}
 \alias{c,wind_field-method}
+\alias{[[,wind_rose,ANY,ANY-method}
+\alias{subset,wind_rose-method}
 \alias{c,wind_rose-method}
 \title{Selecting and combining layers of windscape objects}
 \arguments{

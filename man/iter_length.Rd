@@ -15,3 +15,8 @@ Length of one iteration (time step), in hours if \code{trans = 1} and wind speed
 \description{
 Iteration step length of a random walk
 }
+\examples{
+rose <- windscape_example("wind_rose")
+rw <- random_walk(rose, cbind(-100, 40), iter = 10)
+iter_length(rw)
+}

@@ -10,3 +10,6 @@
 ^LICENSE\.md$
 ^wind.rds$
 ^vignettes/articles$
+^cran-comments\.md$
+^README\.Rmd$
+^notes$

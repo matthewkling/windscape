@@ -19,3 +19,8 @@ Calculate the pairwise distances between the centroids of the raster grid cells 
 This is useful as an alternative to the distances between the points themselves, if distances are going to be
 compared to other metrics that are based on cell centers (e.g. wind connectivity).
 }
+\examples{
+rose <- windscape_example("wind_rose")
+sites <- cbind(c(-110, -100, -95), c(35, 40, 45))
+cell_distance(rose, sites)
+}

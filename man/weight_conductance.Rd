@@ -22,3 +22,10 @@ which can be used to integrate non-wind factors into a wind connectivity analysi
 As a hypothetical example, to incorporate a decreased but nonzero likelihood of dispersal over inhospitable areas, \code{w} could be a raster layer with 0.1 indicating water or mountains and 1.0 elsewhere.
 This would have the effect of down-weighting conductance over water or mountains by 90\%.
 }
+\examples{
+rose <- windscape_example("wind_rose")
+
+# halve conductance west of 105 degrees W
+w <- terra::ifel(terra::init(rose[[1]], "x") < -105, 0.5, 1)
+weighted <- weight_conductance(rose, w)
+}

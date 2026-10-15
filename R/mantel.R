@@ -10,12 +10,10 @@
 #' @param method Correlation method (see \link[stats]{cor} for details).
 #' @param alternative A character string specifying the alternative hypothesis, must be one of "two.sided" (default), "greater" or "less".
 #' @return A list with the following components:
-#' \itemize{
-#'  \item{`stat`: }{The correlation coefficient between \code{x} and \code{y}, measured on the data provided. This will be a partial correlation if \code{z} is specified.}
-#'  \item{`quantile`: }{The quantile of the observed stat in the null distribution.}
-#'  \item{`p.value`: }{Significance, derived from the combination of \code{quantile} and \code{alternative}.}
-#'  \item{`perm`: }{A vector of null correlations based on permuted data.}
-#' }
+#' * `stat`: The correlation coefficient between `x` and `y`, measured on the data provided. This will be a partial correlation if `z` is specified.
+#' * `quantile`: The quantile of the observed stat in the null distribution.
+#' * `p.value`: Significance, derived from the combination of `quantile` and `alternative`.
+#' * `perm`: A vector of null correlations based on permuted data.
 #' @examples
 #' # A convenience function to generate symmetric matrices:
 #' sym_matrix <- function(x){
