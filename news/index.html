@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">windscape</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.1.0.9000</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.0.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -41,12 +41,12 @@
     </div>
 
     <div class="section level2">
-<h2 class="pkg-version" data-toc-text="development version" id="windscape-development-version">windscape (development version)<a class="anchor" aria-label="anchor" href="#windscape-development-version"></a></h2>
+<h2 class="pkg-version" data-toc-text="2.0.0" id="windscape-200">windscape 2.0.0<a class="anchor" aria-label="anchor" href="#windscape-200"></a></h2>
 <p>This release reorganizes windscape around a simpler workflow: download wind data or a pre-built wind rose, summarize the wind as a <code>wind_rose</code>, model connectivity with least-cost or random-walk functions that take the rose directly, and plot each step with ggplot2 layers.</p>
 <div class="section level3">
-<h3 id="breaking-changes-development-version">Breaking changes<a class="anchor" aria-label="anchor" href="#breaking-changes-development-version"></a></h3>
+<h3 id="breaking-changes-2-0-0">Breaking changes<a class="anchor" aria-label="anchor" href="#breaking-changes-2-0-0"></a></h3>
 <div class="section level4">
-<h4 id="wind-data-development-version">Wind data<a class="anchor" aria-label="anchor" href="#wind-data-development-version"></a></h4>
+<h4 id="wind-data-2-0-0">Wind data<a class="anchor" aria-label="anchor" href="#wind-data-2-0-0"></a></h4>
 <ul><li>
 <code>cfsr_dl()</code> and <code>cfsr_dl_land()</code> are replaced by <code><a href="../reference/download_wind_data.html">download_wind_data()</a></code> and <code><a href="../reference/download_land_mask.html">download_land_mask()</a></code>, which use NCAR’s Geoscience Data Exchange (see New features).</li>
 <li>
@@ -56,7 +56,7 @@
 <li>Selecting layers of a <code>wind_series</code>, <code>wind_field</code>, or <code>wind_rose</code> with <code>[[</code> or <code><a href="https://rspatial.github.io/terra/reference/subset.html" class="external-link">subset()</a></code>, or combining them with <code><a href="https://rdrr.io/r/base/c.html" class="external-link">c()</a></code>, now returns a plain <code>SpatRaster</code>, since the result no longer has the object’s structure. Use <code><a href="../reference/subset_series.html">subset_series()</a></code> to select time steps of a series.</li>
 </ul></div>
 <div class="section level4">
-<h4 id="wind-roses-development-version">Wind roses<a class="anchor" aria-label="anchor" href="#wind-roses-development-version"></a></h4>
+<h4 id="wind-roses-2-0-0">Wind roses<a class="anchor" aria-label="anchor" href="#wind-roses-2-0-0"></a></h4>
 <ul><li>
 <code>as_wind_rose()</code> and <code>read_wind_rose()</code> are merged into <code><a href="../reference/wind_rose.html">wind_rose()</a></code>, which builds a rose from a <code>wind_series</code>, or loads a saved rose from an 8-layer raster or file path. <code>rose()</code> is no longer exported.</li>
 <li>
@@ -67,7 +67,7 @@
 <code><a href="https://rspatial.github.io/terra/reference/aggregate.html" class="external-link">terra::aggregate()</a></code>, <code><a href="https://rspatial.github.io/terra/reference/disaggregate.html" class="external-link">disagg()</a></code>, <code><a href="https://rspatial.github.io/terra/reference/resample.html" class="external-link">resample()</a></code>, and <code><a href="https://rspatial.github.io/terra/reference/project.html" class="external-link">project()</a></code> now signal an error on a <code>wind_rose</code>, since they would average conductances without accounting for cell size. Use <code><a href="../reference/downscale.html">downscale()</a></code>, or change the grid of the <code>wind_series</code> before building the rose.</li>
 </ul></div>
 <div class="section level4">
-<h4 id="least-cost-model-development-version">Least-cost model<a class="anchor" aria-label="anchor" href="#least-cost-model-development-version"></a></h4>
+<h4 id="least-cost-model-2-0-0">Least-cost model<a class="anchor" aria-label="anchor" href="#least-cost-model-2-0-0"></a></h4>
 <ul><li>
 <code>least_cost_surface()</code> is renamed <code><a href="../reference/least_cost.html">least_cost()</a></code>, and <code>least_cost_distance()</code> is renamed <code><a href="../reference/pairwise_least_cost.html">pairwise_least_cost()</a></code>. Both take a <code>wind_rose</code> directly (a <code>wind_graph</code> built in advance is still accepted), and <code><a href="../reference/least_cost.html">least_cost()</a></code> gains a <code>direction</code> argument.</li>
 <li>
@@ -76,7 +76,7 @@
 <code><a href="../reference/wind_graph.html">wind_graph()</a></code>: <code>wrap</code> now defaults to <code>NULL</code>, which wraps global grids (spanning 360 degrees of longitude) automatically.</li>
 </ul></div>
 <div class="section level4">
-<h4 id="random-walk-model-development-version">Random walk model<a class="anchor" aria-label="anchor" href="#random-walk-model-development-version"></a></h4>
+<h4 id="random-walk-model-2-0-0">Random walk model<a class="anchor" aria-label="anchor" href="#random-walk-model-2-0-0"></a></h4>
 <ul><li>
 <code><a href="../reference/random_walk.html">random_walk()</a></code>: <code>"ratchet"</code> mode removed; results are now a named list of rasters; arguments reordered (general arguments before mode-specific ones). The new latitude correction (on by default) changes results on lon/lat grids.</li>
 <li>
@@ -87,14 +87,14 @@
 <code>tesselate()</code> is removed; global grids now wrap automatically (see <code>wrap</code> arguments).</li>
 </ul></div>
 <div class="section level4">
-<h4 id="requirements-development-version">Requirements<a class="anchor" aria-label="anchor" href="#requirements-development-version"></a></h4>
+<h4 id="requirements-2-0-0">Requirements<a class="anchor" aria-label="anchor" href="#requirements-2-0-0"></a></h4>
 <ul><li>windscape now requires R &gt;= 4.0.0 and terra &gt;= 1.8-42.</li>
 </ul></div>
 </div>
 <div class="section level3">
-<h3 id="new-features-development-version">New features<a class="anchor" aria-label="anchor" href="#new-features-development-version"></a></h3>
+<h3 id="new-features-2-0-0">New features<a class="anchor" aria-label="anchor" href="#new-features-2-0-0"></a></h3>
 <div class="section level4">
-<h4 id="wind-data-development-version-1">Wind data<a class="anchor" aria-label="anchor" href="#wind-data-development-version-1"></a></h4>
+<h4 id="wind-data-2-0-0-1">Wind data<a class="anchor" aria-label="anchor" href="#wind-data-2-0-0-1"></a></h4>
 <ul><li>
 <code><a href="../reference/download_wind_data.html">download_wind_data()</a></code> downloads hourly wind from NCAR’s Geoscience Data Exchange, with no account needed: ERA5 (1940 to present; 10 m and 100 m), CFSR (1979-2010), and CFSv2 (2011 to present; 10 m and pressure levels). Data are clipped to a bounding box on the server, can be limited to particular <code>days</code> and <code>hours</code> (down to a single hour), and are saved as one file per month, with downloads cached so interrupted runs resume. Large requests are split to fit the server’s size limit.</li>
 <li>
@@ -109,7 +109,7 @@
 <code><a href="../reference/windscape_example.html">windscape_example()</a></code> loads small example data sets.</li>
 </ul></div>
 <div class="section level4">
-<h4 id="wind-roses-development-version-1">Wind roses<a class="anchor" aria-label="anchor" href="#wind-roses-development-version-1"></a></h4>
+<h4 id="wind-roses-2-0-0-1">Wind roses<a class="anchor" aria-label="anchor" href="#wind-roses-2-0-0-1"></a></h4>
 <ul><li>
 <code><a href="../reference/download_wind_rose.html">download_wind_rose()</a></code> provides pre-built global wind roses (10 m CFSR, 1979-2010) for any combination of years and calendar months, optionally cropped to a region, which is read over the internet without downloading whole files. <code><a href="../reference/wind_rose_catalog.html">wind_rose_catalog()</a></code> lists the available files and <code><a href="../reference/wind_rose_cache.html">wind_rose_cache()</a></code> manages downloaded ones.</li>
 <li>
@@ -120,12 +120,12 @@
 <code><a href="../reference/net_flow.html">net_flow()</a></code> returns a rose’s net flow as a <code>wind_field</code>.</li>
 </ul></div>
 <div class="section level4">
-<h4 id="least-cost-model-development-version-1">Least-cost model<a class="anchor" aria-label="anchor" href="#least-cost-model-development-version-1"></a></h4>
+<h4 id="least-cost-model-2-0-0-1">Least-cost model<a class="anchor" aria-label="anchor" href="#least-cost-model-2-0-0-1"></a></h4>
 <ul><li>
 <code><a href="../reference/least_cost_paths.html">least_cost_paths()</a></code> traces fastest routes between sites and other points.</li>
 </ul></div>
 <div class="section level4">
-<h4 id="random-walk-model-development-version-1">Random walk model<a class="anchor" aria-label="anchor" href="#random-walk-model-development-version-1"></a></h4>
+<h4 id="random-walk-model-2-0-0-1">Random walk model<a class="anchor" aria-label="anchor" href="#random-walk-model-2-0-0-1"></a></h4>
 <ul><li>
 <code><a href="../reference/random_walk.html">random_walk()</a></code> gains <code>mode = "stream"</code> (steady state of continuous release, returning residence time and deposition), <code>half_life</code> (deposition), <code>latitude_correction</code>, <code>direction = "upwind"</code> (catchments), <code>flux</code> (net flux of material), <code>source</code>, and <code>wrap</code>.</li>
 <li>
@@ -138,12 +138,12 @@
 <code><a href="../reference/rw_self_retention.html">rw_self_retention()</a></code> for leave-one-out corrections of stream-mode results.</li>
 </ul></div>
 <div class="section level4">
-<h4 id="plotting-development-version">Plotting<a class="anchor" aria-label="anchor" href="#plotting-development-version"></a></h4>
+<h4 id="plotting-2-0-0">Plotting<a class="anchor" aria-label="anchor" href="#plotting-2-0-0"></a></h4>
 <ul><li>ggplot2 layers for each object: <code><a href="../reference/geom_wind_arrow.html">geom_wind_arrow()</a></code> and <code><a href="../reference/geom_wind_trail.html">geom_wind_trail()</a></code> for wind fields, <code><a href="../reference/geom_wind_rose.html">geom_wind_rose()</a></code> for wind roses, and <code><a href="../reference/geom_wind_path.html">geom_wind_path()</a></code> for paths and trails, with <code><a href="../reference/scale_fill_bearing.html">scale_fill_bearing()</a></code> and <code><a href="../reference/scale_fill_bearing.html">scale_colour_bearing()</a></code> for direction-based colors, and <code><a href="https://ggplot2.tidyverse.org/reference/fortify.html" class="external-link">fortify()</a></code> methods for windscape objects.</li>
 </ul></div>
 </div>
 <div class="section level3">
-<h3 id="bug-fixes-development-version">Bug fixes<a class="anchor" aria-label="anchor" href="#bug-fixes-development-version"></a></h3>
+<h3 id="bug-fixes-2-0-0">Bug fixes<a class="anchor" aria-label="anchor" href="#bug-fixes-2-0-0"></a></h3>
 <ul><li>
 <code><a href="../reference/pairwise_least_cost.html">pairwise_least_cost()</a></code> (formerly <code>least_cost_distance(adjust = TRUE)</code>) no longer returns <code>NaN</code> on the diagonal.</li>
 <li>windscape no longer masks <code><a href="https://AgrDataSci.github.io/gdistance/reference/geoCorrection.html" class="external-link">gdistance::geoCorrection()</a></code>.</li>
