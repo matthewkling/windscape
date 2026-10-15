@@ -3,6 +3,7 @@
 
 <!-- badges: start -->
 
+[![R-CMD-check](https://github.com/matthewkling/windscape/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/matthewkling/windscape/actions/workflows/R-CMD-check.yaml)
 <!-- badges: end -->
 
 Because wind disperses particles ranging from pollen, seeds, and spores

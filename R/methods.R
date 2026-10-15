@@ -20,6 +20,24 @@ NULL
 #' series <- windscape_example("wind_series")
 #' class(series[[1:2]]) # a plain SpatRaster
 #' class(subset_series(series, steps = 1:2)) # a wind_series
+#' @usage
+#' \S4method{[[}{wind_series,ANY,ANY}(x, i, j, ...)
+#'
+#' \S4method{[[}{wind_field,ANY,ANY}(x, i, j, ...)
+#'
+#' \S4method{[[}{wind_rose,ANY,ANY}(x, i, j, ...)
+#'
+#' \S4method{subset}{wind_series}(x, subset, ...)
+#'
+#' \S4method{subset}{wind_field}(x, subset, ...)
+#'
+#' \S4method{subset}{wind_rose}(x, subset, ...)
+#'
+#' \S4method{c}{wind_series}(x, ...)
+#'
+#' \S4method{c}{wind_field}(x, ...)
+#'
+#' \S4method{c}{wind_rose}(x, ...)
 #' @name windscape-layers
 #' @exportMethod [[ subset c
 #' @aliases [[,wind_series,ANY,ANY-method subset,wind_series-method c,wind_series-method
@@ -49,8 +67,16 @@ rm(cls)
 #' @param x A `wind_rose`.
 #' @param y,... Not used.
 #' @return These methods signal an error.
+#' @usage
+#' \S4method{aggregate}{wind_rose}(x, ...)
+#'
+#' \S4method{disagg}{wind_rose}(x, ...)
+#'
+#' \S4method{resample}{wind_rose,ANY}(x, y, ...)
+#'
+#' \S4method{project}{wind_rose}(x, ...)
 #' @name wind_rose-grid
-#' @aliases aggregate,wind_rose-method disagg,wind_rose-method resample,wind_rose-method project,wind_rose-method
+#' @aliases aggregate,wind_rose-method disagg,wind_rose-method resample,wind_rose,ANY-method project,wind_rose-method
 #' @exportMethod aggregate disagg resample project
 NULL
 
