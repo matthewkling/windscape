@@ -16,6 +16,22 @@ To use a coarser or different grid, change the grid of the `wind_series`
 [`terra::aggregate()`](https://rspatial.github.io/terra/reference/aggregate.html))
 and build a new rose from it.
 
+## Usage
+
+``` r
+# S4 method for class 'wind_rose'
+aggregate(x, ...)
+
+# S4 method for class 'wind_rose'
+disagg(x, ...)
+
+# S4 method for class 'wind_rose,ANY'
+resample(x, y, ...)
+
+# S4 method for class 'wind_rose'
+project(x, ...)
+```
+
 ## Arguments
 
 - x:

@@ -39,11 +39,10 @@ each cell to its eight neighbors—the basis of both connectivity models.
   : Weight a wind rose's conductances
 - [`net_flow()`](https://matthewkling.github.io/windscape/reference/net_flow.md)
   : Net flow of a wind rose, as a wind field
-- [`wind_rose-grid`](https://matthewkling.github.io/windscape/reference/wind_rose-grid.md)
-  [`aggregate,wind_rose-method`](https://matthewkling.github.io/windscape/reference/wind_rose-grid.md)
-  [`disagg,wind_rose-method`](https://matthewkling.github.io/windscape/reference/wind_rose-grid.md)
-  [`resample,wind_rose-method`](https://matthewkling.github.io/windscape/reference/wind_rose-grid.md)
-  [`project,wind_rose-method`](https://matthewkling.github.io/windscape/reference/wind_rose-grid.md)
+- [`aggregate(`*`<wind_rose>`*`)`](https://matthewkling.github.io/windscape/reference/wind_rose-grid.md)
+  [`disagg(`*`<wind_rose>`*`)`](https://matthewkling.github.io/windscape/reference/wind_rose-grid.md)
+  [`resample(`*`<wind_rose>`*`,`*`<ANY>`*`)`](https://matthewkling.github.io/windscape/reference/wind_rose-grid.md)
+  [`project(`*`<wind_rose>`*`)`](https://matthewkling.github.io/windscape/reference/wind_rose-grid.md)
   : Changing the grid of a wind rose
 
 ## Least-cost model
@@ -153,16 +152,15 @@ ggplot2 layers for wind data and connectivity results.
   : An S4 object class representing a wind rose
 - [`wind_graph-class`](https://matthewkling.github.io/windscape/reference/wind_graph-class.md)
   : An S4 object class representing a wind graph
-- [`windscape-layers`](https://matthewkling.github.io/windscape/reference/windscape-layers.md)
-  [`[[,wind_series,ANY,ANY-method`](https://matthewkling.github.io/windscape/reference/windscape-layers.md)
-  [`subset,wind_series-method`](https://matthewkling.github.io/windscape/reference/windscape-layers.md)
-  [`c,wind_series-method`](https://matthewkling.github.io/windscape/reference/windscape-layers.md)
-  [`[[,wind_field,ANY,ANY-method`](https://matthewkling.github.io/windscape/reference/windscape-layers.md)
-  [`subset,wind_field-method`](https://matthewkling.github.io/windscape/reference/windscape-layers.md)
-  [`c,wind_field-method`](https://matthewkling.github.io/windscape/reference/windscape-layers.md)
-  [`[[,wind_rose,ANY,ANY-method`](https://matthewkling.github.io/windscape/reference/windscape-layers.md)
-  [`subset,wind_rose-method`](https://matthewkling.github.io/windscape/reference/windscape-layers.md)
-  [`c,wind_rose-method`](https://matthewkling.github.io/windscape/reference/windscape-layers.md)
+- [`` `[[`( ``*`<wind_series>`*`,`*`<ANY>`*`,`*`<ANY>`*`)`](https://matthewkling.github.io/windscape/reference/windscape-layers.md)
+  [`` `[[`( ``*`<wind_field>`*`,`*`<ANY>`*`,`*`<ANY>`*`)`](https://matthewkling.github.io/windscape/reference/windscape-layers.md)
+  [`` `[[`( ``*`<wind_rose>`*`,`*`<ANY>`*`,`*`<ANY>`*`)`](https://matthewkling.github.io/windscape/reference/windscape-layers.md)
+  [`subset(`*`<wind_series>`*`)`](https://matthewkling.github.io/windscape/reference/windscape-layers.md)
+  [`subset(`*`<wind_field>`*`)`](https://matthewkling.github.io/windscape/reference/windscape-layers.md)
+  [`subset(`*`<wind_rose>`*`)`](https://matthewkling.github.io/windscape/reference/windscape-layers.md)
+  [`c(`*`<wind_series>`*`)`](https://matthewkling.github.io/windscape/reference/windscape-layers.md)
+  [`c(`*`<wind_field>`*`)`](https://matthewkling.github.io/windscape/reference/windscape-layers.md)
+  [`c(`*`<wind_rose>`*`)`](https://matthewkling.github.io/windscape/reference/windscape-layers.md)
   : Selecting and combining layers of windscape objects
 - [`geoCorrection(`*`<wind_graph>`*`,`*`<ANY>`*`)`](https://matthewkling.github.io/windscape/reference/geoCorrection-wind_graph-ANY-method.md)
   : geoCorrection is not applicable to wind graphs

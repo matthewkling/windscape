@@ -60,6 +60,35 @@ a series intact, use <code><a href="subset_series.html">subset_series()</a></cod
 <code><a href="wind_field.html">wind_field()</a></code>; and to combine series, use <code><a href="wind_series.html">wind_series()</a></code> with a list of series or files.</p>
     </div>
 
+    <div class="section level2">
+    <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="co"># S4 method for class 'wind_series,ANY,ANY'</span></span>
+<span><span class="va">x</span><span class="op">[[</span><span class="va">i</span>, <span class="va">j</span>, <span class="va">...</span><span class="op">]</span><span class="op">]</span></span>
+<span></span>
+<span><span class="co"># S4 method for class 'wind_field,ANY,ANY'</span></span>
+<span><span class="va">x</span><span class="op">[[</span><span class="va">i</span>, <span class="va">j</span>, <span class="va">...</span><span class="op">]</span><span class="op">]</span></span>
+<span></span>
+<span><span class="co"># S4 method for class 'wind_rose,ANY,ANY'</span></span>
+<span><span class="va">x</span><span class="op">[[</span><span class="va">i</span>, <span class="va">j</span>, <span class="va">...</span><span class="op">]</span><span class="op">]</span></span>
+<span></span>
+<span><span class="co"># S4 method for class 'wind_series'</span></span>
+<span><span class="fu"><a href="https://rspatial.github.io/terra/reference/subset.html" class="external-link">subset</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">subset</span>, <span class="va">...</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># S4 method for class 'wind_field'</span></span>
+<span><span class="fu"><a href="https://rspatial.github.io/terra/reference/subset.html" class="external-link">subset</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">subset</span>, <span class="va">...</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># S4 method for class 'wind_rose'</span></span>
+<span><span class="fu"><a href="https://rspatial.github.io/terra/reference/subset.html" class="external-link">subset</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">subset</span>, <span class="va">...</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># S4 method for class 'wind_series'</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">...</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># S4 method for class 'wind_field'</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">...</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># S4 method for class 'wind_rose'</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">...</span><span class="op">)</span></span></code></pre></div>
+    </div>
 
     <div class="section level2">
     <h2 id="arguments">Arguments<a class="anchor" aria-label="anchor" href="#arguments"></a></h2>

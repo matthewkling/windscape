@@ -18,6 +18,8 @@ geom_wind_rose(
   ...,
   res = 15,
   scale = 1,
+  normalize = FALSE,
+  smooth = TRUE,
   saturation = 0.5,
   center = TRUE,
   bearing_scale = NULL,
@@ -34,6 +36,8 @@ stat_wind_rose(
   ...,
   res = 15,
   scale = 1,
+  normalize = FALSE,
+  smooth = TRUE,
   saturation = 0.5,
   center = TRUE,
   bearing_scale = NULL,
@@ -99,6 +103,26 @@ stat_wind_rose(
   glyphs in the layer, including all panels) is half the spacing between
   glyphs.
 
+- normalize:
+
+  Logical: scale each ray by the range of wind directions its neighbor
+  receives? If `FALSE` (the default), rays show flow toward each
+  neighbor, so the glyph shows how the grid's eight connections divide
+  the wind. Away from the equator, neighbor bearings are unevenly spaced
+  (the north and south neighbors lie closer to the diagonals), so even
+  an isotropic wind draws as an east-west peanut. If `TRUE`, each ray is
+  divided by the width of the range of directions allocated to that
+  neighbor, in units of 45 degrees, giving flow per 45 degrees of wind
+  direction: an isotropic wind draws as a circle at any latitude, which
+  suits maps of wind regimes. Either way, directions are resolved only
+  to the eight neighbor bearings, and the computed variables (`speed`,
+  `net`, `bearing`, `consistency`) describe the unnormalized flows.
+
+- smooth:
+
+  Logical: join the ray tips with a smooth curve (the default) rather
+  than straight lines? See Details.
+
 - saturation:
 
   Consistency (see Computed variables) at and above which glyph fill is
@@ -133,7 +157,17 @@ proportional to flow in that direction: conductance times the distance
 to the neighbor, averaged over the block, in km/h. Unlike conductance,
 which is a rate per grid cell, flow does not depend on cell size, so it
 can be averaged across cells and compared across latitudes. The flows
-sum to the mean wind speed, and their vector sum is the net flow.
+sum to the mean wind speed, and their vector sum is the net flow (with
+`normalize = TRUE`, these hold only approximately for the drawn rays).
+
+The outline passes through the tips of the eight rays. With
+`smooth = TRUE`, they are joined by a smooth curve: radius is
+interpolated as a function of bearing with a periodic, shape-preserving
+cubic (PCHIP). Between two adjacent rays the radius stays within the
+range of their lengths, so the outline adds no lobes that aren't in the
+rose. The curve between rays is a visual connector: the rose holds flow
+toward the eight neighbors only. With `smooth = FALSE`, the tips are
+joined by straight lines, giving a star-shaped polygon.
 
 Glyphs are built in longitude/latitude coordinates, scaled so that their
 shapes are correct in km at each glyph's latitude. Use

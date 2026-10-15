@@ -67,6 +67,8 @@ has little net direction.</p>
 <span>  <span class="va">...</span>,</span>
 <span>  res <span class="op">=</span> <span class="fl">15</span>,</span>
 <span>  scale <span class="op">=</span> <span class="fl">1</span>,</span>
+<span>  normalize <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  smooth <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  saturation <span class="op">=</span> <span class="fl">0.5</span>,</span>
 <span>  center <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  bearing_scale <span class="op">=</span> <span class="cn">NULL</span>,</span>
@@ -83,6 +85,8 @@ has little net direction.</p>
 <span>  <span class="va">...</span>,</span>
 <span>  res <span class="op">=</span> <span class="fl">15</span>,</span>
 <span>  scale <span class="op">=</span> <span class="fl">1</span>,</span>
+<span>  normalize <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  smooth <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  saturation <span class="op">=</span> <span class="fl">0.5</span>,</span>
 <span>  center <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  bearing_scale <span class="op">=</span> <span class="cn">NULL</span>,</span>
@@ -137,6 +141,24 @@ typical large glyph (the 90th percentile across all glyphs in the layer, includi
 panels) is half the spacing between glyphs.</p></dd>
 
 
+<dt id="arg-normalize">normalize<a class="anchor" aria-label="anchor" href="#arg-normalize"></a></dt>
+<dd><p>Logical: scale each ray by the range of wind directions its neighbor
+receives? If <code>FALSE</code> (the default), rays show flow toward each neighbor, so the glyph
+shows how the grid's eight connections divide the wind. Away from the equator, neighbor
+bearings are unevenly spaced (the north and south neighbors lie closer to the diagonals),
+so even an isotropic wind draws as an east-west peanut. If <code>TRUE</code>, each ray is divided by
+the width of the range of directions allocated to that neighbor, in units of 45 degrees,
+giving flow per 45 degrees of wind direction: an isotropic wind draws as a circle at any
+latitude, which suits maps of wind regimes. Either way, directions are resolved only to
+the eight neighbor bearings, and the computed variables (<code>speed</code>, <code>net</code>, <code>bearing</code>,
+<code>consistency</code>) describe the unnormalized flows.</p></dd>
+
+
+<dt id="arg-smooth">smooth<a class="anchor" aria-label="anchor" href="#arg-smooth"></a></dt>
+<dd><p>Logical: join the ray tips with a smooth curve (the default) rather than
+straight lines? See Details.</p></dd>
+
+
 <dt id="arg-saturation">saturation<a class="anchor" aria-label="anchor" href="#arg-saturation"></a></dt>
 <dd><p>Consistency (see Computed variables) at and above which glyph fill is shown
 at full strength; glyphs with lower consistency are blended toward gray. Set to 0 to
@@ -166,7 +188,15 @@ disable blending. Default 0.5.</p></dd>
 in that direction: conductance times the distance to the neighbor, averaged over the block,
 in km/h. Unlike conductance, which is a rate per grid cell, flow does not depend on cell
 size, so it can be averaged across cells and compared across latitudes. The flows sum to
-the mean wind speed, and their vector sum is the net flow.</p>
+the mean wind speed, and their vector sum is the net flow (with <code>normalize = TRUE</code>, these
+hold only approximately for the drawn rays).</p>
+<p>The outline passes through the tips of the eight rays. With <code>smooth = TRUE</code>, they are joined
+by a smooth curve: radius is
+interpolated as a function of bearing with a periodic, shape-preserving cubic (PCHIP). Between
+two adjacent rays the radius stays within the range of their lengths, so the outline adds no
+lobes that aren't in the rose. The curve between rays is a visual connector: the rose holds
+flow toward the eight neighbors only. With <code>smooth = FALSE</code>, the tips are joined by straight
+lines, giving a star-shaped polygon.</p>
 <p>Glyphs are built in longitude/latitude coordinates, scaled so that their shapes are correct
 in km at each glyph's latitude. Use <code><a href="https://ggplot2.tidyverse.org/reference/coord_map.html" class="external-link">ggplot2::coord_quickmap()</a></code> or <code><a href="https://ggplot2.tidyverse.org/reference/ggsf.html" class="external-link">ggplot2::coord_sf()</a></code>
 with a longitude/latitude CRS so that the map's aspect ratio matches; in projected

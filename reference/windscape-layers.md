@@ -14,6 +14,37 @@ and to combine series, use
 [`wind_series()`](https://matthewkling.github.io/windscape/reference/wind_series.md)
 with a list of series or files.
 
+## Usage
+
+``` r
+# S4 method for class 'wind_series,ANY,ANY'
+x[[i, j, ...]]
+
+# S4 method for class 'wind_field,ANY,ANY'
+x[[i, j, ...]]
+
+# S4 method for class 'wind_rose,ANY,ANY'
+x[[i, j, ...]]
+
+# S4 method for class 'wind_series'
+subset(x, subset, ...)
+
+# S4 method for class 'wind_field'
+subset(x, subset, ...)
+
+# S4 method for class 'wind_rose'
+subset(x, subset, ...)
+
+# S4 method for class 'wind_series'
+c(x, ...)
+
+# S4 method for class 'wind_field'
+c(x, ...)
+
+# S4 method for class 'wind_rose'
+c(x, ...)
+```
+
 ## Arguments
 
 - x:
