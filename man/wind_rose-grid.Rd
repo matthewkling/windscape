@@ -4,9 +4,18 @@
 \alias{wind_rose-grid}
 \alias{aggregate,wind_rose-method}
 \alias{disagg,wind_rose-method}
-\alias{resample,wind_rose-method}
+\alias{resample,wind_rose,ANY-method}
 \alias{project,wind_rose-method}
 \title{Changing the grid of a wind rose}
+\usage{
+\S4method{aggregate}{wind_rose}(x, ...)
+
+\S4method{disagg}{wind_rose}(x, ...)
+
+\S4method{resample}{wind_rose,ANY}(x, y, ...)
+
+\S4method{project}{wind_rose}(x, ...)
+}
 \arguments{
 \item{x}{A \code{wind_rose}.}
 

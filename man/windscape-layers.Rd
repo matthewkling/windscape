@@ -12,6 +12,25 @@
 \alias{subset,wind_rose-method}
 \alias{c,wind_rose-method}
 \title{Selecting and combining layers of windscape objects}
+\usage{
+\S4method{[[}{wind_series,ANY,ANY}(x, i, j, ...)
+
+\S4method{[[}{wind_field,ANY,ANY}(x, i, j, ...)
+
+\S4method{[[}{wind_rose,ANY,ANY}(x, i, j, ...)
+
+\S4method{subset}{wind_series}(x, subset, ...)
+
+\S4method{subset}{wind_field}(x, subset, ...)
+
+\S4method{subset}{wind_rose}(x, subset, ...)
+
+\S4method{c}{wind_series}(x, ...)
+
+\S4method{c}{wind_field}(x, ...)
+
+\S4method{c}{wind_rose}(x, ...)
+}
 \arguments{
 \item{x}{A \code{wind_series}, \code{wind_field}, or \code{wind_rose}.}
 

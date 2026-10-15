@@ -15,6 +15,8 @@ geom_wind_rose(
   ...,
   res = 15,
   scale = 1,
+  normalize = FALSE,
+  smooth = TRUE,
   saturation = 0.5,
   center = TRUE,
   bearing_scale = NULL,
@@ -31,6 +33,8 @@ stat_wind_rose(
   ...,
   res = 15,
   scale = 1,
+  normalize = FALSE,
+  smooth = TRUE,
   saturation = 0.5,
   center = TRUE,
   bearing_scale = NULL,
@@ -67,6 +71,20 @@ every panel, so faceted glyphs are directly comparable. Default 15.}
 typical large glyph (the 90th percentile across all glyphs in the layer, including all
 panels) is half the spacing between glyphs.}
 
+\item{normalize}{Logical: scale each ray by the range of wind directions its neighbor
+receives? If \code{FALSE} (the default), rays show flow toward each neighbor, so the glyph
+shows how the grid's eight connections divide the wind. Away from the equator, neighbor
+bearings are unevenly spaced (the north and south neighbors lie closer to the diagonals),
+so even an isotropic wind draws as an east-west peanut. If \code{TRUE}, each ray is divided by
+the width of the range of directions allocated to that neighbor, in units of 45 degrees,
+giving flow per 45 degrees of wind direction: an isotropic wind draws as a circle at any
+latitude, which suits maps of wind regimes. Either way, directions are resolved only to
+the eight neighbor bearings, and the computed variables (\code{speed}, \code{net}, \code{bearing},
+\code{consistency}) describe the unnormalized flows.}
+
+\item{smooth}{Logical: join the ray tips with a smooth curve (the default) rather than
+straight lines? See Details.}
+
 \item{saturation}{Consistency (see Computed variables) at and above which glyph fill is shown
 at full strength; glyphs with lower consistency are blended toward gray. Set to 0 to
 disable blending. Default 0.5.}
@@ -93,7 +111,16 @@ Each glyph's eight rays point toward the eight neighbors, with length proportion
 in that direction: conductance times the distance to the neighbor, averaged over the block,
 in km/h. Unlike conductance, which is a rate per grid cell, flow does not depend on cell
 size, so it can be averaged across cells and compared across latitudes. The flows sum to
-the mean wind speed, and their vector sum is the net flow.
+the mean wind speed, and their vector sum is the net flow (with \code{normalize = TRUE}, these
+hold only approximately for the drawn rays).
+
+The outline passes through the tips of the eight rays. With \code{smooth = TRUE}, they are joined
+by a smooth curve: radius is
+interpolated as a function of bearing with a periodic, shape-preserving cubic (PCHIP). Between
+two adjacent rays the radius stays within the range of their lengths, so the outline adds no
+lobes that aren't in the rose. The curve between rays is a visual connector: the rose holds
+flow toward the eight neighbors only. With \code{smooth = FALSE}, the tips are joined by straight
+lines, giving a star-shaped polygon.
 
 Glyphs are built in longitude/latitude coordinates, scaled so that their shapes are correct
 in km at each glyph's latitude. Use \code{\link[ggplot2:coord_quickmap]{ggplot2::coord_quickmap()}} or \code{\link[ggplot2:coord_sf]{ggplot2::coord_sf()}}
