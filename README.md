@@ -1,5 +1,5 @@
 
-# windscape
+# windscape <a href="https://matthewkling.github.io/windscape/"><img src="man/figures/logo.png" align="right" height="200" alt="windscape website" /></a>
 
 <!-- badges: start -->
 
