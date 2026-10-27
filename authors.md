@@ -7,7 +7,7 @@
 ## Citation
 
 Source:
-[`DESCRIPTION`](https://github.com/matthewkling/windscape/blob/master/DESCRIPTION)
+[`DESCRIPTION`](https://github.com/matthewkling/windscape/blob/v2.0.0/DESCRIPTION)
 
 Kling M (2026). *windscape: Model Landscape Connectivity by Wind*. R
 package version 2.0.0, <https://matthewkling.github.io/windscape/>.
