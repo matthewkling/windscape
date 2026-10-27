@@ -1,3 +1,5 @@
+# windscape (development version)
+
 # windscape 2.0.0
 
 This release reorganizes windscape around a simpler workflow: download wind data or a pre-built
